@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 // Import Screens
@@ -15,26 +16,31 @@ import SettingsScreen from './screens/SettingsScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Uber Signature Tab Bar Icon
-function UberTabIcon({ name, focused }) {
-  let symbol;
+// Icon map: tab name → Ionicons icon names (filled & outline)
+const TAB_ICONS = {
+  Home:     { active: 'home',          inactive: 'home-outline' },
+  Services: { active: 'map',           inactive: 'map-outline' },
+  Driver:   { active: 'car-sport',     inactive: 'car-sport-outline' },
+  Account:  { active: 'person-circle', inactive: 'person-circle-outline' },
+};
 
-  if (name === 'Home') symbol = '🏠';
-  else if (name === 'Services') symbol = '🚗';
-  else if (name === 'Driver') symbol = '🚖';
-  else if (name === 'Account') symbol = '👤';
+// Professional Uber-style vector icon with active white pill
+function UberTabIcon({ name, focused }) {
+  const iconSet = TAB_ICONS[name] || { active: 'ellipse', inactive: 'ellipse-outline' };
+  const iconName = focused ? iconSet.active : iconSet.inactive;
+  const iconColor = focused ? '#000000' : '#7C7C7C';
 
   if (focused) {
     return (
       <View style={styles.activePill}>
-        <Text style={styles.activeSymbol}>{symbol}</Text>
+        <Ionicons name={iconName} size={20} color={iconColor} />
       </View>
     );
   }
 
   return (
     <View style={styles.inactivePill}>
-      <Text style={styles.inactiveSymbol}>{symbol}</Text>
+      <Ionicons name={iconName} size={22} color={iconColor} />
     </View>
   );
 }
@@ -95,17 +101,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeSymbol: {
-    fontSize: 16,
-  },
   inactivePill: {
     width: 40,
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.6,
-  },
-  inactiveSymbol: {
-    fontSize: 16,
   },
 });
