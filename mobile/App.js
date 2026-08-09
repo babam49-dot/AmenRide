@@ -15,15 +15,19 @@ import SettingsScreen from './screens/SettingsScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Custom Professional Tab Icon Component
+// Custom Professional Tab Icon Component using Modernized Icons
 function TabIcon({ name, focused }) {
   let symbol;
-  let labelColor = focused ? '#FF9500' : '#64748B';
 
-  if (name === 'Home') symbol = focused ? '🏠' : '🏚️';
-  else if (name === 'Map') symbol = focused ? '📍' : '🗺️';
-  else if (name === 'Driver') symbol = focused ? '🚗' : '🚕';
-  else if (name === 'Settings') symbol = focused ? '⚙️' : '🔧';
+  if (name === 'Home') {
+    symbol = focused ? '🏎️' : '🚘'; // Modernized sports/commute car
+  } else if (name === 'Map') {
+    symbol = focused ? '📍' : '🧭'; // Google Navigation / Compass direction pin
+  } else if (name === 'Driver') {
+    symbol = focused ? '🚕' : '🚖'; // Driver taxi cab
+  } else if (name === 'Settings') {
+    symbol = focused ? '⚙️' : '⚙';  // Gear cogs
+  }
 
   if (focused) {
     return (
@@ -60,8 +64,8 @@ function TabNavigator() {
         tabBarLabelStyle: styles.tabBarLabel,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Map" component={MapScreen} options={{ tabBarLabel: 'Map & Route' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Amen Ride' }} />
+      <Tab.Screen name="Map" component={MapScreen} options={{ tabBarLabel: 'Directions' }} />
       <Tab.Screen name="Driver" component={DriverScreen} options={{ tabBarLabel: 'Driver Portal' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: 'Settings' }} />
     </Tab.Navigator>
