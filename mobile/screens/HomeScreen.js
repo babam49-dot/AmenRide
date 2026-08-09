@@ -53,6 +53,7 @@ function formatTimeAgo(dateStr) {
 }
 
 export default function HomeScreen({ navigation }) {
+  const [activeRole, setActiveRole] = useState('rider'); // 'rider' | 'driver' | 'admin'
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
 
@@ -75,30 +76,96 @@ export default function HomeScreen({ navigation }) {
     });
   }, []);
 
+  const roleConfigs = {
+    rider: {
+      greeting: 'Hello, Rider! 👋',
+      badge: '👤 Customer Mode',
+      title: 'Comfortable Rides,\nAlways On Time',
+      desc: 'Request an AMEN ride in Bahir Dar and get matched in seconds.',
+      btn: 'Book a Ride  →',
+      action: () => navigation.navigate('Map'),
+    },
+    driver: {
+      greeting: 'Hello, Driver Partner! 🚗',
+      badge: '🚕 Driver Mode',
+      title: 'Drive & Earn,\nOn Your Schedule',
+      desc: "Today's Earnings: 1,450 ETB · 8 Trips Completed in Bahir Dar",
+      btn: 'Driver Dashboard  →',
+      action: () => navigation.navigate('Driver'),
+    },
+    admin: {
+      greeting: 'Hello, System Admin! 🛡️',
+      badge: '⚡ Fleet Dispatch Admin',
+      title: 'Fleet Control Center,\nBahir Dar Live',
+      desc: 'System Revenue: 48,250 ETB · 142 Active Drivers · 99.9% Uptime',
+      btn: 'Manage Fleet  →',
+      action: () => navigation.navigate('Settings'),
+    },
+  };
+
+  const currentRole = roleConfigs[activeRole];
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* ── Role Switcher Bar ────────────────────────── */}
+      <View style={styles.roleSwitcher}>
+        {[
+          { key: 'rider', label: '👤 Rider' },
+          { key: 'driver', label: '🚗 Driver' },
+          { key: 'admin', label: '🛡️ Admin' },
+        ].map((r) => {
+          const isSelected = activeRole === r.key;
+          return (
+            <TouchableOpacity
+              key={r.key}
+              style={[styles.roleTab, isSelected && styles.roleTabActive]}
+              onPress={() => setActiveRole(r.key)}
+            >
+              {isSelected && (
+                <LinearGradient
+                  colors={['#FF9500', '#FF6B00']}
+                  style={StyleSheet.absoluteFill}
+                  borderRadius={12}
+                />
+              )}
+              <Text style={[styles.roleTabText, isSelected && styles.roleTabTextActive]}>
+                {r.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       {/* ── Header ─────────────────────────────────── */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>WELCOME TO AMEN</Text>
-          <Text style={styles.userName}>Hello, Rider! 👋</Text>
+          <Text style={styles.userName}>{currentRole.greeting}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <LinearGradient
             colors={['#FF9500', '#FF6B00']}
             style={styles.profileButton}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.profileText}>R</Text>
+            <Text style={styles.profileText}>
+              {activeRole === 'rider' ? 'R' : activeRole === 'driver' ? 'D' : 'A'}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {/* ── Hero Banner ─────────────────────────────── */}
+      {/* ── Dynamic Hero Banner ─────────────────────── */}
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <LinearGradient
-          colors={['#1A1A2E', '#16213E', '#0F3460']}
+          colors={
+            activeRole === 'admin'
+              ? ['#0F172A', '#1E1B4B', '#311B92']
+              : activeRole === 'driver'
+              ? ['#064E3B', '#065F46', '#047857']
+              : ['#1A1A2E', '#16213E', '#0F3460']
+          }
           style={styles.heroCard}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -108,20 +175,19 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.glow2} />
 
           <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>🔥 Live & Ready</Text>
+            <Text style={styles.heroBadgeText}>{currentRole.badge}</Text>
           </View>
-          <Text style={styles.heroTitle}>Comfortable Rides,{'\n'}Always On Time</Text>
-          <Text style={styles.heroDesc}>
-            Request an AMEN ride and get matched in seconds. Safe, direct, and affordable.
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Map')}>
+          <Text style={styles.heroTitle}>{currentRole.title}</Text>
+          <Text style={styles.heroDesc}>{currentRole.desc}</Text>
+
+          <TouchableOpacity onPress={currentRole.action}>
             <LinearGradient
               colors={['#FF9500', '#FF6B00']}
               style={styles.heroBtn}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
-              <Text style={styles.heroBtnText}>Book a Ride  →</Text>
+              <Text style={styles.heroBtnText}>{currentRole.btn}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </LinearGradient>
@@ -133,22 +199,22 @@ export default function HomeScreen({ navigation }) {
           <LinearGradient colors={['#FF9500', '#FF6B00']} style={styles.statIconBg}>
             <Text style={styles.statEmoji}>⭐</Text>
           </LinearGradient>
-          <AnimatedCounter target={49} suffix=" / 5" prefix="" />
-          <Text style={styles.statLabel}>Avg Rating</Text>
+          <AnimatedCounter target={activeRole === 'admin' ? 99 : 49} suffix={activeRole === 'admin' ? '%' : ' / 5'} />
+          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Uptime' : 'Avg Rating'}</Text>
         </View>
         <View style={styles.statCard}>
           <LinearGradient colors={['#06B6D4', '#0284C7']} style={styles.statIconBg}>
-            <Text style={styles.statEmoji}>⚡</Text>
+            <Text style={styles.statEmoji}>{activeRole === 'admin' ? '🚗' : '⚡'}</Text>
           </LinearGradient>
-          <AnimatedCounter target={2} suffix=" min" />
-          <Text style={styles.statLabel}>Avg Pickup</Text>
+          <AnimatedCounter target={activeRole === 'admin' ? 142 : 2} suffix={activeRole === 'admin' ? ' Active' : ' min'} />
+          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Fleet' : 'Avg Pickup'}</Text>
         </View>
         <View style={styles.statCard}>
           <LinearGradient colors={['#10B981', '#059669']} style={styles.statIconBg}>
             <Text style={styles.statEmoji}>😊</Text>
           </LinearGradient>
-          <AnimatedCounter target={12000} suffix="+" />
-          <Text style={styles.statLabel}>Happy Riders</Text>
+          <AnimatedCounter target={activeRole === 'admin' ? 48250 : 12000} suffix={activeRole === 'admin' ? ' ETB' : '+'} />
+          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Revenue' : 'Happy Riders'}</Text>
         </View>
       </View>
 
@@ -228,7 +294,37 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'web' ? 20 : 50,
   },
 
-  // ── Header
+  // Role Switcher
+  roleSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#111827',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#1F2937',
+  },
+  roleTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  roleTabActive: {
+    backgroundColor: 'transparent',
+  },
+  roleTabText: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  roleTabTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -243,7 +339,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   userName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: '#FFFFFF',
     marginTop: 2,
@@ -261,7 +357,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // ── Hero Banner
+  // Hero Banner
   heroCard: {
     borderRadius: 24,
     padding: 24,
@@ -307,10 +403,10 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
     marginBottom: 10,
-    lineHeight: 32,
+    lineHeight: 30,
   },
   heroDesc: {
     color: '#94A3B8',
@@ -321,16 +417,16 @@ const styles = StyleSheet.create({
   heroBtn: {
     borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 26,
+    paddingHorizontal: 24,
     alignSelf: 'flex-start',
   },
   heroBtnText: {
     color: '#FFF',
     fontWeight: '800',
-    fontSize: 15,
+    fontSize: 14,
   },
 
-  // ── Stats
+  // Stats
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -356,7 +452,7 @@ const styles = StyleSheet.create({
   },
   statEmoji: { fontSize: 18 },
   statNumber: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
   },
@@ -368,7 +464,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Services
+  // Services
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
@@ -410,7 +506,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  // ── Recent Trips
+  // Recent Trips
   recentSection: { marginBottom: 20 },
   sectionHeader: {
     flexDirection: 'row',
