@@ -9,13 +9,11 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
 
 const { width, height } = Dimensions.get('window');
 
-// Real Bahir Dar, Ethiopia coordinates & region
 const BAHIR_DAR_REGION = {
   latitude: 11.5958,
   longitude: 37.3885,
@@ -23,11 +21,9 @@ const BAHIR_DAR_REGION = {
   longitudeDelta: 0.025,
 };
 
-// Pickup & Dropoff coordinates in Bahir Dar
-const PICKUP_COORDS  = { latitude: 11.5980, longitude: 37.3820 }; // Felege Hiwot
-const DROPOFF_COORDS = { latitude: 11.5936, longitude: 37.3950 }; // Grand Resort Hotel, Lake Tana
+const PICKUP_COORDS  = { latitude: 11.5980, longitude: 37.3820 };
+const DROPOFF_COORDS = { latitude: 11.5936, longitude: 37.3950 };
 
-// Real street route polyline points in Bahir Dar
 const ROUTE_LINE = [
   { latitude: 11.5980, longitude: 37.3820 },
   { latitude: 11.5972, longitude: 37.3855 },
@@ -37,9 +33,9 @@ const ROUTE_LINE = [
 ];
 
 const MATCHING_STEPS = [
-  '🔍  Locating nearby drivers in Bahir Dar...',
-  '📡  Connecting to AMEN Dispatcher...',
-  '🚗  Matching with best driver on Kebele 03 road...',
+  '🔍  Connecting to Uber AMEN Dispatcher...',
+  '📡  Locating nearest driver on Kebele 03 road...',
+  '🚗  Matching your ride...',
   '✅  Driver confirmed!',
 ];
 
@@ -83,117 +79,101 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Real Google Map centered on Bahir Dar */}
+      {/* Uber Map View */}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={BAHIR_DAR_REGION}
-        customMapStyle={darkMapStyle}
+        customMapStyle={uberDarkMapStyle}
       >
-        {/* Route Polyline (Directions Line) */}
-        <Polyline
-          coordinates={ROUTE_LINE}
-          strokeColor="#FF9500"
-          strokeWidth={5}
-        />
+        <Polyline coordinates={ROUTE_LINE} strokeColor="#FFFFFF" strokeWidth={5} />
 
-        {/* Pickup Location Marker */}
-        <Marker coordinate={PICKUP_COORDS} title="Pickup Location" description="Felege Hiwot, Bahir Dar">
-          <View style={styles.pickupMarker}>
-            <Text style={styles.markerText}>🟢 Pickup</Text>
+        <Marker coordinate={PICKUP_COORDS} title="Pickup">
+          <View style={styles.pickupPin}>
+            <Text style={styles.pinText}>■ Felege Hiwot</Text>
           </View>
         </Marker>
 
-        {/* Dropoff Location Marker */}
-        <Marker coordinate={DROPOFF_COORDS} title="Dropoff Location" description="Grand Resort Hotel, Lake Tana">
-          <View style={styles.dropoffMarker}>
-            <Text style={styles.markerText}>🔴 Dropoff</Text>
+        <Marker coordinate={DROPOFF_COORDS} title="Dropoff">
+          <View style={styles.dropoffPin}>
+            <Text style={styles.pinText}>● Grand Resort Hotel</Text>
           </View>
         </Marker>
 
-        {/* Active Driver Marker */}
-        <Marker coordinate={{ latitude: 11.5965, longitude: 37.3865 }} title="AMEN Driver">
-          <View style={styles.driverMarker}>
-            <Text style={{ fontSize: 20 }}>🚗</Text>
+        <Marker coordinate={{ latitude: 11.5965, longitude: 37.3865 }} title="Driver">
+          <View style={styles.driverBadge}>
+            <Text style={{ fontSize: 16 }}>🚗 UberX</Text>
           </View>
         </Marker>
       </MapView>
 
-      {/* Floating Route Information Bar */}
-      <View style={styles.topBar}>
-        <View style={styles.searchBar}>
-          <View style={styles.locationDot} />
-          <View style={styles.routeInfo}>
-            <Text style={styles.searchText}>Bahir Dar City · Lake Tana Route</Text>
-            <Text style={styles.searchSub}>4.2 km · 12 min drive</Text>
-          </View>
-          <View style={styles.searchBadge}>
-            <Text style={styles.searchBadgeText}>LIVE</Text>
-          </View>
+      {/* Address Bar */}
+      <View style={styles.addressBar}>
+        <View style={styles.addressRow}>
+          <View style={styles.pickupSquare} />
+          <Text style={styles.addressText} numberOfLines={1}>Felege Hiwot, Bahir Dar</Text>
+        </View>
+        <View style={styles.addressDividerLine} />
+        <View style={styles.addressRow}>
+          <View style={styles.dropoffCircle} />
+          <Text style={styles.addressText} numberOfLines={1}>Grand Resort Hotel, Lake Tana</Text>
         </View>
       </View>
 
-      {/* Booking Bottom Sheet */}
+      {/* Bottom Sheet */}
       <View style={styles.bottomSheet}>
         {!isRequested ? (
           <>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Where to in Bahir Dar?</Text>
-            <Text style={styles.sheetSub}>Select your ride option below</Text>
+            <Text style={styles.sheetTitle}>Choose a ride</Text>
 
             {loading ? (
               <View style={styles.loadingRow}>
-                <ActivityIndicator color="#FF9500" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
                 <Text style={styles.loadingText}>Loading options...</Text>
               </View>
             ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rideList}>
+              <ScrollView style={styles.optionsList} showsVerticalScrollIndicator={false}>
                 {rideOptions.map((ride) => {
                   const isSelected = ride.id?.toString() === selectedRide || ride.id === selectedRide;
                   return (
                     <TouchableOpacity
                       key={ride.id}
-                      style={[styles.rideCard, isSelected && styles.rideCardSelected]}
+                      style={[styles.uberOptionRow, isSelected && styles.uberOptionRowSelected]}
                       onPress={() => setSelectedRide(ride.id?.toString())}
                       activeOpacity={0.85}
                     >
-                      {isSelected && (
-                        <LinearGradient
-                          colors={[ride.color || '#FF9500', (ride.color || '#FF9500') + '44']}
-                          style={StyleSheet.absoluteFill}
-                          borderRadius={16}
-                        />
-                      )}
-                      <Text style={styles.rideIcon}>{ride.icon}</Text>
-                      <Text style={[styles.rideName, isSelected && { color: '#FFF' }]}>{ride.name}</Text>
-                      <Text style={[styles.rideEta, isSelected && { color: 'rgba(255,255,255,0.7)' }]}>
-                        {ride.eta_minutes} min away
-                      </Text>
-                      <Text style={[styles.ridePrice, isSelected && { color: '#FFF' }]}>
-                        {ride.base_price} ETB
-                      </Text>
+                      <Text style={styles.uberOptionIcon}>{ride.icon}</Text>
+                      <View style={styles.uberOptionInfo}>
+                        <View style={styles.titleRow}>
+                          <Text style={styles.uberOptionName}>{ride.name}</Text>
+                          <Text style={styles.uberOptionBadge}>👤 4</Text>
+                        </View>
+                        <Text style={styles.uberOptionSub}>
+                          {ride.eta_minutes} min away · {ride.description || 'Fast, direct ride'}
+                        </Text>
+                      </View>
+                      <Text style={styles.uberOptionPrice}>{ride.base_price} ETB</Text>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
             )}
 
-            <TouchableOpacity onPress={() => setIsRequested(true)} disabled={!activeRide} activeOpacity={0.9}>
-              <LinearGradient
-                colors={[activeRide?.color || '#FF9500', '#FF6B00']}
-                style={styles.confirmBtn}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.confirmBtnText}>Confirm {activeRide?.name || 'Ride'}</Text>
-              </LinearGradient>
+            <TouchableOpacity
+              style={styles.uberConfirmBtn}
+              onPress={() => setIsRequested(true)}
+              disabled={!activeRide}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.uberConfirmBtnText}>Choose {activeRide?.name || 'UberX'}</Text>
             </TouchableOpacity>
           </>
         ) : (
           <View style={styles.matchmakingContainer}>
             <View style={styles.sheetHandle} />
             <Animated.Text style={[styles.spinEmoji, { transform: [{ rotate: spin }] }]}>🔄</Animated.Text>
-            <Text style={styles.matchTitle}>Finding your driver in Bahir Dar...</Text>
+            <Text style={styles.matchTitle}>Requesting your ride...</Text>
             <View style={styles.stepsContainer}>
               {MATCHING_STEPS.map((step, i) => (
                 <Text key={i} style={[styles.stepText, i < matchStep && styles.stepDone, i === matchStep && styles.stepActive]}>
@@ -201,10 +181,8 @@ export default function MapScreen() {
                 </Text>
               ))}
             </View>
-            <TouchableOpacity onPress={() => setIsRequested(false)} activeOpacity={0.9}>
-              <LinearGradient colors={['#EF4444', '#DC2626']} style={styles.confirmBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                <Text style={styles.confirmBtnText}>Cancel Request</Text>
-              </LinearGradient>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsRequested(false)} activeOpacity={0.9}>
+              <Text style={styles.cancelBtnText}>Cancel Request</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -213,100 +191,74 @@ export default function MapScreen() {
   );
 }
 
-// Dark Google Maps style
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0f172a' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#334155' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0c1a2e' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#111827' }] },
+const uberDarkMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#000000' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#7c7c7c' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#000000' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#262626' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#090909' }] },
 ];
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
+  container: { flex: 1, backgroundColor: '#000000' },
   map: { width, height },
 
-  pickupMarker: {
-    backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#FFF',
+  pickupPin: {
+    backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
   },
-  dropoffMarker: {
-    backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#FFF',
+  dropoffPin: {
+    backgroundColor: '#000000', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16, borderWidth: 1.5, borderColor: '#FFFFFF',
   },
-  markerText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
-
-  driverMarker: {
-    padding: 8, backgroundColor: '#1E293B',
-    borderRadius: 22, borderWidth: 2, borderColor: '#FF9500',
-    alignItems: 'center', justifyContent: 'center',
+  pinText: { color: '#000000', fontSize: 11, fontWeight: '800' },
+  driverBadge: {
+    backgroundColor: '#FFFFFF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12,
   },
 
-  topBar: { position: 'absolute', top: 50, left: 18, right: 18, zIndex: 10 },
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#1E293B',
-    paddingVertical: 12, paddingHorizontal: 16,
-    borderRadius: 14, borderWidth: 1,
-    borderColor: 'rgba(255,149,0,0.3)',
+  addressBar: {
+    position: 'absolute', top: 50, left: 16, right: 16, zIndex: 10,
+    backgroundColor: '#181818', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#262626',
   },
-  locationDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: '#10B981', marginRight: 12,
-  },
-  routeInfo: { flex: 1 },
-  searchText: { fontSize: 13, fontWeight: '700', color: '#F1F5F9' },
-  searchSub: { fontSize: 10, color: '#FF9500', marginTop: 1, fontWeight: '600' },
-  searchBadge: {
-    backgroundColor: '#FF9500', borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 3,
-  },
-  searchBadgeText: { color: '#FFF', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  addressRow: { flexDirection: 'row', alignItems: 'center' },
+  pickupSquare: { width: 8, height: 8, backgroundColor: '#FFFFFF', marginRight: 12 },
+  dropoffCircle: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFFFFF', marginRight: 12 },
+  addressDividerLine: { width: 1, height: 10, backgroundColor: '#333333', marginLeft: 3.5, marginVertical: 2 },
+  addressText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', flex: 1 },
 
   bottomSheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#0F172A',
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    paddingTop: 12, paddingBottom: 36, paddingHorizontal: 20,
-    borderTopWidth: 1, borderColor: '#1E293B',
+    backgroundColor: '#121212', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 10, paddingBottom: 32, paddingHorizontal: 16, borderWidth: 1, borderColor: '#262626',
+    maxHeight: height * 0.55,
   },
-  sheetHandle: {
-    width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#334155', alignSelf: 'center', marginBottom: 18,
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#333333', alignSelf: 'center', marginBottom: 14 },
+  sheetTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 10 },
+  loadingText: { color: '#A0A0A0', fontSize: 13 },
+  optionsList: { maxHeight: 220, marginBottom: 16 },
+  uberOptionRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12,
+    borderRadius: 14, marginBottom: 6, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#181818',
   },
-  sheetTitle: { fontSize: 22, fontWeight: '800', color: '#FFFFFF' },
-  sheetSub: { fontSize: 13, color: '#64748B', marginTop: 4, marginBottom: 18 },
-  loadingRow: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', paddingVertical: 20, gap: 10,
-  },
-  loadingText: { color: '#64748B', fontSize: 13 },
-  rideList: { paddingBottom: 16, paddingRight: 10 },
-  rideCard: {
-    width: 126, backgroundColor: '#1E293B',
-    borderRadius: 16, padding: 14, marginRight: 12,
-    borderWidth: 2, borderColor: 'transparent',
-    alignItems: 'center', overflow: 'hidden',
-  },
-  rideCardSelected: { borderColor: 'transparent' },
-  rideIcon: { fontSize: 30, marginBottom: 8 },
-  rideName: { fontSize: 12, fontWeight: '700', color: '#E2E8F0', textAlign: 'center' },
-  rideEta: { fontSize: 10, color: '#64748B', marginTop: 2 },
-  ridePrice: { fontSize: 14, fontWeight: '800', color: '#FF9500', marginTop: 8 },
+  uberOptionRowSelected: { borderColor: '#FFFFFF', backgroundColor: '#262626' },
+  uberOptionIcon: { fontSize: 32, marginRight: 14 },
+  uberOptionInfo: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  uberOptionName: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
+  uberOptionBadge: { fontSize: 11, color: '#A0A0A0', fontWeight: '600' },
+  uberOptionSub: { fontSize: 11, color: '#A0A0A0', marginTop: 2 },
+  uberOptionPrice: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
 
-  confirmBtn: {
-    borderRadius: 14, paddingVertical: 16,
-    alignItems: 'center', justifyContent: 'center', marginTop: 16,
-  },
-  confirmBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  uberConfirmBtn: { backgroundColor: '#FFFFFF', borderRadius: 30, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
+  uberConfirmBtnText: { color: '#000000', fontSize: 16, fontWeight: '900' },
 
   matchmakingContainer: { alignItems: 'center', paddingVertical: 10 },
-  spinEmoji: { fontSize: 52, marginBottom: 16 },
-  matchTitle: { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 20 },
-  stepsContainer: { width: '100%', marginBottom: 10 },
-  stepText: { fontSize: 13, color: '#475569', marginBottom: 8, textAlign: 'center' },
-  stepDone: { color: '#10B981' },
-  stepActive: { color: '#FF9500', fontWeight: '700' },
+  spinEmoji: { fontSize: 48, marginBottom: 14 },
+  matchTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 },
+  stepsContainer: { width: '100%', marginBottom: 16 },
+  stepText: { fontSize: 13, color: '#7C7C7C', marginBottom: 8, textAlign: 'center' },
+  stepDone: { color: '#05A357' },
+  stepActive: { color: '#FFFFFF', fontWeight: '800' },
+  cancelBtn: { backgroundColor: '#262626', borderRadius: 30, paddingVertical: 14, paddingHorizontal: 30, width: '100%', alignItems: 'center' },
+  cancelBtnText: { color: '#FF3B30', fontWeight: '800', fontSize: 15 },
 });

@@ -10,38 +10,16 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { fetchTrips } from '../services/tripsApi';
 
 const { width } = Dimensions.get('window');
 
-// ─── Animated Stat Counter ───────────────────────────────────────────────────
-function AnimatedCounter({ target, suffix = '', prefix = '' }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    Animated.timing(anim, {
-      toValue: target,
-      duration: 1400,
-      useNativeDriver: false,
-    }).start();
-    anim.addListener(({ value }) => setDisplay(Math.round(value)));
-    return () => anim.removeAllListeners();
-  }, [target]);
-
-  return (
-    <Text style={styles.statNumber}>
-      {prefix}{display.toLocaleString()}{suffix}
-    </Text>
-  );
-}
-
-const SERVICES = [
-  { name: 'Amen Ride',     sub: 'Daily commute',    emoji: '🚗', from: ['#FF9500', '#FF6B00'], screen: 'Map' },
-  { name: 'Amen Delivery', sub: 'Send packages',    emoji: '📦', from: ['#06B6D4', '#0284C7'], screen: 'Map' },
-  { name: 'Amen Boda',     sub: 'Quick motorcycle', emoji: '🏍️', from: ['#A855F7', '#7C3AED'], screen: 'Map' },
-  { name: 'Intercity',     sub: 'Long distance',    emoji: '🚌', from: ['#10B981', '#059669'], screen: 'Map' },
+// Uber Style Suggestions Grid
+const UBER_SUGGESTIONS = [
+  { name: 'Ride', sub: 'Instant pickup', emoji: '🚗', screen: 'Services' },
+  { name: 'Reserve', sub: 'Book in advance', emoji: '📅', screen: 'Services' },
+  { name: 'Package', sub: 'Deliver items', emoji: '📦', screen: 'Services' },
+  { name: 'Intercity', sub: 'Long distance', emoji: '🚌', screen: 'Services' },
 ];
 
 function formatTimeAgo(dateStr) {
@@ -57,17 +35,6 @@ export default function HomeScreen({ navigation }) {
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
 
-  // Hero banner pulse animation
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1,    duration: 1200, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
   // Load trips from PostgreSQL
   useEffect(() => {
     fetchTrips(1).then((data) => {
@@ -76,205 +43,120 @@ export default function HomeScreen({ navigation }) {
     });
   }, []);
 
-  const roleConfigs = {
-    rider: {
-      greeting: 'Hello, Rider! 👋',
-      badge: '👤 Customer Mode',
-      title: 'Comfortable Rides,\nAlways On Time',
-      desc: 'Request an AMEN ride in Bahir Dar and get matched in seconds.',
-      btn: 'Book a Ride  →',
-      action: () => navigation.navigate('Map'),
-    },
-    driver: {
-      greeting: 'Hello, Driver Partner! 🚗',
-      badge: '🚕 Driver Mode',
-      title: 'Drive & Earn,\nOn Your Schedule',
-      desc: "Today's Earnings: 1,450 ETB · 8 Trips Completed in Bahir Dar",
-      btn: 'Driver Dashboard  →',
-      action: () => navigation.navigate('Driver'),
-    },
-    admin: {
-      greeting: 'Hello, System Admin! 🛡️',
-      badge: '⚡ Fleet Dispatch Admin',
-      title: 'Fleet Control Center,\nBahir Dar Live',
-      desc: 'System Revenue: 48,250 ETB · 142 Active Drivers · 99.9% Uptime',
-      btn: 'Manage Fleet  →',
-      action: () => navigation.navigate('Settings'),
-    },
-  };
-
-  const currentRole = roleConfigs[activeRole];
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* ── Role Switcher Bar ────────────────────────── */}
-      <View style={styles.roleSwitcher}>
-        {[
-          { key: 'rider', label: '👤 Rider' },
-          { key: 'driver', label: '🚗 Driver' },
-          { key: 'admin', label: '🛡️ Admin' },
-        ].map((r) => {
-          const isSelected = activeRole === r.key;
-          return (
+      {/* ── Uber Top Brand Header & Role Switcher ── */}
+      <View style={styles.topRow}>
+        <Text style={styles.uberLogo}>Uber <Text style={styles.uberSubLogo}>AMEN</Text></Text>
+        
+        {/* Role Toggle */}
+        <View style={styles.roleContainer}>
+          {[
+            { key: 'rider', label: 'Rider' },
+            { key: 'driver', label: 'Driver' },
+            { key: 'admin', label: 'Admin' },
+          ].map((r) => (
             <TouchableOpacity
               key={r.key}
-              style={[styles.roleTab, isSelected && styles.roleTabActive]}
+              style={[styles.rolePill, activeRole === r.key && styles.rolePillActive]}
               onPress={() => setActiveRole(r.key)}
             >
-              {isSelected && (
-                <LinearGradient
-                  colors={['#FF9500', '#FF6B00']}
-                  style={StyleSheet.absoluteFill}
-                  borderRadius={12}
-                />
-              )}
-              <Text style={[styles.roleTabText, isSelected && styles.roleTabTextActive]}>
+              <Text style={[styles.roleText, activeRole === r.key && styles.roleTextActive]}>
                 {r.label}
               </Text>
             </TouchableOpacity>
-          );
-        })}
+          ))}
+        </View>
       </View>
 
-      {/* ── Header ─────────────────────────────────── */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>WELCOME TO AMEN</Text>
-          <Text style={styles.userName}>{currentRole.greeting}</Text>
+      {/* ── Uber "Where to?" Search Bar ── */}
+      <TouchableOpacity
+        style={styles.searchPill}
+        onPress={() => navigation.navigate('Services')}
+        activeOpacity={0.9}
+      >
+        <Text style={styles.searchIcon}>🔍</Text>
+        <Text style={styles.searchPlaceholder}>Where to?</Text>
+
+        <View style={styles.timePill}>
+          <Text style={styles.timeText}>⏱️ Pickup now ▾</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-          <LinearGradient
-            colors={['#FF9500', '#FF6B00']}
-            style={styles.profileButton}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Text style={styles.profileText}>
-              {activeRole === 'rider' ? 'R' : activeRole === 'driver' ? 'D' : 'A'}
-            </Text>
-          </LinearGradient>
+      </TouchableOpacity>
+
+      {/* ── Uber Suggestions Grid ── */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Suggestions</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Services')}>
+          <Text style={styles.seeAllText}>See all</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Dynamic Hero Banner ─────────────────────── */}
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <LinearGradient
-          colors={
-            activeRole === 'admin'
-              ? ['#0F172A', '#1E1B4B', '#311B92']
-              : activeRole === 'driver'
-              ? ['#064E3B', '#065F46', '#047857']
-              : ['#1A1A2E', '#16213E', '#0F3460']
-          }
-          style={styles.heroCard}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          {/* Decorative glows */}
-          <View style={styles.glow1} />
-          <View style={styles.glow2} />
-
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>{currentRole.badge}</Text>
-          </View>
-          <Text style={styles.heroTitle}>{currentRole.title}</Text>
-          <Text style={styles.heroDesc}>{currentRole.desc}</Text>
-
-          <TouchableOpacity onPress={currentRole.action}>
-            <LinearGradient
-              colors={['#FF9500', '#FF6B00']}
-              style={styles.heroBtn}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.heroBtnText}>{currentRole.btn}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </LinearGradient>
-      </Animated.View>
-
-      {/* ── Animated Stats Row ──────────────────────── */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <LinearGradient colors={['#FF9500', '#FF6B00']} style={styles.statIconBg}>
-            <Text style={styles.statEmoji}>⭐</Text>
-          </LinearGradient>
-          <AnimatedCounter target={activeRole === 'admin' ? 99 : 49} suffix={activeRole === 'admin' ? '%' : ' / 5'} />
-          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Uptime' : 'Avg Rating'}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <LinearGradient colors={['#06B6D4', '#0284C7']} style={styles.statIconBg}>
-            <Text style={styles.statEmoji}>{activeRole === 'admin' ? '🚗' : '⚡'}</Text>
-          </LinearGradient>
-          <AnimatedCounter target={activeRole === 'admin' ? 142 : 2} suffix={activeRole === 'admin' ? ' Active' : ' min'} />
-          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Fleet' : 'Avg Pickup'}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <LinearGradient colors={['#10B981', '#059669']} style={styles.statIconBg}>
-            <Text style={styles.statEmoji}>😊</Text>
-          </LinearGradient>
-          <AnimatedCounter target={activeRole === 'admin' ? 48250 : 12000} suffix={activeRole === 'admin' ? ' ETB' : '+'} />
-          <Text style={styles.statLabel}>{activeRole === 'admin' ? 'Revenue' : 'Happy Riders'}</Text>
-        </View>
-      </View>
-
-      {/* ── Services ────────────────────────────────── */}
-      <Text style={styles.sectionTitle}>Our Services</Text>
-      <View style={styles.servicesGrid}>
-        {SERVICES.map((svc) => (
+      <View style={styles.suggestionsGrid}>
+        {UBER_SUGGESTIONS.map((item) => (
           <TouchableOpacity
-            key={svc.name}
-            style={styles.serviceItem}
-            onPress={() => navigation.navigate(svc.screen)}
+            key={item.name}
+            style={styles.suggestionCard}
+            onPress={() => navigation.navigate(item.screen)}
             activeOpacity={0.85}
           >
-            <LinearGradient
-              colors={svc.from}
-              style={styles.serviceIconBg}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={styles.serviceEmoji}>{svc.emoji}</Text>
-            </LinearGradient>
-            <Text style={styles.serviceName}>{svc.name}</Text>
-            <Text style={styles.serviceSub}>{svc.sub}</Text>
+            <View style={styles.suggestionIconBox}>
+              <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
+            </View>
+            <Text style={styles.suggestionName}>{item.name}</Text>
+            <Text style={styles.suggestionSub}>{item.sub}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* ── Recent Trips (from PostgreSQL) ─────────── */}
-      <View style={styles.recentSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Trips</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
+      {/* ── Uber Promo Hero Card ── */}
+      <View style={styles.promoCard}>
+        <View style={styles.promoTextContainer}>
+          <Text style={styles.promoBadge}>Uber AMEN Bahir Dar</Text>
+          <Text style={styles.promoTitle}>Go anywhere with Uber AMEN</Text>
+          <Text style={styles.promoDesc}>
+            {activeRole === 'admin'
+              ? 'Fleet Control Center · System Revenue: 48,250 ETB · 142 Vehicles Active'
+              : activeRole === 'driver'
+              ? 'Today: 1,450 ETB Earned · 8 Trips Done in Bahir Dar'
+              : 'Affordable, reliable rides available 24/7 across Bahir Dar.'}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.promoBtn}
+            onPress={() =>
+              navigation.navigate(activeRole === 'driver' ? 'Driver' : activeRole === 'admin' ? 'Account' : 'Services')
+            }
+            activeOpacity={0.9}
+          >
+            <Text style={styles.promoBtnText}>
+              {activeRole === 'driver' ? 'Driver Dashboard' : activeRole === 'admin' ? 'Fleet Admin' : 'Book a ride'}
+            </Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* ── Recent Activity / Trips (PostgreSQL Data) ── */}
+      <View style={styles.recentSection}>
+        <Text style={styles.sectionTitle}>Recent activity</Text>
 
         {loadingTrips ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color="#FF9500" size="small" />
+            <ActivityIndicator color="#FFFFFF" size="small" />
             <Text style={styles.loadingText}>Loading trips...</Text>
           </View>
         ) : (
           trips.slice(0, 4).map((trip, i) => (
-            <TouchableOpacity key={trip.id || i} style={styles.tripCard} activeOpacity={0.8}>
-              <LinearGradient
-                colors={[trip.ride_color || '#FF9500', (trip.ride_color || '#FF9500') + '88']}
-                style={styles.tripIconWrapper}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.tripEmoji}>{trip.ride_icon || '📍'}</Text>
-              </LinearGradient>
+            <TouchableOpacity key={trip.id || i} style={styles.tripRow} activeOpacity={0.8}>
+              <View style={styles.tripIconBox}>
+                <Text style={styles.tripIcon}>📍</Text>
+              </View>
               <View style={styles.tripDetails}>
                 <Text style={styles.tripTitle} numberOfLines={1}>{trip.dropoff_name}</Text>
                 <Text style={styles.tripAddr} numberOfLines={1}>{trip.dropoff_addr}</Text>
-                <Text style={styles.tripTime}>{formatTimeAgo(trip.created_at)}</Text>
               </View>
               <View style={styles.tripRight}>
                 <Text style={styles.tripPrice}>{Math.round(trip.fare)} ETB</Text>
-                <View style={[styles.statusDot, { backgroundColor: trip.status === 'completed' ? '#10B981' : '#FF9500' }]} />
+                <Text style={styles.tripTime}>{formatTimeAgo(trip.created_at)}</Text>
               </View>
             </TouchableOpacity>
           ))
@@ -289,294 +171,240 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
-    paddingHorizontal: 18,
-    paddingTop: Platform.OS === 'web' ? 20 : 50,
+    backgroundColor: '#000000',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'web' ? 20 : 52,
   },
 
-  // Role Switcher
-  roleSwitcher: {
-    flexDirection: 'row',
-    backgroundColor: '#111827',
-    borderRadius: 14,
-    padding: 4,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#1F2937',
-  },
-  roleTab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  roleTabActive: {
-    backgroundColor: 'transparent',
-  },
-  roleTabText: {
-    color: '#64748B',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  roleTabTextActive: {
-    color: '#FFFFFF',
-  },
-
-  // Header
-  header: {
+  // Header Logo & Role Switcher
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
-  greeting: {
-    fontSize: 11,
-    color: '#FF9500',
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '800',
+  uberLogo: {
+    fontSize: 28,
+    fontWeight: '900',
     color: '#FFFFFF',
-    marginTop: 2,
+    letterSpacing: -0.5,
   },
-  profileButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+  uberSubLogo: {
+    color: '#05A357', // Uber Green
+    fontWeight: '700',
   },
-  profileText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '800',
+  roleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#181818',
+    borderRadius: 20,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  rolePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+  },
+  rolePillActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  roleText: {
+    color: '#A0A0A0',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  roleTextActive: {
+    color: '#000000',
   },
 
-  // Hero Banner
-  heroCard: {
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    overflow: 'hidden',
+  // "Where to?" Search Bar
+  searchPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#181818',
+    borderRadius: 30,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginBottom: 26,
     borderWidth: 1,
-    borderColor: 'rgba(255,149,0,0.2)',
+    borderColor: '#262626',
   },
-  glow1: {
-    position: 'absolute',
-    top: -40,
-    right: -40,
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#FF9500',
-    opacity: 0.12,
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 12,
   },
-  glow2: {
-    position: 'absolute',
-    bottom: -30,
-    left: -20,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#7C3AED',
-    opacity: 0.12,
+  searchPlaceholder: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,149,0,0.2)',
+  timePill: {
+    backgroundColor: '#262626',
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,149,0,0.4)',
+    paddingVertical: 6,
   },
-  heroBadgeText: {
-    color: '#FF9500',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  heroTitle: {
+  timeText: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '900',
-    marginBottom: 10,
-    lineHeight: 30,
-  },
-  heroDesc: {
-    color: '#94A3B8',
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  heroBtn: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignSelf: 'flex-start',
-  },
-  heroBtnText: {
-    color: '#FFF',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-
-  // Stats
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 26,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1F2937',
-  },
-  statIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statEmoji: { fontSize: 18 },
-  statNumber: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  statLabel: {
-    fontSize: 9,
-    color: '#6B7280',
-    marginTop: 3,
-    textAlign: 'center',
+    fontSize: 12,
     fontWeight: '600',
   },
 
-  // Services
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 14,
-  },
-  servicesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 28,
-    gap: 12,
-  },
-  serviceItem: {
-    width: (width - 48) / 2,
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#1F2937',
-  },
-  serviceIconBg: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  serviceEmoji: { fontSize: 26 },
-  serviceName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  serviceSub: {
-    fontSize: 11,
-    color: '#6B7280',
-    marginTop: 3,
-  },
-
-  // Recent Trips
-  recentSection: { marginBottom: 20 },
+  // Suggestions Grid
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   seeAllText: {
-    color: '#FF9500',
+    color: '#A0A0A0',
     fontSize: 13,
+    fontWeight: '600',
+  },
+  suggestionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 26,
+  },
+  suggestionCard: {
+    width: (width - 48) / 4,
+    backgroundColor: '#181818',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  suggestionIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#262626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  suggestionEmoji: {
+    fontSize: 22,
+  },
+  suggestionName: {
+    fontSize: 12,
     fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  suggestionSub: {
+    fontSize: 9,
+    color: '#A0A0A0',
+    marginTop: 2,
+  },
+
+  // Promo Card
+  promoCard: {
+    backgroundColor: '#181818',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 26,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  promoTextContainer: { flex: 1 },
+  promoBadge: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#05A357',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  promoTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  promoDesc: {
+    fontSize: 13,
+    color: '#A0A0A0',
+    lineHeight: 19,
+    marginBottom: 16,
+  },
+  promoBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    alignSelf: 'flex-start',
+  },
+  promoBtnText: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  // Recent Activity
+  recentSection: {
+    marginBottom: 20,
   },
   loadingBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: 20,
     gap: 10,
   },
   loadingText: {
-    color: '#6B7280',
+    color: '#A0A0A0',
     fontSize: 13,
   },
-  tripCard: {
+  tripRow: {
     flexDirection: 'row',
-    backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 14,
     alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#1F2937',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#181818',
   },
-  tripIconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  tripIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#262626',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
-  tripEmoji: { fontSize: 20 },
+  tripIcon: {
+    fontSize: 18,
+  },
   tripDetails: { flex: 1 },
   tripTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   tripAddr: {
-    fontSize: 11,
-    color: '#6B7280',
+    fontSize: 12,
+    color: '#A0A0A0',
     marginTop: 2,
-  },
-  tripTime: {
-    fontSize: 10,
-    color: '#4B5563',
-    marginTop: 3,
   },
   tripRight: {
     alignItems: 'flex-end',
-    gap: 6,
   },
   tripPrice: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FF9500',
+    color: '#FFFFFF',
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  tripTime: {
+    fontSize: 10,
+    color: '#7C7C7C',
+    marginTop: 3,
   },
 });

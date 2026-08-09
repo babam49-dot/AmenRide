@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   StyleSheet,
   Text,
@@ -12,27 +11,8 @@ import {
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
 
-const SETTINGS_GROUPS = [
-  {
-    title: 'App Preferences',
-    color: ['#7C3AED', '#A855F7'],
-    emoji: '⚙️',
-    items: ['toggles'],
-  },
-  {
-    title: 'Account & Legal',
-    color: ['#0284C7', '#06B6D4'],
-    emoji: '🔐',
-    rows: [
-      { label: 'Payment Methods', detail: '💳 Visa', color: '#FF9500' },
-      { label: 'Terms of Service',  detail: '→', color: '#94A3B8' },
-      { label: 'Support & Help',    detail: '→', color: '#94A3B8' },
-    ],
-  },
-];
-
 export default function SettingsScreen() {
-  const [darkMode, setDarkMode]   = useState(false);
+  const [darkMode, setDarkMode]   = useState(true);
   const [pushNotif, setPushNotif] = useState(true);
   const [driver, setDriver]       = useState(null);
   const [loading, setLoading]     = useState(true);
@@ -49,128 +29,95 @@ export default function SettingsScreen() {
     .map((w) => w[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2) || 'JD';
+    .slice(0, 2) || 'AB';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* ── Header ───────────────────────────────────── */}
-      <LinearGradient
-        colors={['#1A1A2E', '#16213E']}
-        style={styles.pageHeader}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <Text style={styles.headerTitle}>Settings</Text>
-      </LinearGradient>
+      {/* ── Uber Account Profile Header ── */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Account</Text>
+      </View>
 
-      {/* ── Profile Card ─────────────────────────────── */}
       {loading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color="#FF9500" size="large" />
+          <ActivityIndicator color="#FFFFFF" size="small" />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       ) : (
-        <View style={styles.profileCard}>
-          <LinearGradient
-            colors={['#FF9500', '#FF6B00', '#A855F7']}
-            style={styles.avatar}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
+        <View style={styles.profileRow}>
+          <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
-          </LinearGradient>
-          <View style={styles.profileDetails}>
-            <Text style={styles.profileName}>{driver?.name || 'John Doe'}</Text>
-            <Text style={styles.profileEmail}>{driver?.email || 'john.doe@amenride.com'}</Text>
-            <View style={styles.profileBadge}>
-              <LinearGradient colors={['#FF9500', '#FF6B00']} style={styles.badgeGradient} start={{x:0,y:0}} end={{x:1,y:0}}>
-                <Text style={styles.badgeText}>⭐ {driver?.rating} · {driver?.vehicle_type}</Text>
-              </LinearGradient>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>{driver?.name || 'Amanuel Bekele'}</Text>
+            <Text style={styles.email}>{driver?.email || 'amanuel.b@amenride.com'}</Text>
+            <View style={styles.ratingBadge}>
+              <Text style={styles.ratingText}>⭐ {driver?.rating || '4.92'}</Text>
             </View>
           </View>
         </View>
       )}
 
-      {/* ── App Preferences ──────────────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <LinearGradient colors={['#7C3AED', '#A855F7']} style={styles.sectionIconBg}>
-          <Text style={styles.sectionIconText}>⚙️</Text>
-        </LinearGradient>
-        <Text style={styles.sectionTitle}>App Preferences</Text>
+      {/* ── Uber Wallet Card ── */}
+      <View style={styles.walletCard}>
+        <View>
+          <Text style={styles.walletLabel}>Uber Cash / Wallet</Text>
+          <Text style={styles.walletVal}>0.00 ETB</Text>
+        </View>
+        <TouchableOpacity style={styles.addFundsBtn}>
+          <Text style={styles.addFundsText}>+ Add Funds</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* ── Preferences ── */}
+      <Text style={styles.sectionTitle}>App Preferences</Text>
       <View style={styles.card}>
-        <View style={styles.settingRow}>
-          <View style={styles.settingLeft}>
-            <View style={[styles.settingIcon, { backgroundColor: '#1E293B' }]}>
-              <Text>🌙</Text>
-            </View>
-            <Text style={styles.settingText}>Dark Mode</Text>
-          </View>
+        <View style={styles.row}>
+          <Text style={styles.rowText}>Dark Mode</Text>
           <Switch
             value={darkMode}
             onValueChange={setDarkMode}
-            trackColor={{ false: '#334155', true: '#A855F7' }}
-            thumbColor={darkMode ? '#FFF' : '#94A3B8'}
+            trackColor={{ false: '#333333', true: '#FFFFFF' }}
+            thumbColor={darkMode ? '#000000' : '#7C7C7C'}
           />
         </View>
         <View style={styles.divider} />
-        <View style={styles.settingRow}>
-          <View style={styles.settingLeft}>
-            <View style={[styles.settingIcon, { backgroundColor: '#1E293B' }]}>
-              <Text>🔔</Text>
-            </View>
-            <Text style={styles.settingText}>Push Notifications</Text>
-          </View>
+        <View style={styles.row}>
+          <Text style={styles.rowText}>Push Notifications</Text>
           <Switch
             value={pushNotif}
             onValueChange={setPushNotif}
-            trackColor={{ false: '#334155', true: '#FF9500' }}
-            thumbColor={pushNotif ? '#FFF' : '#94A3B8'}
+            trackColor={{ false: '#333333', true: '#FFFFFF' }}
+            thumbColor={pushNotif ? '#000000' : '#7C7C7C'}
           />
         </View>
       </View>
 
-      {/* ── Account & Legal ──────────────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <LinearGradient colors={['#0284C7', '#06B6D4']} style={styles.sectionIconBg}>
-          <Text style={styles.sectionIconText}>🔐</Text>
-        </LinearGradient>
-        <Text style={styles.sectionTitle}>Account & Legal</Text>
-      </View>
+      {/* ── Account Links ── */}
+      <Text style={styles.sectionTitle}>Account & Safety</Text>
       <View style={styles.card}>
         {[
-          { label: 'Payment Methods', detail: '💳 Visa',  color: '#FF9500' },
-          { label: 'Terms of Service', detail: '›',       color: '#64748B' },
-          { label: 'Support & Help',   detail: '›',       color: '#64748B' },
-        ].map((row, i, arr) => (
-          <View key={row.label}>
-            <TouchableOpacity style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: '#1E293B' }]}>
-                  <Text>{i === 0 ? '💳' : i === 1 ? '📋' : '🎧'}</Text>
-                </View>
-                <Text style={styles.settingText}>{row.label}</Text>
-              </View>
-              <Text style={[styles.arrowText, { color: row.color }]}>{row.detail}</Text>
+          { label: 'Payment Methods', detail: '💳 Visa' },
+          { label: 'Safety Center', detail: '🛡️ Active' },
+          { label: 'Terms & Privacy', detail: '›' },
+          { label: 'Help & Support', detail: '›' },
+        ].map((item, i, arr) => (
+          <View key={item.label}>
+            <TouchableOpacity style={styles.row}>
+              <Text style={styles.rowText}>{item.label}</Text>
+              <Text style={styles.rowDetail}>{item.detail}</Text>
             </TouchableOpacity>
             {i < arr.length - 1 && <View style={styles.divider} />}
           </View>
         ))}
       </View>
 
-      {/* ── Logout ───────────────────────────────────── */}
-      <TouchableOpacity activeOpacity={0.85}>
-        <LinearGradient
-          colors={['rgba(239,68,68,0.15)', 'rgba(220,38,38,0.1)']}
-          style={styles.logoutBtn}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.logoutBtnText}>🚪  Log Out</Text>
-        </LinearGradient>
+      {/* ── Uber Sign Out ── */}
+      <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
+        <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
 
-      <Text style={styles.versionText}>AMEN Ride v1.0.0 · Powered by PostgreSQL</Text>
+      <Text style={styles.versionText}>Uber AMEN v1.0.0 · Bahir Dar</Text>
 
       <View style={{ height: 100 }} />
     </ScrollView>
@@ -180,114 +127,157 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: '#000000',
   },
   contentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'web' ? 20 : 52,
     paddingBottom: 40,
   },
 
-  pageHeader: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'web' ? 20 : 54,
-    paddingBottom: 24,
+  header: {
     marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 28, fontWeight: '900', color: '#FFF',
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
-
   loadingBox: {
-    alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 32, gap: 12,
+    alignItems: 'center',
+    paddingVertical: 20,
   },
-  loadingText: {
-    color: '#64748B', fontSize: 14,
-  },
+  loadingText: { color: '#A0A0A0', fontSize: 13 },
 
-  profileCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#111827',
-    borderRadius: 20, marginHorizontal: 20, padding: 18,
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
-    borderWidth: 1, borderColor: '#1F2937',
   },
   avatar: {
-    width: 68, height: 68, borderRadius: 34,
-    justifyContent: 'center', alignItems: 'center',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#262626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   avatarText: {
-    color: '#FFF', fontSize: 26, fontWeight: '900',
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
   },
-  profileDetails: {
-    marginLeft: 16, flex: 1,
+  profileInfo: { flex: 1 },
+  name: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
-  profileName: {
-    fontSize: 18, fontWeight: '800', color: '#FFF',
+  email: {
+    fontSize: 13,
+    color: '#A0A0A0',
+    marginTop: 2,
   },
-  profileEmail: {
-    fontSize: 13, color: '#64748B', marginTop: 2,
+  ratingBadge: {
+    backgroundColor: '#181818',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+    marginTop: 6,
   },
-  profileBadge: {
-    alignSelf: 'flex-start', marginTop: 8, borderRadius: 20, overflow: 'hidden',
-  },
-  badgeGradient: {
-    paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20,
-  },
-  badgeText: {
-    color: '#FFF', fontSize: 11, fontWeight: '700',
+  ratingText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 
-  sectionHeaderRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, marginBottom: 12, gap: 10,
+  walletCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#181818',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 26,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
-  sectionIconBg: {
-    width: 34, height: 34, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
+  walletLabel: {
+    fontSize: 12,
+    color: '#A0A0A0',
+    fontWeight: '700',
   },
-  sectionIconText: { fontSize: 16 },
+  walletVal: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 4,
+  },
+  addFundsBtn: {
+    backgroundColor: '#262626',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addFundsText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
   sectionTitle: {
-    fontSize: 16, fontWeight: '800', color: '#FFF',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 12,
   },
-
   card: {
-    backgroundColor: '#111827',
-    borderRadius: 18, marginHorizontal: 20,
-    marginBottom: 22, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: '#1F2937',
+    backgroundColor: '#181818',
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
-  settingRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingVertical: 14,
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
   },
-  settingLeft: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+  rowText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
-  settingIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
+  rowDetail: {
+    fontSize: 14,
+    color: '#A0A0A0',
+    fontWeight: '600',
   },
-  settingText: {
-    fontSize: 15, color: '#E2E8F0', fontWeight: '500',
-  },
-  divider: {
-    height: 1, backgroundColor: '#1F2937',
-  },
-  arrowText: {
-    fontSize: 16, fontWeight: '700',
-  },
+  divider: { height: 1, backgroundColor: '#262626' },
 
   logoutBtn: {
-    marginHorizontal: 20, borderRadius: 16,
-    paddingVertical: 16, alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
-    marginBottom: 22,
+    backgroundColor: '#181818',
+    borderRadius: 25,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#262626',
+    marginBottom: 24,
   },
-  logoutBtnText: {
-    color: '#EF4444', fontSize: 16, fontWeight: '800',
+  logoutText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '800',
   },
-
   versionText: {
-    textAlign: 'center', color: '#374151', fontSize: 11, fontWeight: '500',
+    textAlign: 'center',
+    color: '#7C7C7C',
+    fontSize: 11,
   },
 });
