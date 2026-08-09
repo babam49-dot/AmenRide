@@ -10,8 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SettingsScreen() {
+  const { lang, toggleLanguage, t } = useLanguage();
   const [darkMode, setDarkMode]   = useState(true);
   const [pushNotif, setPushNotif] = useState(true);
   const [driver, setDriver]       = useState(null);
@@ -35,7 +37,7 @@ export default function SettingsScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* ── Uber Account Profile Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Account</Text>
+        <Text style={styles.headerTitle}>{t('account')}</Text>
       </View>
 
       {loading ? (
@@ -61,17 +63,22 @@ export default function SettingsScreen() {
       {/* ── Uber Wallet Card ── */}
       <View style={styles.walletCard}>
         <View>
-          <Text style={styles.walletLabel}>Uber Cash / Wallet</Text>
+          <Text style={styles.walletLabel}>{t('uberCash')}</Text>
           <Text style={styles.walletVal}>0.00 ETB</Text>
         </View>
         <TouchableOpacity style={styles.addFundsBtn}>
-          <Text style={styles.addFundsText}>+ Add Funds</Text>
+          <Text style={styles.addFundsText}>{t('addFunds')}</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Preferences ── */}
-      <Text style={styles.sectionTitle}>App Preferences</Text>
+      <Text style={styles.sectionTitle}>{t('appPreferences')}</Text>
       <View style={styles.card}>
+        <TouchableOpacity style={styles.row} onPress={toggleLanguage}>
+          <Text style={styles.rowText}>{t('language')}</Text>
+          <Text style={styles.rowDetail}>{lang === 'en' ? 'English (EN)' : 'አማርኛ (AM)'}</Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
         <View style={styles.row}>
           <Text style={styles.rowText}>Dark Mode</Text>
           <Switch
@@ -94,7 +101,7 @@ export default function SettingsScreen() {
       </View>
 
       {/* ── Account Links ── */}
-      <Text style={styles.sectionTitle}>Account & Safety</Text>
+      <Text style={styles.sectionTitle}>{t('accountSafety')}</Text>
       <View style={styles.card}>
         {[
           { label: 'Payment Methods', detail: '💳 Visa' },
@@ -114,7 +121,7 @@ export default function SettingsScreen() {
 
       {/* ── Uber Sign Out ── */}
       <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
-        <Text style={styles.logoutText}>Sign Out</Text>
+        <Text style={styles.logoutText}>{t('signOut')}</Text>
       </TouchableOpacity>
 
       <Text style={styles.versionText}>Uber AMEN v1.0.0 · Bahir Dar</Text>
@@ -256,8 +263,8 @@ const styles = StyleSheet.create({
   },
   rowDetail: {
     fontSize: 14,
-    color: '#A0A0A0',
-    fontWeight: '600',
+    color: '#05A357',
+    fontWeight: '700',
   },
   divider: { height: 1, backgroundColor: '#262626' },
 

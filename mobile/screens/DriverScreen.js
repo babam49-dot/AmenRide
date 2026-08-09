@@ -7,10 +7,20 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Animated,
   ActivityIndicator,
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
+import { useLanguage } from '../context/LanguageContext';
+
+const WEEKLY_EARNINGS = [
+  { day: 'Mon', amount: 1200 },
+  { day: 'Tue', amount: 950 },
+  { day: 'Wed', amount: 1450, isToday: true },
+  { day: 'Thu', amount: 1100 },
+  { day: 'Fri', amount: 1800 },
+  { day: 'Sat', amount: 2100 },
+  { day: 'Sun', amount: 1600 },
+];
 
 function CountdownTimer({ seconds, onExpire }) {
   const [remaining, setRemaining] = useState(seconds);
@@ -27,6 +37,7 @@ function CountdownTimer({ seconds, onExpire }) {
 }
 
 export default function DriverScreen() {
+  const { t } = useLanguage();
   const [isOnline, setIsOnline] = useState(false);
   const [hasRequest, setHasRequest] = useState(false);
   const [driver, setDriver] = useState(null);
@@ -51,12 +62,13 @@ export default function DriverScreen() {
 
   const earnings = driver?.today_earnings || 1450;
   const todayTrips = driver?.today_trips || 8;
+  const maxWeekly = Math.max(...WEEKLY_EARNINGS.map((w) => w.amount));
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* ── Uber Driver Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Uber Driver</Text>
+        <Text style={styles.headerTitle}>{t('driverDashboard')}</Text>
         <Text style={styles.headerSub}>Bahir Dar Fleet Partner</Text>
       </View>
 
@@ -74,9 +86,9 @@ export default function DriverScreen() {
         activeOpacity={0.9}
       >
         <View>
-          <Text style={styles.statusLabel}>{isOnline ? "YOU'RE ONLINE" : "YOU'RE OFFLINE"}</Text>
+          <Text style={styles.statusLabel}>{isOnline ? t('youreOnline') : t('youreOffline')}</Text>
           <Text style={styles.statusHint}>
-            {isOnline ? 'Receiving trip requests in Bahir Dar' : 'Tap to start earning'}
+            {isOnline ? t('onlineHint') : t('offlineHint')}
           </Text>
         </View>
 
@@ -91,7 +103,7 @@ export default function DriverScreen() {
 
       {/* ── Uber Net Earnings Hero Card ── */}
       <View style={styles.earningsCard}>
-        <Text style={styles.earningsLabel}>Net Earnings Today</Text>
+        <Text style={styles.earningsLabel}>{t('netEarnings')}</Text>
         <Text style={styles.earningsVal}>{earnings.toLocaleString()} ETB</Text>
 
         <View style={styles.metaRow}>
@@ -109,6 +121,35 @@ export default function DriverScreen() {
             <Text style={styles.metaVal}>{driver?.acceptance_rate || '96'}%</Text>
             <Text style={styles.metaLabel}>Acceptance</Text>
           </View>
+        </View>
+      </View>
+
+      {/* ── Weekly Revenue Bar Chart ── */}
+      <View style={styles.chartCard}>
+        <Text style={styles.chartTitle}>Weekly Revenue Breakdown</Text>
+        <Text style={styles.chartSub}>Total Week: 10,200 ETB</Text>
+
+        <View style={styles.barChartRow}>
+          {WEEKLY_EARNINGS.map((item) => {
+            const heightPct = (item.amount / maxWeekly) * 100;
+            return (
+              <View key={item.day} style={styles.barCol}>
+                <Text style={styles.barVal}>{Math.round(item.amount / 1000)}k</Text>
+                <View style={styles.barTrack}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      { height: `${heightPct}%` },
+                      item.isToday && styles.barFillToday,
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.barLabel, item.isToday && styles.barLabelToday]}>
+                  {item.day}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </View>
 
@@ -265,6 +306,54 @@ const styles = StyleSheet.create({
   metaVal: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
   metaLabel: { fontSize: 11, color: '#A0A0A0', marginTop: 2 },
   metaDivider: { width: 1, height: 26, backgroundColor: '#262626' },
+
+  // Weekly Revenue Chart
+  chartCard: {
+    backgroundColor: '#181818',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  chartTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
+  chartSub: { fontSize: 12, color: '#05A357', marginTop: 2, fontWeight: '700', marginBottom: 16 },
+  barChartRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 120,
+  },
+  barCol: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  barVal: { fontSize: 9, color: '#A0A0A0', marginBottom: 4, fontWeight: '700' },
+  barTrack: {
+    width: 14,
+    height: 80,
+    backgroundColor: '#262626',
+    borderRadius: 7,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    backgroundColor: '#666666',
+    borderRadius: 7,
+  },
+  barFillToday: {
+    backgroundColor: '#05A357',
+  },
+  barLabel: {
+    fontSize: 10,
+    color: '#A0A0A0',
+    marginTop: 6,
+    fontWeight: '700',
+  },
+  barLabelToday: {
+    color: '#05A357',
+  },
 
   // Request Card
   requestCard: {

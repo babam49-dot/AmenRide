@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 // Import Screens
 import HomeScreen from './screens/HomeScreen';
@@ -39,6 +40,7 @@ function UberTabIcon({ name, focused }) {
 }
 
 function TabNavigator() {
+  const { t } = useLanguage();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -50,22 +52,24 @@ function TabNavigator() {
         tabBarLabelStyle: styles.tabBarLabel,
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Services" component={MapScreen} options={{ tabBarLabel: 'Services' }} />
-      <Tab.Screen name="Driver" component={DriverScreen} options={{ tabBarLabel: 'Driver' }} />
-      <Tab.Screen name="Account" component={SettingsScreen} options={{ tabBarLabel: 'Account' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: t('welcome')?.includes('WELCOME') ? 'Home' : 'መነሻ' }} />
+      <Tab.Screen name="Services" component={MapScreen} options={{ tabBarLabel: t('welcome')?.includes('WELCOME') ? 'Services' : 'ታክሲዎች' }} />
+      <Tab.Screen name="Driver" component={DriverScreen} options={{ tabBarLabel: t('welcome')?.includes('WELCOME') ? 'Driver' : 'አሽከርካሪ' }} />
+      <Tab.Screen name="Account" component={SettingsScreen} options={{ tabBarLabel: t('welcome')?.includes('WELCOME') ? 'Account' : 'መለያ' }} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Main" component={TabNavigator} />
-      </Stack.Navigator>
-      <StatusBar style="light" />
-    </NavigationContainer>
+    <LanguageProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Main" component={TabNavigator} />
+        </Stack.Navigator>
+        <StatusBar style="light" />
+      </NavigationContainer>
+    </LanguageProvider>
   );
 }
 

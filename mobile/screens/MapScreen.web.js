@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { fetchRideOptions } from '../services/tripsApi';
+import { useLanguage } from '../context/LanguageContext';
+import ReceiptModal from '../components/ReceiptModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,7 +22,7 @@ const MATCHING_STEPS = [
   '✅  Driver confirmed! En route to pickup.',
 ];
 
-// Uber Dark Map Leaflet HTML
+// Uber Dark Map Leaflet HTML with Animated GPS Driver Movement
 const UBER_MAP_HTML = `
 <!DOCTYPE html>
 <html>
@@ -40,7 +42,7 @@ const UBER_MAP_HTML = `
     }
     .leaflet-container { background: #000000 !important; }
 
-    /* Uber Pickup Pin (Black Square inside White) */
+    /* Pickup Pin */
     .pickup-pin {
       background: #FFFFFF;
       color: #000000;
@@ -50,12 +52,9 @@ const UBER_MAP_HTML = `
       font-weight: 800;
       box-shadow: 0 4px 16px rgba(255, 255, 255, 0.4);
       white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
-    /* Uber Dropoff Pin (Black Circle inside White) */
+    /* Dropoff Pin */
     .dropoff-pin {
       background: #000000;
       color: #FFFFFF;
@@ -66,12 +65,22 @@ const UBER_MAP_HTML = `
       font-weight: 800;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
       white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
-    /* Uber Driver Badges */
+    /* Animated Driver Badge */
+    .moving-driver-badge {
+      background: linear-gradient(135deg, #05A357, #047857);
+      color: #FFFFFF;
+      border: 2px solid #FFFFFF;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: 0 4px 16px rgba(5, 163, 87, 0.8);
+      white-space: nowrap;
+      transition: all 0.8s ease-in-out;
+    }
+
     .uber-car-badge {
       background: #FFFFFF;
       color: #000000;
@@ -100,9 +109,8 @@ const UBER_MAP_HTML = `
       zoomControl: true
     });
 
-    // Dark Tile Layer (CartoDB Dark Matter)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: '&copy; OpenStreetMap',
       subdomains: 'abcd',
       maxZoom: 19
     }).addTo(map);
@@ -118,7 +126,7 @@ const UBER_MAP_HTML = `
       [11.5936, 37.3950]
     ];
 
-    // Uber Signature White Route Polyline
+    // White Route Line
     L.polyline(routeCoordinates, {
       color: '#FFFFFF',
       weight: 5,
@@ -126,7 +134,7 @@ const UBER_MAP_HTML = `
       lineCap: 'round'
     }).addTo(map);
 
-    // Pickup Square Pin
+    // Pickup & Dropoff Markers
     L.marker(customerPickup, {
       icon: L.divIcon({
         className: 'custom-icon',
@@ -136,7 +144,6 @@ const UBER_MAP_HTML = `
       })
     }).addTo(map);
 
-    // Dropoff Circle Pin
     L.marker(destinationDropoff, {
       icon: L.divIcon({
         className: 'custom-icon',
@@ -146,23 +153,22 @@ const UBER_MAP_HTML = `
       })
     }).addTo(map);
 
-    // Nearby Uber Drivers
-    const drivers = [
-      { coords: [11.5965, 37.3865], label: '🚗 UberX' },
-      { coords: [11.5925, 37.3910], label: '🚙 Uber Comfort' },
-      { coords: [11.5950, 37.3970], label: '🏍️ Uber Moto' }
-    ];
+    // Live Moving Driver Marker along Bahir Dar roads
+    let routeStepIndex = 0;
+    const movingDriverMarker = L.marker(routeCoordinates[0], {
+      icon: L.divIcon({
+        className: 'custom-icon',
+        html: '<div class="moving-driver-badge">🚗 Live GPS: En Route</div>',
+        iconSize: [160, 32],
+        iconAnchor: [80, 16]
+      })
+    }).addTo(map);
 
-    drivers.forEach(d => {
-      L.marker(d.coords, {
-        icon: L.divIcon({
-          className: 'custom-icon',
-          html: '<div class="uber-car-badge">' + d.label + '</div>',
-          iconSize: [120, 28],
-          iconAnchor: [60, 14]
-        })
-      }).addTo(map);
-    });
+    // Animate Driver Movement along Bahir Dar Route every 2 seconds
+    setInterval(() => {
+      routeStepIndex = (routeStepIndex + 1) % routeCoordinates.length;
+      movingDriverMarker.setLatLng(routeCoordinates[routeStepIndex]);
+    }, 2000);
 
     map.fitBounds(L.polyline(routeCoordinates).getBounds(), { padding: [50, 50] });
   </script>
@@ -171,11 +177,13 @@ const UBER_MAP_HTML = `
 `;
 
 export default function MapScreen() {
+  const { t } = useLanguage();
   const [selectedRide, setSelectedRide] = useState(null);
   const [isRequested, setIsRequested] = useState(false);
   const [rideOptions, setRideOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [matchStep, setMatchStep] = useState(0);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const spinAnim = useRef(new Animated.Value(0)).current;
 
@@ -198,6 +206,7 @@ export default function MapScreen() {
         step += 1;
         if (step >= MATCHING_STEPS.length) {
           clearInterval(interval);
+          setShowReceipt(true); // Open Digital Receipt Modal upon confirmation!
         } else {
           setMatchStep(step);
         }
@@ -217,7 +226,7 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ── Uber Dark Leaflet Map ── */}
+      {/* ── Uber Dark Leaflet Map with GPS Driver Movement ── */}
       <View style={styles.mapContainer}>
         <iframe
           title="Uber Map"
@@ -245,12 +254,12 @@ export default function MapScreen() {
         {!isRequested ? (
           <>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Choose a ride</Text>
+            <Text style={styles.sheetTitle}>{t('chooseRide')}</Text>
 
             {loading ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.loadingText}>Loading options...</Text>
+                <Text style={styles.loadingText}>{t('loadingOptions')}</Text>
               </View>
             ) : (
               <ScrollView style={styles.optionsList} showsVerticalScrollIndicator={false}>
@@ -298,7 +307,7 @@ export default function MapScreen() {
             <Animated.Text style={[styles.spinEmoji, { transform: [{ rotate: spin }] }]}>
               🔄
             </Animated.Text>
-            <Text style={styles.matchTitle}>Requesting your ride...</Text>
+            <Text style={styles.matchTitle}>{t('requestingRide')}</Text>
             <View style={styles.stepsContainer}>
               {MATCHING_STEPS.map((step, i) => (
                 <Text
@@ -318,11 +327,25 @@ export default function MapScreen() {
               onPress={() => setIsRequested(false)}
               activeOpacity={0.9}
             >
-              <Text style={styles.cancelBtnText}>Cancel Request</Text>
+              <Text style={styles.cancelBtnText}>{t('cancelRequest')}</Text>
             </TouchableOpacity>
           </View>
         )}
       </View>
+
+      {/* Digital Receipt Modal */}
+      <ReceiptModal
+        visible={showReceipt}
+        onClose={() => {
+          setShowReceipt(false);
+          setIsRequested(false);
+        }}
+        tripData={{
+          fare: activeRide?.base_price || 210,
+          pickup_name: 'Felege Hiwot, Bahir Dar',
+          dropoff_name: 'Grand Resort Hotel, Lake Tana',
+        }}
+      />
     </View>
   );
 }
