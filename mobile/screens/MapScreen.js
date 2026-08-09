@@ -10,41 +10,38 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
 
 const { width, height } = Dimensions.get('window');
 
+// Real Bahir Dar, Ethiopia coordinates & region
 const BAHIR_DAR_REGION = {
-  latitude: 11.5936,
-  longitude: 37.3908,
-  latitudeDelta: 0.03,
-  longitudeDelta: 0.03,
+  latitude: 11.5958,
+  longitude: 37.3885,
+  latitudeDelta: 0.025,
+  longitudeDelta: 0.025,
 };
 
-const MATCHING_STEPS = [
-  '🔍  Locating nearby drivers...',
-  '📡  Connecting to AMEN Dispatcher...',
-  '🚗  Matching with best driver...',
-  '✅  Driver confirmed!',
+// Pickup & Dropoff coordinates in Bahir Dar
+const PICKUP_COORDS  = { latitude: 11.5980, longitude: 37.3820 }; // Felege Hiwot
+const DROPOFF_COORDS = { latitude: 11.5936, longitude: 37.3950 }; // Grand Resort Hotel, Lake Tana
+
+// Real street route polyline points in Bahir Dar
+const ROUTE_LINE = [
+  { latitude: 11.5980, longitude: 37.3820 },
+  { latitude: 11.5972, longitude: 37.3855 },
+  { latitude: 11.5960, longitude: 37.3888 },
+  { latitude: 11.5948, longitude: 37.3915 },
+  { latitude: 11.5936, longitude: 37.3950 },
 ];
 
-function CountdownTimer({ seconds, onExpire }) {
-  const [remaining, setRemaining] = useState(seconds);
-  useEffect(() => {
-    if (remaining <= 0) { onExpire?.(); return; }
-    const t = setTimeout(() => setRemaining((r) => r - 1), 1000);
-    return () => clearTimeout(t);
-  }, [remaining]);
-  return (
-    <View style={styles.timerContainer}>
-      <Text style={[styles.timerText, remaining <= 5 && { color: '#EF4444' }]}>{remaining}s</Text>
-      <View style={styles.timerBar}>
-        <View style={[styles.timerFill, { width: `${(remaining / seconds) * 100}%`, backgroundColor: remaining > 8 ? '#10B981' : '#EF4444' }]} />
-      </View>
-    </View>
-  );
-}
+const MATCHING_STEPS = [
+  '🔍  Locating nearby drivers in Bahir Dar...',
+  '📡  Connecting to AMEN Dispatcher...',
+  '🚗  Matching with best driver on Kebele 03 road...',
+  '✅  Driver confirmed!',
+];
 
 export default function MapScreen() {
   const [selectedRide, setSelectedRide] = useState(null);
@@ -86,33 +83,50 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Google MapView */}
+      {/* Real Google Map centered on Bahir Dar */}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={BAHIR_DAR_REGION}
         customMapStyle={darkMapStyle}
       >
-        <Marker
-          coordinate={{ latitude: 11.5936, longitude: 37.3908 }}
-          title="Pickup Location"
-          description="Bahir Dar City Center"
+        {/* Route Polyline (Directions Line) */}
+        <Polyline
+          coordinates={ROUTE_LINE}
+          strokeColor="#FF9500"
+          strokeWidth={5}
         />
-        <Marker
-          coordinate={{ latitude: 11.5986, longitude: 37.3938 }}
-          title="AMEN Driver"
-        >
+
+        {/* Pickup Location Marker */}
+        <Marker coordinate={PICKUP_COORDS} title="Pickup Location" description="Felege Hiwot, Bahir Dar">
+          <View style={styles.pickupMarker}>
+            <Text style={styles.markerText}>🟢 Pickup</Text>
+          </View>
+        </Marker>
+
+        {/* Dropoff Location Marker */}
+        <Marker coordinate={DROPOFF_COORDS} title="Dropoff Location" description="Grand Resort Hotel, Lake Tana">
+          <View style={styles.dropoffMarker}>
+            <Text style={styles.markerText}>🔴 Dropoff</Text>
+          </View>
+        </Marker>
+
+        {/* Active Driver Marker */}
+        <Marker coordinate={{ latitude: 11.5965, longitude: 37.3865 }} title="AMEN Driver">
           <View style={styles.driverMarker}>
             <Text style={{ fontSize: 20 }}>🚗</Text>
           </View>
         </Marker>
       </MapView>
 
-      {/* Floating Search Bar */}
+      {/* Floating Route Information Bar */}
       <View style={styles.topBar}>
         <View style={styles.searchBar}>
           <View style={styles.locationDot} />
-          <Text style={styles.searchText}>Bahir Dar City Center</Text>
+          <View style={styles.routeInfo}>
+            <Text style={styles.searchText}>Bahir Dar City · Lake Tana Route</Text>
+            <Text style={styles.searchSub}>4.2 km · 12 min drive</Text>
+          </View>
           <View style={styles.searchBadge}>
             <Text style={styles.searchBadgeText}>LIVE</Text>
           </View>
@@ -124,8 +138,8 @@ export default function MapScreen() {
         {!isRequested ? (
           <>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Where to, Rider?</Text>
-            <Text style={styles.sheetSub}>Select your ride type below</Text>
+            <Text style={styles.sheetTitle}>Where to in Bahir Dar?</Text>
+            <Text style={styles.sheetSub}>Select your ride option below</Text>
 
             {loading ? (
               <View style={styles.loadingRow}>
@@ -179,7 +193,7 @@ export default function MapScreen() {
           <View style={styles.matchmakingContainer}>
             <View style={styles.sheetHandle} />
             <Animated.Text style={[styles.spinEmoji, { transform: [{ rotate: spin }] }]}>🔄</Animated.Text>
-            <Text style={styles.matchTitle}>Finding your driver...</Text>
+            <Text style={styles.matchTitle}>Finding your driver in Bahir Dar...</Text>
             <View style={styles.stepsContainer}>
               {MATCHING_STEPS.map((step, i) => (
                 <Text key={i} style={[styles.stepText, i < matchStep && styles.stepDone, i === matchStep && styles.stepActive]}>
@@ -214,6 +228,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
   map: { width, height },
 
+  pickupMarker: {
+    backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#FFF',
+  },
+  dropoffMarker: {
+    backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#FFF',
+  },
+  markerText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
+
   driverMarker: {
     padding: 8, backgroundColor: '#1E293B',
     borderRadius: 22, borderWidth: 2, borderColor: '#FF9500',
@@ -224,15 +248,17 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#1E293B',
-    paddingVertical: 14, paddingHorizontal: 16,
+    paddingVertical: 12, paddingHorizontal: 16,
     borderRadius: 14, borderWidth: 1,
-    borderColor: 'rgba(255,149,0,0.25)',
+    borderColor: 'rgba(255,149,0,0.3)',
   },
   locationDot: {
     width: 10, height: 10, borderRadius: 5,
     backgroundColor: '#10B981', marginRight: 12,
   },
-  searchText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#F1F5F9' },
+  routeInfo: { flex: 1 },
+  searchText: { fontSize: 13, fontWeight: '700', color: '#F1F5F9' },
+  searchSub: { fontSize: 10, color: '#FF9500', marginTop: 1, fontWeight: '600' },
   searchBadge: {
     backgroundColor: '#FF9500', borderRadius: 6,
     paddingHorizontal: 8, paddingVertical: 3,
@@ -283,9 +309,4 @@ const styles = StyleSheet.create({
   stepText: { fontSize: 13, color: '#475569', marginBottom: 8, textAlign: 'center' },
   stepDone: { color: '#10B981' },
   stepActive: { color: '#FF9500', fontWeight: '700' },
-
-  timerContainer: { alignItems: 'center', gap: 4 },
-  timerText: { color: '#FFF', fontWeight: '800', fontSize: 16 },
-  timerBar: { width: 60, height: 4, backgroundColor: '#334155', borderRadius: 2, overflow: 'hidden' },
-  timerFill: { height: '100%', borderRadius: 2 },
 });
