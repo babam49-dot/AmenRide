@@ -44,6 +44,13 @@ export const translations = {
     driverAssigned: "Assigned Driver",
     paymentMethod: "Payment Method",
     closeReceipt: "Close Receipt",
+    // GPS & tracking
+    broadcastingGPS: "Broadcasting GPS",
+    acquiringGPS: "Acquiring GPS signal...",
+    gpsError: "GPS permission denied",
+    nearestDriver: "Nearest Driver",
+    driversNearby: "drivers nearby",
+    liveTracking: "Live Tracking Active",
   },
   am: {
     welcome: "እንኳን ወደ አሜን በደህና መጡ",
@@ -90,5 +97,12 @@ export const translations = {
     driverAssigned: "የተመደበ አሽከርካሪ",
     paymentMethod: "የክፍያ መንገድ",
     closeReceipt: "ዘጋ",
+    // GPS & tracking (Amharic)
+    broadcastingGPS: "GPS በመላክ ላይ",
+    acquiringGPS: "GPS ምልክት በመፈለግ ላይ...",
+    gpsError: "GPS ፈቃድ ተከልክሏል",
+    nearestDriver: "ቅርብ አሽከርካሪ",
+    driversNearby: "ቅርብ አሽከርካሪዎች",
+    liveTracking: "ቀጥታ ክትትል ንቁ ነው",
   },
 };
