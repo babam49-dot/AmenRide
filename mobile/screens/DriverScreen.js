@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
+import useDriverGPS from '../hooks/useDriverGPS';
 
 const WEEKLY_EARNINGS = [
   { day: 'Mon', amount: 1200 },
@@ -43,6 +44,12 @@ export default function DriverScreen() {
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // GPS hook — broadcasts real phone location to backend every 5s when online
+  const { location, error: gpsError, isTracking } = useDriverGPS({
+    driverId: driver?.id || 1,
+    isOnline,
+  });
+
   useEffect(() => {
     fetchDriver(1).then((d) => {
       setDriver(d);
@@ -71,6 +78,21 @@ export default function DriverScreen() {
         <Text style={styles.headerTitle}>{t('driverDashboard')}</Text>
         <Text style={styles.headerSub}>Bahir Dar Fleet Partner</Text>
       </View>
+
+      {/* GPS Status Badge */}
+      {isOnline && (
+        <View style={[styles.gpsBadge, isTracking ? styles.gpsBadgeActive : styles.gpsBadgeWaiting]}>
+          {isTracking && location ? (
+            <Text style={styles.gpsBadgeText}>
+              📡 Broadcasting GPS · {location.lat.toFixed(4)}°N, {location.lng.toFixed(4)}°E
+            </Text>
+          ) : gpsError ? (
+            <Text style={styles.gpsBadgeText}>⚠️ {gpsError}</Text>
+          ) : (
+            <Text style={styles.gpsBadgeText}>📍 Acquiring GPS signal...</Text>
+          )}
+        </View>
+      )}
 
       {loading && (
         <View style={styles.loadingBox}>
@@ -454,4 +476,27 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 14, color: '#A0A0A0' },
   rowVal: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   divider: { height: 1, backgroundColor: '#262626' },
+
+  // GPS broadcasting badge
+  gpsBadge: {
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+  },
+  gpsBadgeActive: {
+    backgroundColor: 'rgba(5,163,87,0.15)',
+    borderColor: '#05A357',
+  },
+  gpsBadgeWaiting: {
+    backgroundColor: '#181818',
+    borderColor: '#333333',
+  },
+  gpsBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#A0A0A0',
+    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+  },
 });
