@@ -35,7 +35,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* ── Uber Account Profile Header ── */}
+      {/* Account Profile Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('account')}</Text>
       </View>
@@ -51,8 +51,8 @@ export default function SettingsScreen() {
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{driver?.name || 'Amanuel Bekele'}</Text>
-            <Text style={styles.email}>{driver?.email || 'amanuel.b@amenride.com'}</Text>
+            <Text style={styles.name}>{driver?.name || 'Abebe Bikila'}</Text>
+            <Text style={styles.email}>{driver?.email || 'abebe.b@amenride.com'}</Text>
             <View style={styles.ratingBadge}>
               <Text style={styles.ratingText}>⭐ {driver?.rating || '4.92'}</Text>
             </View>
@@ -60,18 +60,18 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      {/* ── Uber Wallet Card ── */}
+      {/* Wallet Card */}
       <View style={styles.walletCard}>
         <View>
           <Text style={styles.walletLabel}>{t('uberCash')}</Text>
-          <Text style={styles.walletVal}>0.00 ETB</Text>
+          <Text style={styles.walletVal}>250.00 ETB</Text>
         </View>
         <TouchableOpacity style={styles.addFundsBtn}>
           <Text style={styles.addFundsText}>{t('addFunds')}</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Preferences ── */}
+      {/* Preferences */}
       <Text style={styles.sectionTitle}>{t('appPreferences')}</Text>
       <View style={styles.card}>
         <TouchableOpacity style={styles.row} onPress={toggleLanguage}>
@@ -84,8 +84,8 @@ export default function SettingsScreen() {
           <Switch
             value={darkMode}
             onValueChange={setDarkMode}
-            trackColor={{ false: '#333333', true: '#FFFFFF' }}
-            thumbColor={darkMode ? '#000000' : '#7C7C7C'}
+            trackColor={{ false: '#333333', true: '#00D154' }}
+            thumbColor={darkMode ? '#FFFFFF' : '#7C7C7C'}
           />
         </View>
         <View style={styles.divider} />
@@ -94,17 +94,17 @@ export default function SettingsScreen() {
           <Switch
             value={pushNotif}
             onValueChange={setPushNotif}
-            trackColor={{ false: '#333333', true: '#FFFFFF' }}
-            thumbColor={pushNotif ? '#000000' : '#7C7C7C'}
+            trackColor={{ false: '#333333', true: '#00D154' }}
+            thumbColor={pushNotif ? '#FFFFFF' : '#7C7C7C'}
           />
         </View>
       </View>
 
-      {/* ── Account Links ── */}
+      {/* Account Links */}
       <Text style={styles.sectionTitle}>{t('accountSafety')}</Text>
       <View style={styles.card}>
         {[
-          { label: 'Payment Methods', detail: '💳 Visa' },
+          { label: 'Payment Methods', detail: '💳 Telebirr / Cash' },
           { label: 'Safety Center', detail: '🛡️ Active' },
           { label: 'Terms & Privacy', detail: '›' },
           { label: 'Help & Support', detail: '›' },
@@ -119,12 +119,12 @@ export default function SettingsScreen() {
         ))}
       </View>
 
-      {/* ── Uber Sign Out ── */}
+      {/* Sign Out */}
       <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
         <Text style={styles.logoutText}>{t('signOut')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.versionText}>Uber AMEN v1.0.0 · Bahir Dar</Text>
+      <Text style={styles.versionText}>AMEN Ride v1.0.0 · Bahir Dar, Ethiopia 🇪🇹</Text>
 
       <View style={{ height: 100 }} />
     </ScrollView>
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#262626',
+    backgroundColor: '#00D154',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   rowDetail: {
     fontSize: 14,
-    color: '#05A357',
+    color: '#00D154',
     fontWeight: '700',
   },
   divider: { height: 1, backgroundColor: '#262626' },
