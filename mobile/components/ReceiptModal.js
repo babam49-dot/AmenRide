@@ -7,10 +7,10 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
 
   if (!tripData) return null;
 
-  const fare = tripData.fare || 210;
-  const baseFare = 80;
-  const distanceFare = Math.round(fare * 0.55);
-  const serviceFee = Math.round(fare * 0.1);
+  const fare = tripData.fare || tripData.estimated_fare || 210;
+  const baseFare = 50;
+  const distanceFare = Math.round(fare * 0.7);
+  const serviceFee = Math.max(10, Math.round(fare * 0.1));
   const total = baseFare + distanceFare + serviceFee;
 
   return (
@@ -22,8 +22,8 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
             <Text style={styles.brandTitle}>Uber <Text style={styles.greenText}>AMEN</Text></Text>
 
             <Text style={styles.receiptTitle}>{t('receiptTitle')}</Text>
-            <Text style={styles.receiptId}>Receipt ID: AMEN-BD-{Math.floor(1000 + Math.random() * 9000)}</Text>
-            <Text style={styles.dateText}>{new Date().toLocaleDateString()} · Bahir Dar</Text>
+            <Text style={styles.receiptId}>Receipt ID: AMEN-BD-{tripData.id || Math.floor(1000 + Math.random() * 9000)}</Text>
+            <Text style={styles.dateText}>{new Date().toLocaleDateString()} · Bahir Dar, Ethiopia 🇪🇹</Text>
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -33,7 +33,7 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
                 <View style={styles.pickupSquare} />
                 <View style={styles.routeTextCol}>
                   <Text style={styles.routeLabel}>PICKUP</Text>
-                  <Text style={styles.routeVal}>{tripData.pickup_name || 'Felege Hiwot, Bahir Dar'}</Text>
+                  <Text style={styles.routeVal}>{tripData.pickup_address || tripData.pickup_name || 'Felege Hiwot Hospital, Bahir Dar'}</Text>
                 </View>
               </View>
               <View style={styles.routeLine} />
@@ -41,7 +41,7 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
                 <View style={styles.dropoffCircle} />
                 <View style={styles.routeTextCol}>
                   <Text style={styles.routeLabel}>DROPOFF</Text>
-                  <Text style={styles.routeVal}>{tripData.dropoff_name || 'Grand Resort Hotel, Lake Tana'}</Text>
+                  <Text style={styles.routeVal}>{tripData.dropoff_address || tripData.dropoff_name || 'Grand Resort Hotel, Lake Tana'}</Text>
                 </View>
               </View>
             </View>
@@ -49,12 +49,14 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
             {/* Driver & Vehicle */}
             <View style={styles.driverBox}>
               <View style={styles.driverAvatar}>
-                <Text style={styles.avatarText}>AB</Text>
+                <Text style={styles.avatarText}>
+                  {(tripData.driver_name || 'Abebe Bikila').split(' ').map(n => n[0]).join('')}
+                </Text>
               </View>
               <View style={styles.driverInfo}>
                 <Text style={styles.driverLabel}>{t('driverAssigned')}</Text>
-                <Text style={styles.driverName}>Amanuel Bekele (⭐ 4.92)</Text>
-                <Text style={styles.vehicleText}>Toyota Corolla · BD-1234-AA</Text>
+                <Text style={styles.driverName}>{tripData.driver_name || 'Abebe Bikila'} (⭐ {tripData.driver_rating || '4.9'})</Text>
+                <Text style={styles.vehicleText}>{tripData.vehicle_type || 'Standard Bajaj'} · {tripData.vehicle_plate || 'BD-3-1029'}</Text>
               </View>
             </View>
 
