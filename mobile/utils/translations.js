@@ -51,6 +51,14 @@ export const translations = {
     nearestDriver: "Nearest Driver",
     driversNearby: "drivers nearby",
     liveTracking: "Live Tracking Active",
+    // New Trip Lifecycle keys
+    tripRequested: "Trip Requested",
+    driverAccepted: "Driver Accepted & On The Way",
+    driverArrived: "Driver Has Arrived",
+    tripInProgress: "Trip in Progress to Destination",
+    tripCompleted: "Trip Completed Successfully",
+    surgeApplied: "Peak Hours Surge Applied",
+    cashPayment: "Cash / Telebirr",
   },
   am: {
     welcome: "እንኳን ወደ አሜን በደህና መጡ",
@@ -104,5 +112,13 @@ export const translations = {
     nearestDriver: "ቅርብ አሽከርካሪ",
     driversNearby: "ቅርብ አሽከርካሪዎች",
     liveTracking: "ቀጥታ ክትትል ንቁ ነው",
+    // New Trip Lifecycle keys (Amharic)
+    tripRequested: "የጉዞ ጥያቄ ተልኳል",
+    driverAccepted: "አሽከርካሪ ጥያቄውን ተቀብሎ እየመጣ ነው",
+    driverArrived: "አሽከርካሪው ደርሷል",
+    tripInProgress: "ጉዞ በሂደት ላይ ነው",
+    tripCompleted: "ጉዞው በተሳካ ሁኔታ ተጠናቋል",
+    surgeApplied: "የከፍተኛ ሰዓት ተጨማሪ ክፍያ ታስቧል",
+    cashPayment: "በጥሬ ገንዘብ / ቴሌብር",
   },
 };
