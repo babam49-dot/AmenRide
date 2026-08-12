@@ -1,10 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-// ── Base URL Configuration ────────────────────────────────────────────────────
-// Android Emulator: 10.0.2.2 routes to host machine's localhost
-// iOS Simulator / Web: localhost
-// Physical device on WiFi: set to your machine's local IP (e.g. 192.168.1.X)
 const BASE_URL = Platform.select({
   android: 'http://10.0.2.2:5000',
   default: 'http://localhost:5000',
@@ -20,7 +16,7 @@ const api = axios.create({
   },
 });
 
-// ── Request interceptor — log outgoing requests in dev ───────────────────────
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     if (__DEV__) {
@@ -31,10 +27,29 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response interceptor — normalize errors ───────────────────────────────────
+// Response interceptor with automatic retry on network timeout
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const { config, response } = error;
+
+    // Retry up to 2 times on network failures or 5xx server errors
+    if (config && (!response || response.status >= 500)) {
+      config.__retryCount = config.__retryCount || 0;
+
+      if (config.__retryCount < 2) {
+        config.__retryCount += 1;
+        const backoffDelay = config.__retryCount * 1000;
+        
+        if (__DEV__) {
+          console.log(`⚠️ Network retry attempt #${config.__retryCount} after ${backoffDelay}ms...`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+        return api(config);
+      }
+    }
+
     const msg = error.response?.data?.error || error.message;
     if (__DEV__) {
       console.error(`✗ API Error [${error.response?.status || 'NETWORK'}]:`, msg);
