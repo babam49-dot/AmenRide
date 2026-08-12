@@ -3,15 +3,16 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch } from 're
 import { useLanguage } from '../context/LanguageContext';
 
 const DEMO_FLEET_DRIVERS = [
-  { id: 1, name: 'Amanuel Bekele', vehicle: 'Toyota Corolla (BD-1234-AA)', rating: 4.92, trips: 847, status: 'online' },
-  { id: 2, name: 'Tewodros Kassaye', vehicle: 'Hyundai Elantra (BD-5678-BB)', rating: 4.88, trips: 620, status: 'busy' },
-  { id: 3, name: 'Meron Tadesse', vehicle: 'TukTuk / Boda (BD-9101-CC)', rating: 4.95, trips: 1140, status: 'online' },
-  { id: 4, name: 'Yonas Gebre', vehicle: 'Toyota Vitz (BD-3412-DD)', rating: 4.79, trips: 310, status: 'offline' },
+  { id: 1, name: 'Abebe Bikila', vehicle: 'Standard Bajaj (BD-3-1029)', rating: 4.92, trips: 847, status: 'online' },
+  { id: 2, name: 'Tewodros Kassahun', vehicle: 'Executive Bajaj (BD-3-4820)', rating: 4.88, trips: 620, status: 'busy' },
+  { id: 3, name: 'Mulugeta Tesfaye', vehicle: 'Comfort Car (BD-2-7711)', rating: 4.95, trips: 1140, status: 'online' },
+  { id: 4, name: 'Aster Aweke', vehicle: 'Standard Bajaj (BD-3-9934)', rating: 4.79, trips: 310, status: 'offline' },
 ];
 
 export default function AdminConsole() {
   const { t } = useLanguage();
   const [drivers, setDrivers] = useState(DEMO_FLEET_DRIVERS);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const toggleDriverStatus = (id) => {
     setDrivers((prev) =>
@@ -23,10 +24,28 @@ export default function AdminConsole() {
     );
   };
 
+  const triggerFleetSimulation = () => {
+    setIsSimulating(true);
+    setTimeout(() => {
+      setIsSimulating(false);
+    }, 2000);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>🛡️ {t('adminConsole')}</Text>
-      <Text style={styles.headerSub}>Bahir Dar City Dispatch Control Center</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.headerTitle}>🛡️ {t('adminConsole')}</Text>
+          <Text style={styles.headerSub}>Bahir Dar City Dispatch Control Center</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.simBtn, isSimulating && styles.simBtnActive]}
+          onPress={triggerFleetSimulation}
+        >
+          <Text style={styles.simBtnText}>{isSimulating ? '⚡ Syncing...' : '📡 Sim GPS'}</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Stats Summary */}
       <View style={styles.statsGrid}>
@@ -36,7 +55,7 @@ export default function AdminConsole() {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>{t('activeFleet')}</Text>
-          <Text style={styles.statVal}>142 Cars</Text>
+          <Text style={styles.statVal}>142 Vehicles</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>{t('dailyTrips')}</Text>
@@ -44,7 +63,7 @@ export default function AdminConsole() {
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>{t('systemUptime')}</Text>
-          <Text style={[styles.statVal, { color: '#05A357' }]}>99.9%</Text>
+          <Text style={[styles.statVal, { color: '#00D154' }]}>99.9%</Text>
         </View>
       </View>
 
@@ -57,7 +76,7 @@ export default function AdminConsole() {
             <View style={styles.driverInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.driverName}>{d.name}</Text>
-                <View style={[styles.statusDot, { backgroundColor: d.status === 'online' ? '#05A357' : d.status === 'busy' ? '#FF9500' : '#7C7C7C' }]} />
+                <View style={[styles.statusDot, { backgroundColor: d.status === 'online' ? '#00D154' : d.status === 'busy' ? '#FF9500' : '#7C7C7C' }]} />
                 <Text style={styles.statusText}>{d.status.toUpperCase()}</Text>
               </View>
               <Text style={styles.vehicleText}>{d.vehicle}</Text>
@@ -65,7 +84,7 @@ export default function AdminConsole() {
             </View>
 
             <Switch
-              trackColor={{ false: '#333333', true: '#05A357' }}
+              trackColor={{ false: '#333333', true: '#00D154' }}
               thumbColor="#FFFFFF"
               value={d.status === 'online'}
               onValueChange={() => toggleDriverStatus(d.id)}
@@ -86,6 +105,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#262626',
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
@@ -96,6 +120,22 @@ const styles = StyleSheet.create({
     color: '#A0A0A0',
     marginTop: 2,
     marginBottom: 16,
+  },
+  simBtn: {
+    backgroundColor: '#262626',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#38383A',
+  },
+  simBtnActive: {
+    backgroundColor: '#00D154',
+  },
+  simBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   statsGrid: {
     flexDirection: 'row',
