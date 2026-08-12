@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
+import DriverStatusBadge from '../components/DriverStatusBadge';
 
 const { width, height } = Dimensions.get('window');
 
@@ -86,7 +87,7 @@ export default function MapScreen() {
         initialRegion={BAHIR_DAR_REGION}
         customMapStyle={uberDarkMapStyle}
       >
-        <Polyline coordinates={ROUTE_LINE} strokeColor="#FFFFFF" strokeWidth={5} />
+        <Polyline coordinates={ROUTE_LINE} strokeColor="#00D154" strokeWidth={5} />
 
         <Marker coordinate={PICKUP_COORDS} title="Pickup">
           <View style={styles.pickupPin}>
@@ -102,7 +103,7 @@ export default function MapScreen() {
 
         <Marker coordinate={{ latitude: 11.5965, longitude: 37.3865 }} title="Driver">
           <View style={styles.driverBadge}>
-            <Text style={{ fontSize: 16 }}>🚗 UberX</Text>
+            <Text style={{ fontSize: 16 }}>🚗 Abebe (Standard Bajaj)</Text>
           </View>
         </Marker>
       </MapView>
@@ -125,7 +126,10 @@ export default function MapScreen() {
         {!isRequested ? (
           <>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Choose a ride</Text>
+            <View style={styles.titleHeaderRow}>
+              <Text style={styles.sheetTitle}>Choose a ride</Text>
+              <DriverStatusBadge isOnline={true} />
+            </View>
 
             {loading ? (
               <View style={styles.loadingRow}>
@@ -166,7 +170,7 @@ export default function MapScreen() {
               disabled={!activeRide}
               activeOpacity={0.9}
             >
-              <Text style={styles.uberConfirmBtnText}>Choose {activeRide?.name || 'UberX'}</Text>
+              <Text style={styles.uberConfirmBtnText}>Choose {activeRide?.name || 'Standard Bajaj'}</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -232,7 +236,8 @@ const styles = StyleSheet.create({
     maxHeight: height * 0.55,
   },
   sheetHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#333333', alignSelf: 'center', marginBottom: 14 },
-  sheetTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
+  titleHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sheetTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
   loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 10 },
   loadingText: { color: '#A0A0A0', fontSize: 13 },
   optionsList: { maxHeight: 220, marginBottom: 16 },
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
   matchTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 },
   stepsContainer: { width: '100%', marginBottom: 16 },
   stepText: { fontSize: 13, color: '#7C7C7C', marginBottom: 8, textAlign: 'center' },
-  stepDone: { color: '#05A357' },
+  stepDone: { color: '#00D154' },
   stepActive: { color: '#FFFFFF', fontWeight: '800' },
   cancelBtn: { backgroundColor: '#262626', borderRadius: 30, paddingVertical: 14, paddingHorizontal: 30, width: '100%', alignItems: 'center' },
   cancelBtnText: { color: '#FF3B30', fontWeight: '800', fontSize: 15 },
