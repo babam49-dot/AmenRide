@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
@@ -44,7 +45,6 @@ export default function DriverScreen() {
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // GPS hook — broadcasts real phone location to backend every 5s when online
   const { location, error: gpsError, isTracking } = useDriverGPS({
     driverId: driver?.id || 1,
     isOnline,
@@ -73,10 +73,10 @@ export default function DriverScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* ── Uber Driver Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('driverDashboard')}</Text>
-        <Text style={styles.headerSub}>Bahir Dar Fleet Partner</Text>
+        <Text style={styles.headerSub}>Bahir Dar Fleet Partner 🇪🇹</Text>
       </View>
 
       {/* GPS Status Badge */}
@@ -101,7 +101,7 @@ export default function DriverScreen() {
         </View>
       )}
 
-      {/* ── Uber Online/Offline Toggle Button ── */}
+      {/* Online/Offline Banner */}
       <TouchableOpacity
         style={[styles.statusBanner, isOnline ? styles.statusOnline : styles.statusOffline]}
         onPress={toggleOnline}
@@ -115,7 +115,7 @@ export default function DriverScreen() {
         </View>
 
         <Switch
-          trackColor={{ false: '#333333', true: '#05A357' }}
+          trackColor={{ false: '#333333', true: '#00D154' }}
           thumbColor="#FFFFFF"
           ios_backgroundColor="#262626"
           onValueChange={toggleOnline}
@@ -123,7 +123,7 @@ export default function DriverScreen() {
         />
       </TouchableOpacity>
 
-      {/* ── Uber Net Earnings Hero Card ── */}
+      {/* Net Earnings Hero Card */}
       <View style={styles.earningsCard}>
         <Text style={styles.earningsLabel}>{t('netEarnings')}</Text>
         <Text style={styles.earningsVal}>{earnings.toLocaleString()} ETB</Text>
@@ -146,7 +146,7 @@ export default function DriverScreen() {
         </View>
       </View>
 
-      {/* ── Weekly Revenue Bar Chart ── */}
+      {/* Weekly Revenue Bar Chart */}
       <View style={styles.chartCard}>
         <Text style={styles.chartTitle}>Weekly Revenue Breakdown</Text>
         <Text style={styles.chartSub}>Total Week: 10,200 ETB</Text>
@@ -175,7 +175,7 @@ export default function DriverScreen() {
         </View>
       </View>
 
-      {/* ── Uber Trip Request Alert ── */}
+      {/* Trip Request Dispatch Modal */}
       {isOnline && hasRequest && (
         <View style={styles.requestCard}>
           <View style={styles.requestHeader}>
@@ -200,25 +200,29 @@ export default function DriverScreen() {
 
             <TouchableOpacity
               style={styles.acceptBtn}
-              onPress={() => { alert('Uber Trip Accepted! 🚗'); setHasRequest(false); }}
+              onPress={() => {
+                if (Platform.OS === 'web') alert('AMEN Trip Accepted! 🚗');
+                else Alert.alert('Trip Accepted', 'Heading to Bahir Dar Airport pickup point.');
+                setHasRequest(false);
+              }}
             >
-              <Text style={styles.acceptBtnText}>Accept Uber Trip</Text>
+              <Text style={styles.acceptBtnText}>Accept AMEN Ride</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* ── Driver Vehicle & Profile Info ── */}
+      {/* Account Details */}
       <Text style={styles.sectionTitle}>Account Details</Text>
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Vehicle</Text>
-          <Text style={styles.rowVal}>{driver?.vehicle_type || 'Toyota Corolla'}</Text>
+          <Text style={styles.rowVal}>{driver?.vehicle_type || 'Standard Bajaj'}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
           <Text style={styles.rowLabel}>License Plate</Text>
-          <Text style={styles.rowVal}>{driver?.vehicle_plate || 'BD-1234-AA'}</Text>
+          <Text style={styles.rowVal}>{driver?.vehicle_plate || 'BD-3-1029'}</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.row}>
@@ -266,7 +270,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Status Banner
   statusBanner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -278,7 +281,7 @@ const styles = StyleSheet.create({
     borderColor: '#262626',
   },
   statusOnline: {
-    backgroundColor: '#05A357',
+    backgroundColor: '#00D154',
   },
   statusOffline: {
     backgroundColor: '#181818',
@@ -294,7 +297,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Earnings
   earningsCard: {
     backgroundColor: '#181818',
     borderRadius: 20,
@@ -329,7 +331,6 @@ const styles = StyleSheet.create({
   metaLabel: { fontSize: 11, color: '#A0A0A0', marginTop: 2 },
   metaDivider: { width: 1, height: 26, backgroundColor: '#262626' },
 
-  // Weekly Revenue Chart
   chartCard: {
     backgroundColor: '#181818',
     borderRadius: 20,
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     borderColor: '#262626',
   },
   chartTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
-  chartSub: { fontSize: 12, color: '#05A357', marginTop: 2, fontWeight: '700', marginBottom: 16 },
+  chartSub: { fontSize: 12, color: '#00D154', marginTop: 2, fontWeight: '700', marginBottom: 16 },
   barChartRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   barFillToday: {
-    backgroundColor: '#05A357',
+    backgroundColor: '#00D154',
   },
   barLabel: {
     fontSize: 10,
@@ -374,17 +375,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   barLabelToday: {
-    color: '#05A357',
+    color: '#00D154',
   },
 
-  // Request Card
   requestCard: {
     backgroundColor: '#181818',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#05A357',
+    borderColor: '#00D154',
   },
   requestHeader: {
     flexDirection: 'row',
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   requestBadge: {
-    color: '#05A357',
+    color: '#00D154',
     fontWeight: '900',
     fontSize: 14,
   },
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
   declineBtnText: { color: '#A0A0A0', fontWeight: '800' },
   acceptBtn: {
     flex: 1,
-    backgroundColor: '#05A357',
+    backgroundColor: '#00D154',
     borderRadius: 25,
     paddingVertical: 14,
     alignItems: 'center',
@@ -477,7 +477,6 @@ const styles = StyleSheet.create({
   rowVal: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   divider: { height: 1, backgroundColor: '#262626' },
 
-  // GPS broadcasting badge
   gpsBadge: {
     borderRadius: 12,
     paddingHorizontal: 14,
@@ -486,8 +485,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   gpsBadgeActive: {
-    backgroundColor: 'rgba(5,163,87,0.15)',
-    borderColor: '#05A357',
+    backgroundColor: 'rgba(0,209,84,0.15)',
+    borderColor: '#00D154',
   },
   gpsBadgeWaiting: {
     backgroundColor: '#181818',
