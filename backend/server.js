@@ -14,13 +14,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Request logger middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[HTTP] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+  });
+  next();
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/trips',        require('./routes/trips'));
 app.use('/api/driver',       require('./routes/driver'));
 app.use('/api/ride-options', require('./routes/rideOptions'));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
-// GET /health — returns server status, DB connection, and fleet stats
 app.get('/health', async (req, res) => {
   let dbStatus = 'disconnected';
   let onlineDrivers = 0;
@@ -55,10 +64,38 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
+// ─── 404 & Global Error Middleware ───────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Endpoint ${req.originalUrl} does not exist on AMEN Ride API.`,
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err.stack);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err.message || 'An unexpected error occurred.',
+  });
+});
+
+// ─── Start Server & Graceful Shutdown ─────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚗 AMEN Ride server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   console.log(`📍 Health: http://localhost:${PORT}/health`);
   console.log(`🗺️  Nearby: http://localhost:${PORT}/api/driver/nearby?lat=11.5936&lng=37.3908`);
+});
+
+// Graceful Shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server...');
+  server.close(() => {
+    console.log('HTTP server closed.');
+    pool.end(() => {
+      console.log('Database pool closed.');
+      process.exit(0);
+    });
+  });
 });
