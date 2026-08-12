@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -23,22 +23,19 @@ const UBER_SUGGESTIONS = [
   { name: 'Intercity', sub: 'Long distance', emoji: '🚌', screen: 'Services' },
 ];
 
-function formatTimeAgo(dateStr) {
-  if (!dateStr) return '';
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 3600) return `${Math.round(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.round(diff / 3600)}h ago`;
-  return `${Math.round(diff / 86400)}d ago`;
-}
+const POPULAR_DESTINATIONS = [
+  { title: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar' },
+  { title: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore' },
+  { title: 'Blue Nile Bridge', subtitle: 'Abay River Crossing' },
+];
 
 export default function HomeScreen({ navigation }) {
   const { lang, toggleLanguage, t } = useLanguage();
-  const [activeRole, setActiveRole] = useState('rider'); // 'rider' | 'driver' | 'admin'
+  const [activeRole, setActiveRole] = useState('rider');
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [selectedReceiptTrip, setSelectedReceiptTrip] = useState(null);
 
-  // Load trips from PostgreSQL
   useEffect(() => {
     fetchTrips(1).then((data) => {
       setTrips(data);
@@ -48,19 +45,17 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* ── Uber Top Brand Header & Role Switcher & Language Toggle ── */}
+      {/* Top Header */}
       <View style={styles.topRow}>
         <Text style={styles.uberLogo}>
           Uber <Text style={styles.uberSubLogo}>AMEN</Text>
         </Text>
 
         <View style={styles.headerRightRow}>
-          {/* Language Toggle Button */}
           <TouchableOpacity style={styles.langPill} onPress={toggleLanguage}>
             <Text style={styles.langText}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
           </TouchableOpacity>
 
-          {/* Role Toggle */}
           <View style={styles.roleContainer}>
             {[
               { key: 'rider', label: 'Rider' },
@@ -81,7 +76,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      {/* ── Uber "Where to?" Search Bar ── */}
+      {/* Where to Search Bar */}
       <TouchableOpacity
         style={styles.searchPill}
         onPress={() => navigation.navigate('Services')}
@@ -95,12 +90,28 @@ export default function HomeScreen({ navigation }) {
         </View>
       </TouchableOpacity>
 
-      {/* ── Admin Fleet Console View (When Admin Role is Active) ── */}
+      {/* Quick Destination Chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
+        {POPULAR_DESTINATIONS.map((dest, idx) => (
+          <TouchableOpacity
+            key={idx}
+            style={styles.chip}
+            onPress={() => navigation.navigate('Services', { destination: dest.title })}
+          >
+            <Text style={styles.chipIcon}>📍</Text>
+            <View>
+              <Text style={styles.chipTitle}>{dest.title}</Text>
+              <Text style={styles.chipSub}>{dest.subtitle}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Role specific content */}
       {activeRole === 'admin' ? (
         <AdminConsole />
       ) : (
         <>
-          {/* ── Uber Suggestions Grid ── */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t('suggestions')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Services')}>
@@ -125,15 +136,14 @@ export default function HomeScreen({ navigation }) {
             ))}
           </View>
 
-          {/* ── Uber Promo Hero Card ── */}
           <View style={styles.promoCard}>
             <View style={styles.promoTextContainer}>
-              <Text style={styles.promoBadge}>Uber AMEN Bahir Dar</Text>
+              <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
               <Text style={styles.promoTitle}>{t('goAnywhere')}</Text>
               <Text style={styles.promoDesc}>
                 {activeRole === 'driver'
-                  ? 'Today: 1,450 ETB Earned · 8 Trips Done in Bahir Dar'
-                  : 'Affordable, reliable rides available 24/7 across Bahir Dar.'}
+                  ? 'Today: 1,450 ETB Earned · 8 Trips Completed'
+                  : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
               </Text>
 
               <TouchableOpacity
@@ -152,7 +162,7 @@ export default function HomeScreen({ navigation }) {
         </>
       )}
 
-      {/* ── Recent Activity / Trips (PostgreSQL Data) ── */}
+      {/* Recent Trips */}
       <View style={styles.recentSection}>
         <Text style={styles.sectionTitle}>{t('recentActivity')}</Text>
 
@@ -185,7 +195,6 @@ export default function HomeScreen({ navigation }) {
         )}
       </View>
 
-      {/* Digital Receipt Modal */}
       <ReceiptModal
         visible={!!selectedReceiptTrip}
         onClose={() => setSelectedReceiptTrip(null)}
@@ -204,8 +213,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'web' ? 20 : 52,
   },
-
-  // Header
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -224,7 +231,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   uberSubLogo: {
-    color: '#05A357',
+    color: '#00D154',
     fontWeight: '700',
   },
   langPill: {
@@ -264,8 +271,6 @@ const styles = StyleSheet.create({
   roleTextActive: {
     color: '#000000',
   },
-
-  // Search Bar
   searchPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,7 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 14,
     paddingHorizontal: 18,
-    marginBottom: 24,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#262626',
   },
@@ -298,8 +303,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-
-  // Suggestions Grid
+  chipsScroll: {
+    marginBottom: 20,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#181818',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  chipIcon: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  chipTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chipSub: {
+    color: '#8E8E93',
+    fontSize: 10,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -352,8 +382,6 @@ const styles = StyleSheet.create({
     color: '#A0A0A0',
     marginTop: 2,
   },
-
-  // Promo Card
   promoCard: {
     backgroundColor: '#181818',
     borderRadius: 20,
@@ -366,7 +394,7 @@ const styles = StyleSheet.create({
   promoBadge: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#05A357',
+    color: '#00D154',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 6,
@@ -395,8 +423,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
-
-  // Recent Activity
   recentSection: {
     marginBottom: 20,
     marginTop: 10,
@@ -452,7 +478,7 @@ const styles = StyleSheet.create({
   },
   receiptTag: {
     fontSize: 10,
-    color: '#05A357',
+    color: '#00D154',
     fontWeight: '700',
     marginTop: 3,
   },
