@@ -12,7 +12,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'X-App-Name': 'AMEN-Ride',
-    'X-App-Version': '1.0.0',
+    'X-App-Version': '1.1.0',
+
   },
 });
 
