@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react me-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
+
 
 const RATING_TAGS = ['Smooth Drive', 'Polite Driver', 'Clean Vehicle', 'Great Route', 'Punctual'];
 
