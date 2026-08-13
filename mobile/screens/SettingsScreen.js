@@ -8,16 +8,32 @@ import {
   Switch,
   Platform,
   ActivityIndicator,
+  Image,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
+
+const AVATAR_PRESETS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+];
 
 export default function SettingsScreen() {
   const { lang, toggleLanguage, t } = useLanguage();
-  const [darkMode, setDarkMode]   = useState(true);
+  const { mode, theme, toggleTheme } = useTheme();
+
   const [pushNotif, setPushNotif] = useState(true);
   const [driver, setDriver]       = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [avatarUri, setAvatarUri] = useState(AVATAR_PRESETS[0]);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [emergencyPhone, setEmergencyPhone]     = useState('+251911999888');
+  const [notifMessage, setNotifMessage]         = useState('');
 
   useEffect(() => {
     fetchDriver(1).then((d) => {
@@ -26,32 +42,65 @@ export default function SettingsScreen() {
     });
   }, []);
 
-  const initials = driver?.name
-    ?.split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'AB';
+  const triggerNotifToast = (msg) => {
+    setNotifMessage(msg);
+    setTimeout(() => setNotifMessage(''), 3500);
+  };
+
+  const handlePushNotifToggle = (val) => {
+    setPushNotif(val);
+    if (val) {
+      triggerNotifToast('🔔 Push Notifications Enabled! You will receive live ride & safety alerts.');
+    } else {
+      triggerNotifToast('🔕 Push Notifications Disabled.');
+    }
+  };
+
+  const handlePhotoSelect = (uri) => {
+    setAvatarUri(uri);
+    setShowAvatarPicker(false);
+    triggerNotifToast('📷 Profile photo updated successfully!');
+  };
+
+  const isDark = mode === 'dark';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
+      contentContainerStyle={styles.contentContainer}
+    >
+      {/* Toast Notification Banner */}
+      {notifMessage ? (
+        <View style={styles.toastBanner}>
+          <Text style={styles.toastText}>{notifMessage}</Text>
+        </View>
+      ) : null}
+
       {/* Account Profile Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('account')}</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+          {t('account')}
+        </Text>
       </View>
 
       {loading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color="#FFFFFF" size="small" />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <ActivityIndicator color="#0D9488" size="small" />
+          <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }}>Loading profile...</Text>
         </View>
       ) : (
-        <View style={styles.profileRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
+        <View style={[styles.profileRow, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
+          <TouchableOpacity style={styles.avatarContainer} onPress={() => setShowAvatarPicker(!showAvatarPicker)}>
+            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+            <View style={styles.cameraBadge}>
+              <Text style={styles.cameraIcon}>📷</Text>
+            </View>
+          </TouchableOpacity>
+
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{driver?.name || 'Abebe Bikila'}</Text>
+            <Text style={[styles.name, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+              {driver?.name || 'Abebe Bikila'}
+            </Text>
             <Text style={styles.email}>{driver?.email || 'abebe.b@amenride.com'}</Text>
             <View style={styles.ratingBadge}>
               <Text style={styles.ratingText}>⭐ {driver?.rating || '4.92'}</Text>
@@ -60,73 +109,121 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      {/* Wallet Card */}
-      <View style={styles.walletCard}>
-        <View>
-          <Text style={styles.walletLabel}>{t('uberCash')}</Text>
-          <Text style={styles.walletVal}>250.00 ETB</Text>
+      {/* Avatar Picker Section */}
+      {showAvatarPicker && (
+        <View style={[styles.avatarPickerBox, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
+          <Text style={[styles.pickerTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Choose Profile Photo
+          </Text>
+          <View style={styles.presetRow}>
+            {AVATAR_PRESETS.map((url, idx) => (
+              <TouchableOpacity key={idx} onPress={() => handlePhotoSelect(url)}>
+                <Image
+                  source={{ uri: url }}
+                  style={[styles.presetThumb, avatarUri === url && styles.presetThumbActive]}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-        <TouchableOpacity style={styles.addFundsBtn}>
+      )}
+
+      {/* Wallet Card */}
+      <View style={[styles.walletCard, { backgroundColor: isDark ? '#142E35' : '#E6FFFA' }]}>
+        <View>
+          <Text style={[styles.walletLabel, { color: isDark ? '#5EEAD4' : '#0F766E' }]}>
+            {t('uberCash')} Balance
+          </Text>
+          <Text style={[styles.walletVal, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            250.00 ETB
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.addFundsBtn}
+          onPress={() => triggerNotifToast('💳 Telebirr Top-Up Initiated for 100 ETB')}
+        >
           <Text style={styles.addFundsText}>{t('addFunds')}</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Preferences */}
-      <Text style={styles.sectionTitle}>{t('appPreferences')}</Text>
-      <View style={styles.card}>
+      {/* App Preferences */}
+      <Text style={[styles.sectionTitle, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+        {t('appPreferences')}
+      </Text>
+
+      <View style={[styles.card, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
         <TouchableOpacity style={styles.row} onPress={toggleLanguage}>
-          <Text style={styles.rowText}>{t('language')}</Text>
+          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            {t('language')}
+          </Text>
           <Text style={styles.rowDetail}>{lang === 'en' ? 'English (EN)' : 'አማርኛ (AM)'}</Text>
         </TouchableOpacity>
-        <View style={styles.divider} />
+
+        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
+
         <View style={styles.row}>
-          <Text style={styles.rowText}>Dark Mode</Text>
+          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Dark Mode ({isDark ? 'ON' : 'OFF'})
+          </Text>
           <Switch
-            value={darkMode}
-            onValueChange={setDarkMode}
-            trackColor={{ false: '#333333', true: '#00D154' }}
-            thumbColor={darkMode ? '#FFFFFF' : '#7C7C7C'}
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: '#CBD5E1', true: '#0D9488' }}
+            thumbColor={isDark ? '#FFFFFF' : '#7C7C7C'}
           />
         </View>
-        <View style={styles.divider} />
+
+        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
+
         <View style={styles.row}>
-          <Text style={styles.rowText}>Push Notifications</Text>
+          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Push Notifications
+          </Text>
           <Switch
             value={pushNotif}
-            onValueChange={setPushNotif}
-            trackColor={{ false: '#333333', true: '#00D154' }}
+            onValueChange={handlePushNotifToggle}
+            trackColor={{ false: '#CBD5E1', true: '#0D9488' }}
             thumbColor={pushNotif ? '#FFFFFF' : '#7C7C7C'}
           />
         </View>
       </View>
 
-      {/* Account Links */}
-      <Text style={styles.sectionTitle}>{t('accountSafety')}</Text>
-      <View style={styles.card}>
-        {[
-          { label: 'Payment Methods', detail: '💳 Telebirr / Cash' },
-          { label: 'Safety Center', detail: '🛡️ Active' },
-          { label: 'Terms & Privacy', detail: '›' },
-          { label: 'Help & Support', detail: '›' },
-        ].map((item, i, arr) => (
-          <View key={item.label}>
-            <TouchableOpacity style={styles.row}>
-              <Text style={styles.rowText}>{item.label}</Text>
-              <Text style={styles.rowDetail}>{item.detail}</Text>
-            </TouchableOpacity>
-            {i < arr.length - 1 && <View style={styles.divider} />}
-          </View>
-        ))}
+      {/* Safety & Security */}
+      <Text style={[styles.sectionTitle, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+        🛡️ Safety & Trusted Contacts
+      </Text>
+
+      <View style={[styles.card, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => triggerNotifToast('🚨 Live Trip Tracking link copied to clipboard!')}
+        >
+          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Share Trip Status
+          </Text>
+          <Text style={styles.rowDetail}>Copy Link 🔗</Text>
+        </TouchableOpacity>
+
+        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
+
+        <View style={styles.columnRow}>
+          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Trusted Emergency Contact
+          </Text>
+          <TextInput
+            style={[
+              styles.phoneInput,
+              {
+                backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+                color: isDark ? '#F8FAFC' : '#0F172A',
+                borderColor: isDark ? '#334155' : '#E2E8F0',
+              },
+            ]}
+            value={emergencyPhone}
+            onChangeText={setEmergencyPhone}
+          />
+        </View>
       </View>
-
-      {/* Sign Out */}
-      <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
-        <Text style={styles.logoutText}>{t('signOut')}</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.versionText}>AMEN Ride v1.0.0 · Bahir Dar, Ethiopia 🇪🇹</Text>
-
-      <View style={{ height: 100 }} />
     </ScrollView>
   );
 }
@@ -134,157 +231,185 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'web' ? 20 : 52,
-    paddingBottom: 40,
+    padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
-
+  toastBanner: {
+    backgroundColor: '#0D9488',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 14,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+    textAlign: 'center',
+  },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800',
   },
   loadingBox: {
+    padding: 24,
     alignItems: 'center',
-    paddingVertical: 20,
   },
-  loadingText: { color: '#A0A0A0', fontSize: 13 },
-
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 2,
   },
-  avatar: {
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 16,
+  },
+  avatarImage: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#00D154',
-    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#0D9488',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#0D9488',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#333333',
+    justifyContent: 'center',
   },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '900',
+  cameraIcon: {
+    fontSize: 12,
   },
-  profileInfo: { flex: 1 },
+  profileInfo: {
+    flex: 1,
+  },
   name: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
   },
   email: {
     fontSize: 13,
-    color: '#A0A0A0',
+    color: '#64748B',
     marginTop: 2,
   },
   ratingBadge: {
-    backgroundColor: '#181818',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
     alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
     marginTop: 6,
   },
   ratingText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
+    color: '#D97706',
   },
-
+  avatarPickerBox: {
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  pickerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  presetThumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  presetThumbActive: {
+    borderColor: '#0D9488',
+  },
   walletCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#181818',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 26,
-    borderWidth: 1,
-    borderColor: '#262626',
+    justifyContent: 'space-between',
+    padding: 18,
+    borderRadius: 14,
+    marginBottom: 20,
   },
   walletLabel: {
-    fontSize: 12,
-    color: '#A0A0A0',
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
   },
   walletVal: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
     marginTop: 4,
   },
   addFundsBtn: {
-    backgroundColor: '#262626',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    backgroundColor: '#0D9488',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   addFundsText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
+    fontSize: 13,
   },
-
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 12,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+    marginLeft: 4,
   },
   card: {
-    backgroundColor: '#181818',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#262626',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginBottom: 20,
+    elevation: 2,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+  },
+  columnRow: {
+    paddingVertical: 12,
   },
   rowText: {
     fontSize: 15,
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   rowDetail: {
-    fontSize: 14,
-    color: '#00D154',
-    fontWeight: '700',
+    fontSize: 13,
+    color: '#0D9488',
+    fontWeight: '600',
   },
-  divider: { height: 1, backgroundColor: '#262626' },
-
-  logoutBtn: {
-    backgroundColor: '#181818',
-    borderRadius: 25,
-    paddingVertical: 16,
-    alignItems: 'center',
+  divider: {
+    height: 1,
+  },
+  phoneInput: {
     borderWidth: 1,
-    borderColor: '#262626',
-    marginBottom: 24,
-  },
-  logoutText: {
-    color: '#EF4444',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  versionText: {
-    textAlign: 'center',
-    color: '#7C7C7C',
-    fontSize: 11,
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    fontSize: 14,
   },
 });
