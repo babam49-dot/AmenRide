@@ -13,6 +13,7 @@ import {
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
 import useDriverGPS from '../hooks/useDriverGPS';
+import EmergencyButton from '../components/EmergencyButton';
 
 const WEEKLY_EARNINGS = [
   { day: 'Mon', amount: 1200 },
