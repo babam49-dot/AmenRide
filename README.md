@@ -16,7 +16,9 @@
 - **Real Bahir Dar Map** — OpenStreetMap & MapView dark tiles showing actual city streets
 - **Live Driver Tracking** — See nearest available drivers on map in real time with location updates
 - **Ride Booking & Peak Surge Pricing** — Choose between Standard Bajaj, Executive Bajaj, and Comfort Car
-- **Digital Trip Receipt** — Itemized ETB fare breakdown with Telebirr payment integration
+- **Digital Trip Receipt & Payment Gateway** — Integrated Telebirr & CBE Birr local payment processing
+- **Post-Trip Driver Ratings** — Interactive 5-star rating system, feedback tags, and reviews
+- **One-Tap Emergency SOS Alert** — Live GPS dispatch to local Bahir Dar police lines
 - **Amharic / English** — Full bilingual support (አማርኛ + English)
 
 ### Driver Partner
