@@ -9,15 +9,22 @@ import {
   TextInput,
 } from 'react-native';
 import { fetchRideOptions } from '../services/tripsApi';
+import { useTheme } from '../context/ThemeContext';
 import RatingModal from '../components/RatingModal';
 
 const { width, height } = Dimensions.get('window');
 const API_BASE = 'http://localhost:5000/api';
 
-const CUSTOMER_LAT = 11.5936;
-const CUSTOMER_LNG = 37.3908;
+const BAHIR_DAR_PRESETS = [
+  { name: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar', lat: 11.5980, lng: 37.3820 },
+  { name: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore', lat: 11.5936, lng: 37.3950 },
+  { name: 'Blue Nile Bridge', subtitle: 'Abay River Crossing', lat: 11.6050, lng: 37.3810 },
+  { name: 'Bahir Dar University', subtitle: 'Kebele 11, Bahir Dar', lat: 11.5850, lng: 37.3780 },
+  { name: 'Poly-Technic College', subtitle: 'Kebele 08, Bahir Dar', lat: 11.5900, lng: 37.3850 },
+  { name: 'Bole International Airport', subtitle: 'Addis Ababa', lat: 8.9779, lng: 38.7993 },
+];
 
-const buildMapHTML = (apiBase, customerLat, customerLng) => `
+const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -43,29 +50,33 @@ const buildMapHTML = (apiBase, customerLat, customerLng) => `
 <body>
 <div id="map"></div>
 <script>
-  const CUSTOMER_LAT = ${customerLat};
-  const CUSTOMER_LNG = ${customerLng};
-  const map = L.map('map', { center: [CUSTOMER_LAT, CUSTOMER_LNG], zoom: 14 });
+  const pickup = [${startLat}, ${startLng}];
+  const dropoff = [${destLat}, ${destLng}];
+  const map = L.map('map', { center: pickup, zoom: 14 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-  const pickup = [11.5980, 37.3820];
-  const dropoff = [11.5936, 37.3950];
 
   L.marker(pickup, { icon: L.divIcon({ className: 'pin-a', html: 'A' }) }).addTo(map);
   L.marker(dropoff, { icon: L.divIcon({ className: 'pin-b', html: 'B' }) }).addTo(map);
-  L.polyline([pickup, [11.5960, 37.3888], dropoff], { color: '#000000', weight: 4 }).addTo(map);
+  L.polyline([pickup, [(${startLat} + ${destLat})/2 + 0.001, (${startLng} + ${destLng})/2], dropoff], { color: '#000000', weight: 4 }).addTo(map);
 </script>
 </body>
 </html>
 `;
 
 export default function MapScreenWeb() {
-  const [startLocation, setStartLocation] = useState('My location: Jan Moskov Library / ጃን ሞስኮቭ');
-  const [destination, setDestination]     = useState('Abay mado market (Gebeya)');
-  const [selectedRide, setSelectedRide]   = useState('1');
-  const [isRequested, setIsRequested]     = useState(false);
-  const [isMinimized, setIsMinimized]     = useState(false);
-  const [rideOptions, setRideOptions]     = useState([]);
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+
+  const [startLocation, setStartLocation]   = useState(BAHIR_DAR_PRESETS[0].name);
+  const [startCoords, setStartCoords]       = useState({ lat: 11.5980, lng: 37.3820 });
+  const [destination, setDestination]       = useState(BAHIR_DAR_PRESETS[1].name);
+  const [destCoords, setDestCoords]         = useState({ lat: 11.5936, lng: 37.3950 });
+
+  const [activeInput, setActiveInput]       = useState(null);
+  const [selectedRide, setSelectedRide]     = useState('1');
+  const [isRequested, setIsRequested]       = useState(false);
+  const [isMinimized, setIsMinimized]       = useState(false);
+  const [rideOptions, setRideOptions]       = useState([]);
   const [showRatingModal, setShowRatingModal] = useState(false);
 
   useEffect(() => {
@@ -75,76 +86,125 @@ export default function MapScreenWeb() {
     });
   }, []);
 
+  const handleSelectPreset = (preset) => {
+    if (activeInput === 'start') {
+      setStartLocation(preset.name);
+      setStartCoords({ lat: preset.lat, lng: preset.lng });
+    } else if (activeInput === 'dest') {
+      setDestination(preset.name);
+      setDestCoords({ lat: preset.lat, lng: preset.lng });
+    }
+    setActiveInput(null);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#000000' }]}>
       {/* Leaflet Web Map */}
       <iframe
         title="Bahir Dar Interactive Map"
-        srcDoc={buildMapHTML(API_BASE, CUSTOMER_LAT, CUSTOMER_LNG)}
+        srcDoc={buildMapHTML(API_BASE, startCoords.lat, startCoords.lng, destCoords.lat, destCoords.lng)}
         style={styles.iframeMap}
       />
 
-      {/* Floating Top Location Inputs (Image 2) */}
-      <View style={styles.topInputCard}>
+      {/* Floating Interactive Location Card */}
+      <View style={[styles.topInputCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
         <View style={styles.inputRow}>
           <View style={styles.badgeA}>
             <Text style={styles.badgeText}>A</Text>
           </View>
           <TextInput
-            style={styles.locationInput}
+            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={startLocation}
             onChangeText={setStartLocation}
+            onFocus={() => setActiveInput('start')}
             placeholder="Search start location..."
           />
         </View>
 
-        <View style={styles.inputDivider} />
+        <View style={[styles.inputDivider, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]} />
 
         <View style={styles.inputRow}>
           <View style={styles.badgeB}>
             <Text style={styles.badgeText}>B</Text>
           </View>
           <TextInput
-            style={styles.locationInput}
+            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={destination}
             onChangeText={setDestination}
+            onFocus={() => setActiveInput('dest')}
             placeholder="Search destination..."
           />
           <TouchableOpacity style={styles.plusBtn}>
             <Text style={styles.plusText}>+</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Dynamic Search Suggestions Dropdown */}
+        {activeInput && (
+          <View style={[styles.suggestionsBox, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
+            <Text style={styles.suggestionsHeader}>Suggested Locations in Bahir Dar</Text>
+            {BAHIR_DAR_PRESETS.map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.suggestionRow}
+                onPress={() => handleSelectPreset(item)}
+              >
+                <Text style={styles.suggestionIcon}>📍</Text>
+                <View>
+                  <Text style={[styles.suggestionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.suggestionSub}>{item.subtitle}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* Top Floating ETA Badge */}
+      {/* Floating ETA Badge */}
       <View style={styles.etaFloatingBadge}>
         <Text style={styles.etaText}>1 min</Text>
       </View>
 
-      {/* Bottom Sheet Card (Minimizable / Expandable) */}
-      <View style={[styles.bottomSheet, isMinimized && styles.bottomSheetMinimized]}>
+      {/* Bottom Sheet Card with Clean Drag Bar (No Text) */}
+      <View
+        style={[
+          styles.bottomSheet,
+          { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
+          isMinimized && styles.bottomSheetMinimized,
+        ]}
+      >
         <TouchableOpacity
           style={styles.dragHandle}
+          activeOpacity={0.7}
           onPress={() => setIsMinimized(!isMinimized)}
         >
-          <View style={styles.handleBar} />
-          <Text style={styles.minimizeChevron}>{isMinimized ? '▲ Expand' : '▼ Minimize'}</Text>
+          <View style={[styles.handleBar, { backgroundColor: isDark ? '#64748B' : '#CBD5E1' }]} />
         </TouchableOpacity>
 
         {isMinimized ? (
-          /* Minimized Compact View (Image 3) */
+          /* Minimized Compact View */
           <View style={styles.minimizedContent}>
-            <Text style={styles.rideProgressTitle}>Ride in Progress</Text>
-            <Text style={styles.driverName}>Name: Abraham</Text>
+            <Text style={[styles.rideProgressTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+              Ride in Progress
+            </Text>
+            <Text style={[styles.driverName, { color: isDark ? '#E2E8F0' : '#334155' }]}>
+              Name: Abraham
+            </Text>
             <Text style={styles.driverRating}>Rating: ⭐⭐⭐⭐⭐ 4.6</Text>
 
             <View style={styles.locSummaryRow}>
               <Text style={styles.locDotGreen}>🟢 From: </Text>
-              <Text style={styles.locSummaryText}>{startLocation}</Text>
+              <Text style={[styles.locSummaryText, { color: isDark ? '#CBD5E1' : '#475569' }]}>
+                {startLocation}
+              </Text>
             </View>
             <View style={styles.locSummaryRow}>
               <Text style={styles.locDotRed}>🔴 To: </Text>
-              <Text style={styles.locSummaryText}>{destination}</Text>
+              <Text style={[styles.locSummaryText, { color: isDark ? '#CBD5E1' : '#475569' }]}>
+                {destination}
+              </Text>
             </View>
 
             <Text style={styles.rideFooterMsg}>Ride in progress - Enjoy your trip!</Text>
@@ -157,14 +217,18 @@ export default function MapScreenWeb() {
             </TouchableOpacity>
           </View>
         ) : (
-          /* Expanded Card View (Image 1 & Image 2) */
+          /* Expanded Card View */
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.cardHeading}>Your driver is here</Text>
+            <Text style={[styles.cardHeading, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+              Your driver is here
+            </Text>
             <Text style={styles.cardSubheading}>The driver is waiting for you</Text>
 
-            {/* Vehicle Card Badge */}
-            <View style={styles.vehicleDetailsCard}>
-              <Text style={styles.vehicleModelName}>Toyota Camry</Text>
+            {/* Vehicle Details Card */}
+            <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+              <Text style={[styles.vehicleModelName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                Toyota Camry
+              </Text>
               <View style={styles.badgePillRow}>
                 <View style={styles.colorPill}>
                   <Text style={styles.colorPillText}>Black</Text>
@@ -180,11 +244,17 @@ export default function MapScreenWeb() {
               {rideOptions.map((ride) => (
                 <TouchableOpacity
                   key={ride.id}
-                  style={[styles.rideCard, selectedRide === ride.id.toString() && styles.rideCardActive]}
+                  style={[
+                    styles.rideCard,
+                    { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+                    selectedRide === ride.id.toString() && styles.rideCardActive,
+                  ]}
                   onPress={() => setSelectedRide(ride.id.toString())}
                 >
                   <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                  <Text style={styles.rideName}>{ride.name}</Text>
+                  <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                    {ride.name}
+                  </Text>
                   <Text style={styles.ridePrice}>~{ride.base_price || 200.23} ETB</Text>
                 </TouchableOpacity>
               ))}
@@ -192,7 +262,7 @@ export default function MapScreenWeb() {
 
             <View style={styles.paymentBadgeRow}>
               <Text style={styles.paymentIcon}>💵</Text>
-              <Text style={styles.paymentText}>Cash</Text>
+              <Text style={[styles.paymentText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Cash</Text>
             </View>
 
             <TouchableOpacity
@@ -220,7 +290,6 @@ export default function MapScreenWeb() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   iframeMap: {
     width: '100%',
@@ -232,7 +301,6 @@ const styles = StyleSheet.create({
     top: 30,
     left: 20,
     right: 20,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
     boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
@@ -269,7 +337,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
     outlineStyle: 'none',
   },
   plusBtn: {
@@ -281,9 +348,39 @@ const styles = StyleSheet.create({
   },
   inputDivider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
     marginVertical: 8,
     marginLeft: 34,
+  },
+  suggestionsBox: {
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderColor: '#334155',
+    paddingTop: 10,
+  },
+  suggestionsHeader: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0D9488',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+    cursor: 'pointer',
+  },
+  suggestionIcon: {
+    fontSize: 16,
+  },
+  suggestionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  suggestionSub: {
+    fontSize: 11,
+    color: '#64748B',
   },
   etaFloatingBadge: {
     position: 'absolute',
@@ -305,34 +402,27 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 20,
     maxHeight: 460,
     zIndex: 100,
     boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
   },
   bottomSheetMinimized: {
-    maxHeight: 240,
-    backgroundColor: '#F8FAFC',
+    maxHeight: 230,
   },
   dragHandle: {
     alignItems: 'center',
-    paddingBottom: 10,
+    paddingVertical: 10,
     cursor: 'pointer',
   },
   handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#CBD5E1',
-    marginBottom: 4,
-  },
-  minimizeChevron: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
+    width: 48,
+    height: 5,
+    borderRadius: 3,
   },
   minimizedContent: {
     paddingVertical: 4,
@@ -340,13 +430,11 @@ const styles = StyleSheet.create({
   rideProgressTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 4,
   },
   driverName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
   },
   driverRating: {
     fontSize: 13,
@@ -370,7 +458,6 @@ const styles = StyleSheet.create({
   },
   locSummaryText: {
     fontSize: 13,
-    color: '#475569',
     flex: 1,
   },
   rideFooterMsg: {
@@ -385,6 +472,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
+    cursor: 'pointer',
   },
   completeBtnText: {
     color: '#FFFFFF',
@@ -394,7 +482,6 @@ const styles = StyleSheet.create({
   cardHeading: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
   },
   cardSubheading: {
     fontSize: 13,
@@ -402,17 +489,15 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   vehicleDetailsCard: {
-    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#334155',
     marginBottom: 14,
   },
   vehicleModelName: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 8,
   },
   badgePillRow: {
@@ -448,9 +533,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   rideCard: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: '#334155',
     borderRadius: 12,
     padding: 12,
     marginRight: 10,
@@ -468,7 +552,6 @@ const styles = StyleSheet.create({
   rideName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
   },
   ridePrice: {
     fontSize: 12,
@@ -489,7 +572,6 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
   },
   setPickupBtn: {
     backgroundColor: '#F59E0B',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,109 +6,122 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
-  Animated,
-  ActivityIndicator,
   TextInput,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
-import DriverStatusBadge from '../components/DriverStatusBadge';
-import LiveEtaBanner from '../components/LiveEtaBanner';
+import { useTheme } from '../context/ThemeContext';
 import RatingModal from '../components/RatingModal';
 
 const { width, height } = Dimensions.get('window');
 
-const BAHIR_DAR_REGION = {
-  latitude: 11.5958,
-  longitude: 37.3885,
-  latitudeDelta: 0.025,
-  longitudeDelta: 0.025,
-};
-
-const PICKUP_COORDS  = { latitude: 11.5980, longitude: 37.3820 };
-const DROPOFF_COORDS = { latitude: 11.5936, longitude: 37.3950 };
-
-const ROUTE_LINE = [
-  { latitude: 11.5980, longitude: 37.3820 },
-  { latitude: 11.5972, longitude: 37.3855 },
-  { latitude: 11.5960, longitude: 37.3888 },
-  { latitude: 11.5948, longitude: 37.3915 },
-  { latitude: 11.5936, longitude: 37.3950 },
+const BAHIR_DAR_PRESETS = [
+  { name: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar', lat: 11.5980, lng: 37.3820 },
+  { name: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore', lat: 11.5936, lng: 37.3950 },
+  { name: 'Blue Nile Bridge', subtitle: 'Abay River Crossing', lat: 11.6050, lng: 37.3810 },
+  { name: 'Bahir Dar University', subtitle: 'Kebele 11, Bahir Dar', lat: 11.5850, lng: 37.3780 },
+  { name: 'Poly-Technic College', subtitle: 'Kebele 08, Bahir Dar', lat: 11.5900, lng: 37.3850 },
+  { name: 'Bole International Airport', subtitle: 'Addis Ababa', lat: 8.9779, lng: 38.7993 },
 ];
 
 export default function MapScreen() {
-  const [startLocation, setStartLocation] = useState('My location: Jan Moskov Library / ጃን ሞስኮቭ');
-  const [destination, setDestination]     = useState('Abay mado market (Gebeya)');
-  const [selectedRide, setSelectedRide]   = useState('1');
-  const [isRequested, setIsRequested]     = useState(false);
-  const [isMinimized, setIsMinimized]     = useState(false);
-  const [rideOptions, setRideOptions]     = useState([]);
-  const [loading, setLoading]             = useState(true);
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+
+  const [startLocation, setStartLocation]   = useState(BAHIR_DAR_PRESETS[0].name);
+  const [startCoords, setStartCoords]       = useState({ latitude: 11.5980, longitude: 37.3820 });
+  const [destination, setDestination]       = useState(BAHIR_DAR_PRESETS[1].name);
+  const [destCoords, setDestCoords]         = useState({ latitude: 11.5936, longitude: 37.3950 });
+
+  const [activeInput, setActiveInput]       = useState(null); // 'start' | 'dest' | null
+  const [selectedRide, setSelectedRide]     = useState('1');
+  const [isRequested, setIsRequested]       = useState(false);
+  const [isMinimized, setIsMinimized]       = useState(false);
+  const [rideOptions, setRideOptions]       = useState([]);
   const [showRatingModal, setShowRatingModal] = useState(false);
 
   useEffect(() => {
     fetchRideOptions().then((data) => {
       setRideOptions(data);
       if (data && data.length > 0) setSelectedRide(data[0].id.toString());
-      setLoading(false);
     });
   }, []);
 
-  const activeRide = rideOptions.find((r) => r.id?.toString() === selectedRide) || {
-    name: 'Toyota Camry',
-    base_price: 200.23,
-    color_label: 'Black',
-    plate: '55810AA',
+  const handleSelectPreset = (preset) => {
+    if (activeInput === 'start') {
+      setStartLocation(preset.name);
+      setStartCoords({ latitude: preset.lat, longitude: preset.lng });
+    } else if (activeInput === 'dest') {
+      setDestination(preset.name);
+      setDestCoords({ latitude: preset.lat, longitude: preset.lng });
+    }
+    setActiveInput(null);
   };
 
+  const routePolyline = [
+    startCoords,
+    {
+      latitude: (startCoords.latitude + destCoords.latitude) / 2 + 0.001,
+      longitude: (startCoords.longitude + destCoords.longitude) / 2,
+    },
+    destCoords,
+  ];
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#000000' }]}>
       {/* Real Map View */}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
-        initialRegion={BAHIR_DAR_REGION}
+        initialRegion={{
+          latitude: 11.5958,
+          longitude: 37.3885,
+          latitudeDelta: 0.025,
+          longitudeDelta: 0.025,
+        }}
       >
-        <Polyline coordinates={ROUTE_LINE} strokeColor="#000000" strokeWidth={5} />
+        <Polyline coordinates={routePolyline} strokeColor={isDark ? '#38BDF8' : '#000000'} strokeWidth={5} />
 
-        <Marker coordinate={PICKUP_COORDS} title="Start (A)">
+        <Marker coordinate={startCoords} title="Start (A)">
           <View style={styles.pinA}>
             <Text style={styles.pinLabel}>A</Text>
           </View>
         </Marker>
 
-        <Marker coordinate={DROPOFF_COORDS} title="Destination (B)">
+        <Marker coordinate={destCoords} title="Destination (B)">
           <View style={styles.pinB}>
             <Text style={styles.pinLabel}>B</Text>
           </View>
         </Marker>
       </MapView>
 
-      {/* Floating Top Location Inputs (Image 2) */}
-      <View style={styles.topInputCard}>
+      {/* Floating Interactive Location Card */}
+      <View style={[styles.topInputCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
         <View style={styles.inputRow}>
           <View style={styles.badgeA}>
             <Text style={styles.badgeText}>A</Text>
           </View>
           <TextInput
-            style={styles.locationInput}
+            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={startLocation}
             onChangeText={setStartLocation}
+            onFocus={() => setActiveInput('start')}
             placeholder="Search start location..."
             placeholderTextColor="#94A3B8"
           />
         </View>
 
-        <View style={styles.inputDivider} />
+        <View style={[styles.inputDivider, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]} />
 
         <View style={styles.inputRow}>
           <View style={styles.badgeB}>
             <Text style={styles.badgeText}>B</Text>
           </View>
           <TextInput
-            style={styles.locationInput}
+            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={destination}
             onChangeText={setDestination}
+            onFocus={() => setActiveInput('dest')}
             placeholder="Search destination..."
             placeholderTextColor="#94A3B8"
           />
@@ -116,38 +129,74 @@ export default function MapScreen() {
             <Text style={styles.plusText}>+</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Dynamic Search Suggestions Dropdown */}
+        {activeInput && (
+          <View style={[styles.suggestionsBox, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
+            <Text style={styles.suggestionsHeader}>Suggested Locations in Bahir Dar</Text>
+            {BAHIR_DAR_PRESETS.map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.suggestionRow}
+                onPress={() => handleSelectPreset(item)}
+              >
+                <Text style={styles.suggestionIcon}>📍</Text>
+                <View>
+                  <Text style={[styles.suggestionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.suggestionSub}>{item.subtitle}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* Top Floating ETA Badge */}
+      {/* Floating ETA Badge */}
       <View style={styles.etaFloatingBadge}>
         <Text style={styles.etaText}>1 min</Text>
       </View>
 
-      {/* Bottom Sheet Card (Minimizable / Expandable - Image 1, 2 & 3) */}
-      <View style={[styles.bottomSheet, isMinimized && styles.bottomSheetMinimized]}>
-        {/* Minimize / Expand Drag Handle */}
+      {/* Bottom Sheet Card with Clean Drag Bar (No Text) */}
+      <View
+        style={[
+          styles.bottomSheet,
+          { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
+          isMinimized && styles.bottomSheetMinimized,
+        ]}
+      >
+        {/* Sleek Pill Handle Bar - Hand drag / tap trigger (No Text) */}
         <TouchableOpacity
           style={styles.dragHandle}
+          activeOpacity={0.7}
           onPress={() => setIsMinimized(!isMinimized)}
         >
-          <View style={styles.handleBar} />
-          <Text style={styles.minimizeChevron}>{isMinimized ? '▲ Expand' : '▼ Minimize'}</Text>
+          <View style={[styles.handleBar, { backgroundColor: isDark ? '#64748B' : '#CBD5E1' }]} />
         </TouchableOpacity>
 
         {isMinimized ? (
-          /* Minimized Compact Ride Summary (Image 3) */
+          /* Minimized Compact View */
           <View style={styles.minimizedContent}>
-            <Text style={styles.rideProgressTitle}>Ride in Progress</Text>
-            <Text style={styles.driverName}>Name: Abraham</Text>
+            <Text style={[styles.rideProgressTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+              Ride in Progress
+            </Text>
+            <Text style={[styles.driverName, { color: isDark ? '#E2E8F0' : '#334155' }]}>
+              Name: Abraham
+            </Text>
             <Text style={styles.driverRating}>Rating: ⭐⭐⭐⭐⭐ 4.6</Text>
 
             <View style={styles.locSummaryRow}>
               <Text style={styles.locDotGreen}>🟢 From: </Text>
-              <Text style={styles.locSummaryText} numberOfLines={1}>{startLocation}</Text>
+              <Text style={[styles.locSummaryText, { color: isDark ? '#CBD5E1' : '#475569' }]} numberOfLines={1}>
+                {startLocation}
+              </Text>
             </View>
             <View style={styles.locSummaryRow}>
               <Text style={styles.locDotRed}>🔴 To: </Text>
-              <Text style={styles.locSummaryText} numberOfLines={1}>{destination}</Text>
+              <Text style={[styles.locSummaryText, { color: isDark ? '#CBD5E1' : '#475569' }]} numberOfLines={1}>
+                {destination}
+              </Text>
             </View>
 
             <Text style={styles.rideFooterMsg}>Ride in progress - Enjoy your trip!</Text>
@@ -160,14 +209,18 @@ export default function MapScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          /* Expanded Card View (Image 1 & Image 2) */
+          /* Expanded Full Card View */
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.cardHeading}>Your driver is here</Text>
+            <Text style={[styles.cardHeading, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+              Your driver is here
+            </Text>
             <Text style={styles.cardSubheading}>The driver is waiting for you</Text>
 
-            {/* Vehicle Card Badge */}
-            <View style={styles.vehicleDetailsCard}>
-              <Text style={styles.vehicleModelName}>Toyota Camry</Text>
+            {/* Vehicle Details Card */}
+            <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+              <Text style={[styles.vehicleModelName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                Toyota Camry
+              </Text>
               <View style={styles.badgePillRow}>
                 <View style={styles.colorPill}>
                   <Text style={styles.colorPillText}>Black</Text>
@@ -178,28 +231,32 @@ export default function MapScreen() {
               </View>
             </View>
 
-            {/* Ride Type Selector Row */}
+            {/* Ride Selector */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
               {rideOptions.map((ride) => (
                 <TouchableOpacity
                   key={ride.id}
-                  style={[styles.rideCard, selectedRide === ride.id.toString() && styles.rideCardActive]}
+                  style={[
+                    styles.rideCard,
+                    { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+                    selectedRide === ride.id.toString() && styles.rideCardActive,
+                  ]}
                   onPress={() => setSelectedRide(ride.id.toString())}
                 >
                   <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                  <Text style={styles.rideName}>{ride.name}</Text>
+                  <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                    {ride.name}
+                  </Text>
                   <Text style={styles.ridePrice}>~{ride.base_price || 200.23} ETB</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
-            {/* Payment Method Badge */}
             <View style={styles.paymentBadgeRow}>
               <Text style={styles.paymentIcon}>💵</Text>
-              <Text style={styles.paymentText}>Cash</Text>
+              <Text style={[styles.paymentText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Cash</Text>
             </View>
 
-            {/* Yellow Primary Action Button */}
             <TouchableOpacity
               style={styles.setPickupBtn}
               onPress={() => setIsRequested(true)}
@@ -212,7 +269,6 @@ export default function MapScreen() {
         )}
       </View>
 
-      {/* Post Trip Rating Modal */}
       <RatingModal
         visible={showRatingModal}
         onClose={() => setShowRatingModal(false)}
@@ -226,7 +282,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   map: {
     width: width,
@@ -262,7 +317,6 @@ const styles = StyleSheet.create({
     top: 50,
     left: 16,
     right: 16,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
     shadowColor: '#000',
@@ -301,7 +355,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
     paddingVertical: 4,
   },
   plusBtn: {
@@ -310,17 +363,45 @@ const styles = StyleSheet.create({
   plusText: {
     fontSize: 22,
     color: '#64748B',
-    fontWeight: '400',
   },
   inputDivider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
     marginVertical: 10,
     marginLeft: 34,
   },
+  suggestionsBox: {
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderColor: '#334155',
+    paddingTop: 10,
+  },
+  suggestionsHeader: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0D9488',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+  suggestionIcon: {
+    fontSize: 16,
+  },
+  suggestionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  suggestionSub: {
+    fontSize: 11,
+    color: '#64748B',
+  },
   etaFloatingBadge: {
     position: 'absolute',
-    top: 175,
+    top: 200,
     alignSelf: 'center',
     backgroundColor: '#000000',
     paddingHorizontal: 16,
@@ -337,46 +418,37 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 20,
     maxHeight: height * 0.52,
     elevation: 12,
   },
   bottomSheetMinimized: {
-    maxHeight: 240,
-    backgroundColor: '#F8FAFC',
+    maxHeight: 230,
   },
   dragHandle: {
     alignItems: 'center',
-    paddingBottom: 10,
+    paddingVertical: 10,
   },
   handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#CBD5E1',
-    marginBottom: 4,
-  },
-  minimizeChevron: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
+    width: 48,
+    height: 5,
+    borderRadius: 3,
   },
   minimizedContent: {
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   rideProgressTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 4,
   },
   driverName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#334155',
   },
   driverRating: {
     fontSize: 13,
@@ -400,7 +472,6 @@ const styles = StyleSheet.create({
   },
   locSummaryText: {
     fontSize: 13,
-    color: '#475569',
     flex: 1,
   },
   rideFooterMsg: {
@@ -424,7 +495,6 @@ const styles = StyleSheet.create({
   cardHeading: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
   },
   cardSubheading: {
     fontSize: 13,
@@ -432,17 +502,15 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   vehicleDetailsCard: {
-    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#334155',
     marginBottom: 14,
   },
   vehicleModelName: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
     marginBottom: 8,
   },
   badgePillRow: {
@@ -478,9 +546,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   rideCard: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: '#334155',
     borderRadius: 12,
     padding: 12,
     marginRight: 10,
@@ -497,7 +564,6 @@ const styles = StyleSheet.create({
   rideName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
   },
   ridePrice: {
     fontSize: 12,
@@ -518,7 +584,6 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
   },
   setPickupBtn: {
     backgroundColor: '#F59E0B',
