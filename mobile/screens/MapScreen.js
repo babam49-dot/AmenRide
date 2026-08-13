@@ -12,6 +12,8 @@ import {
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
 import DriverStatusBadge from '../components/DriverStatusBadge';
+import LiveEtaBanner from '../components/LiveEtaBanner';
+import RatingModal from '../components/RatingModal';
 
 const { width, height } = Dimensions.get('window');
 

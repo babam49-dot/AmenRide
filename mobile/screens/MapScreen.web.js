@@ -12,6 +12,8 @@ import {
 import { fetchRideOptions } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
 import ReceiptModal from '../components/ReceiptModal';
+import LiveEtaBanner from '../components/LiveEtaBanner';
+import RatingModal from '../components/RatingModal';
 
 const { width, height } = Dimensions.get('window');
 const API_BASE = 'http://localhost:5000/api';
