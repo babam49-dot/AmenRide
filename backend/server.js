@@ -14,18 +14,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Request logger middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`[HTTP] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
-  });
-  next();
-});
-
+// ─── Audit & Request Logging ─────────────────────────────────────────────────
 const auditLogger = require('./middleware/auditLogger');
 app.use(auditLogger);
+
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/trips',        require('./routes/trips'));
