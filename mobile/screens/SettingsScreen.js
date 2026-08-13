@@ -11,21 +11,28 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
 
+const AVATAR_PRESETS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+];
+
 export default function SettingsScreen() {
   const { lang, toggleLanguage, t } = useLanguage();
-  const { mode, theme, toggleTheme } = useTheme();
+  const { mode, toggleTheme } = useTheme();
 
   const [pushNotif, setPushNotif] = useState(true);
   const [driver, setDriver]       = useState(null);
   const [loading, setLoading]     = useState(true);
   const [avatarUri, setAvatarUri] = useState(DEFAULT_AVATAR);
+  const [showPresets, setShowPresets] = useState(false);
   const [emergencyPhone, setEmergencyPhone] = useState('+251911999888');
   const [notifMessage, setNotifMessage]     = useState('');
 
@@ -41,31 +48,53 @@ export default function SettingsScreen() {
     setTimeout(() => setNotifMessage(''), 3500);
   };
 
-  // Launch device native photo library to pick real photo from phone
+  // Zero-dependency Photo Uploader: Native HTML5 File Input on Web / Dynamic ImagePicker on Native
   const handlePickPhonePhoto = async () => {
-    try {
-      if (Platform.OS !== 'web') {
+    if (Platform.OS === 'web') {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              if (event.target?.result) {
+                setAvatarUri(event.target.result);
+                triggerNotifToast('📷 Phone photo uploaded successfully!');
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        input.click();
+      } catch (err) {
+        setShowPresets(true);
+      }
+    } else {
+      try {
+        // Dynamic try-require to prevent Metro bundling error when expo-image-picker is missing
+        const ImagePicker = require('expo-image-picker');
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
           triggerNotifToast('⚠️ Permission required to access phone photos.');
           return;
         }
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          setAvatarUri(result.assets[0].uri);
+          triggerNotifToast('📷 Phone photo uploaded successfully!');
+        }
+      } catch (err) {
+        setShowPresets(!showPresets);
+        triggerNotifToast('📷 Choose avatar from presets below!');
       }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setAvatarUri(result.assets[0].uri);
-        triggerNotifToast('📷 Phone photo uploaded successfully!');
-      }
-    } catch (err) {
-      console.warn('Image picker fallback:', err.message);
-      triggerNotifToast('📷 Profile picture updated!');
     }
   };
 
@@ -85,7 +114,7 @@ export default function SettingsScreen() {
       style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
       contentContainerStyle={styles.contentContainer}
     >
-      {/* Notification Toast Banner */}
+      {/* Toast Banner */}
       {notifMessage ? (
         <View style={styles.toastBanner}>
           <Text style={styles.toastText}>{notifMessage}</Text>
@@ -119,8 +148,24 @@ export default function SettingsScreen() {
             </Text>
             <Text style={styles.email}>{driver?.email || 'abebe.b@amenride.com'}</Text>
             <TouchableOpacity style={styles.uploadBtn} onPress={handlePickPhonePhoto}>
-              <Text style={styles.uploadBtnText}>Upload Photo from Phone 📱</Text>
+              <Text style={styles.uploadBtnText}>Upload Photo from Device 📱</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Avatar Presets Bar */}
+      {showPresets && (
+        <View style={[styles.presetBox, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
+          <Text style={[styles.presetTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+            Or Pick an Avatar Preset:
+          </Text>
+          <View style={styles.presetRow}>
+            {AVATAR_PRESETS.map((url, idx) => (
+              <TouchableOpacity key={idx} onPress={() => { setAvatarUri(url); setShowPresets(false); }}>
+                <Image source={{ uri: url }} style={styles.presetThumb} />
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       )}
@@ -315,6 +360,27 @@ const styles = StyleSheet.create({
     color: '#0F766E',
     fontWeight: '700',
     fontSize: 11,
+  },
+  presetBox: {
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  presetTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  presetThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#0D9488',
   },
   walletCard: {
     flexDirection: 'row',
