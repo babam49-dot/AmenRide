@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import useDriverGPS from '../hooks/useDriverGPS';
 import EmergencyButton from '../components/EmergencyButton';
 
@@ -41,7 +42,10 @@ function CountdownTimer({ seconds, onExpire }) {
 
 export default function DriverScreen() {
   const { t } = useLanguage();
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
   const [isOnline, setIsOnline] = useState(false);
+
   const [hasRequest, setHasRequest] = useState(false);
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +77,11 @@ export default function DriverScreen() {
   const maxWeekly = Math.max(...WEEKLY_EARNINGS.map((w) => w.amount));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('driverDashboard')}</Text>

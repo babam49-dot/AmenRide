@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { fetchTrips } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import ReceiptModal from '../components/ReceiptModal';
 import AdminConsole from '../components/AdminConsole';
 import PaymentMethodCard from '../components/PaymentMethodCard';
@@ -32,10 +33,13 @@ const POPULAR_DESTINATIONS = [
 
 export default function HomeScreen({ navigation }) {
   const { lang, toggleLanguage, t } = useLanguage();
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
   const [activeRole, setActiveRole] = useState('rider');
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [selectedReceiptTrip, setSelectedReceiptTrip] = useState(null);
+
 
   useEffect(() => {
     fetchTrips(1).then((data) => {
@@ -45,7 +49,10 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Top Header */}
       <View style={styles.topRow}>
         <Text style={styles.uberLogo}>
