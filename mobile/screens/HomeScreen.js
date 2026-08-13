@@ -13,6 +13,7 @@ import { fetchTrips } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
 import ReceiptModal from '../components/ReceiptModal';
 import AdminConsole from '../components/AdminConsole';
+import PaymentMethodCard from '../components/PaymentMethodCard';
 
 const { width } = Dimensions.get('window');
 
