@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
+
 
 // Import Screens
 import HomeScreen from './screens/HomeScreen';
@@ -69,14 +71,16 @@ function TabNavigator() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Main" component={TabNavigator} />
-        </Stack.Navigator>
-        <StatusBar style="light" />
-      </NavigationContainer>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Main" component={TabNavigator} />
+          </Stack.Navigator>
+          <StatusBar style="light" />
+        </NavigationContainer>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 
