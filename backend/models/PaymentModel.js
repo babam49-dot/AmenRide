@@ -1,6 +1,9 @@
-const db = require('../config/db');
+// DB is lazy-loaded only when USE_POSTGRES=true to prevent startup errors
+// when PostgreSQL is not configured
+const getDb = () => require('../config/db');
 
 // In-memory fallback repository for transaction logs
+
 const transactionsDb = new Map();
 
 class PaymentModel {
@@ -23,7 +26,7 @@ class PaymentModel {
           VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *;
         `;
-        const res = await db.query(query, [id, tripId, amount, paymentMethod, phoneNumber, 'COMPLETED']);
+        const res = await getDb().query(query, [id, tripId, amount, paymentMethod, phoneNumber, 'COMPLETED']);
         return res.rows[0];
       } catch (err) {
         console.warn('PostgreSQL payment insert fallback:', err.message);
@@ -37,7 +40,7 @@ class PaymentModel {
   static async findById(id) {
     if (process.env.USE_POSTGRES === 'true') {
       try {
-        const res = await db.query('SELECT * FROM payments WHERE id = $1', [id]);
+        const res = await getDb().query('SELECT * FROM payments WHERE id = $1', [id]);
         if (res.rows.length > 0) return res.rows[0];
       } catch (err) {
         console.warn('PostgreSQL payment query fallback:', err.message);

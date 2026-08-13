@@ -1,4 +1,6 @@
-const db = require('../config/db');
+// DB is lazy-loaded only when USE_POSTGRES=true
+const getDb = () => require('../config/db');
+
 
 const ratingsDb = [];
 
@@ -21,7 +23,8 @@ class RatingModel {
           VALUES ($1, $2, $3, $4, $5)
           RETURNING *;
         `;
-        const res = await db.query(query, [tripId, driverId, rating, JSON.stringify(tags), comment]);
+        const res = await getDb().query(query, [tripId, driverId, rating, JSON.stringify(tags), comment]);
+
         return res.rows[0];
       } catch (err) {
         console.warn('PostgreSQL rating insert fallback:', err.message);
