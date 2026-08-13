@@ -24,10 +24,15 @@ app.use((req, res, next) => {
   next();
 });
 
+const auditLogger = require('./middleware/auditLogger');
+app.use(auditLogger);
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/trips',        require('./routes/trips'));
 app.use('/api/driver',       require('./routes/driver'));
 app.use('/api/ride-options', require('./routes/rideOptions'));
+app.use('/api/payments',     require('./routes/payment'));
+app.use('/api/ratings',      require('./routes/rating'));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', async (req, res) => {
