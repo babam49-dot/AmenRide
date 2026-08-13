@@ -10,7 +10,19 @@ import {
   Platform,
 } from 'react-native';
 
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+let MapView, Marker, Polyline, PROVIDER_GOOGLE;
+if (Platform.OS !== 'web') {
+  try {
+    const Maps = require('react-native-maps');
+    MapView = Maps.default || Maps;
+    Marker = Maps.Marker;
+    Polyline = Maps.Polyline;
+    PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.warn('react-native-maps dynamic load skipped on web:', e.message);
+  }
+}
+
 import { fetchRideOptions } from '../services/tripsApi';
 import { useTheme } from '../context/ThemeContext';
 import RatingModal from '../components/RatingModal';

@@ -8,14 +8,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 
-// Import Screens (Platform specific MapScreen resolution)
+// Import Screens (Safe web / native resolution)
 import HomeScreen from './screens/HomeScreen';
-import MapScreenNative from './screens/MapScreen';
 import MapScreenWeb from './screens/MapScreen.web';
 import DriverScreen from './screens/DriverScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
-const MapScreen = Platform.OS === 'web' ? MapScreenWeb : MapScreenNative;
+let MapScreen = MapScreenWeb;
+if (Platform.OS !== 'web') {
+  try {
+    MapScreen = require('./screens/MapScreen').default;
+  } catch (e) {
+    MapScreen = MapScreenWeb;
+  }
+}
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
