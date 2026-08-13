@@ -50,9 +50,10 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}
+      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
       showsVerticalScrollIndicator={false}
     >
+
       {/* Top Header */}
       <View style={styles.topRow}>
         <Text style={styles.uberLogo}>

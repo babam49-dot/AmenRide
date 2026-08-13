@@ -98,7 +98,8 @@ export default function MapScreenWeb() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#000000' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+
       {/* Leaflet Web Map Container */}
       <View style={styles.iframeContainer}>
         <iframe

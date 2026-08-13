@@ -88,7 +88,8 @@ export default function MapScreen() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#000000' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+
       {/* Real Map View */}
       <MapView
         provider={PROVIDER_GOOGLE}

@@ -44,9 +44,15 @@ const MOCK_DRIVERS = [
 ];
 
 class DriverModel {
+  static async findById(id) {
+    const driver = MOCK_DRIVERS.find((d) => String(d.id) === String(id));
+    return driver || MOCK_DRIVERS[0];
+  }
+
   /**
    * Find nearby online drivers within radius (km)
    */
+
   static async findNearby(lat, lng, radiusKm = 5) {
     try {
       const query = `
