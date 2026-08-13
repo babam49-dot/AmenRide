@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,32 +6,17 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
-  Animated,
-  ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { fetchRideOptions } from '../services/tripsApi';
-import { useLanguage } from '../context/LanguageContext';
-import ReceiptModal from '../components/ReceiptModal';
-import LiveEtaBanner from '../components/LiveEtaBanner';
 import RatingModal from '../components/RatingModal';
 
 const { width, height } = Dimensions.get('window');
 const API_BASE = 'http://localhost:5000/api';
 
-// Customer demo position (Bahir Dar city center — used as default on web)
 const CUSTOMER_LAT = 11.5936;
 const CUSTOMER_LNG = 37.3908;
 
-const MATCHING_STEPS = [
-  '🔍  Connecting to AMEN Dispatcher...',
-  '📡  Locating nearest driver...',
-  '🚗  Matching your ride...',
-  '✅  Driver confirmed! En route.',
-];
-
-// ── Real Bahir Dar Leaflet Map HTML ──────────────────────────────────────────
-// Uses OpenStreetMap CartoDB Dark tiles (real Bahir Dar imagery)
-// Polls /api/drivers/nearby every 5 seconds to move real driver pins
 const buildMapHTML = (apiBase, customerLat, customerLng) => `
 <!DOCTYPE html>
 <html>
@@ -41,67 +26,18 @@ const buildMapHTML = (apiBase, customerLat, customerLng) => `
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    html, body, #map { width:100%; height:100%; margin:0; padding:0; background:#000; }
-    .leaflet-container { background:#000 !important; }
-
-    .customer-pin {
-      background: #3B82F6;
-      border: 3px solid #FFFFFF;
-      border-radius: 50%;
-      width: 16px; height: 16px;
-      box-shadow: 0 0 0 6px rgba(59,130,246,0.3);
-      animation: pulse 2s infinite;
+    html, body, #map { width:100%; height:100%; margin:0; padding:0; background:#E5E7EB; }
+    .leaflet-container { background:#E5E7EB !important; }
+    .pin-a {
+      background: #000000; color: #FFF; border-radius: 50%;
+      width: 24px; height: 24px; text-align: center; line-height: 24px; font-weight: bold;
+      border: 2px solid #FFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
-      70%  { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
-      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    .pin-b {
+      background: #EF4444; color: #FFF; border-radius: 50%;
+      width: 24px; height: 24px; text-align: center; line-height: 24px; font-weight: bold;
+      border: 2px solid #FFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-
-    .driver-pin {
-      background: #05A357;
-      color: #FFFFFF;
-      border: 2px solid #FFFFFF;
-      border-radius: 20px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 900;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(5,163,87,0.7);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    .driver-pin:hover { transform: scale(1.1); }
-    .driver-pin.nearest {
-      background: #FFFFFF;
-      color: #000000;
-      border-color: #05A357;
-      box-shadow: 0 4px 20px rgba(255,255,255,0.9);
-    }
-
-    .dist-label {
-      background: rgba(0,0,0,0.85);
-      color: #A0A0A0;
-      border-radius: 10px;
-      padding: 2px 8px;
-      font-size: 10px;
-      font-family: -apple-system, sans-serif;
-      white-space: nowrap;
-    }
-
-    .leaflet-control-zoom a {
-      background: #181818 !important;
-      color: #FFF !important;
-      border: 1px solid #333 !important;
-    }
-    .leaflet-popup-content-wrapper {
-      background: #181818;
-      color: #FFF;
-      border: 1px solid #333;
-      border-radius: 16px;
-    }
-    .leaflet-popup-tip { background: #181818; }
   </style>
 </head>
 <body>
@@ -109,367 +45,463 @@ const buildMapHTML = (apiBase, customerLat, customerLng) => `
 <script>
   const CUSTOMER_LAT = ${customerLat};
   const CUSTOMER_LNG = ${customerLng};
-  const API_BASE = '${apiBase}';
-
   const map = L.map('map', { center: [CUSTOMER_LAT, CUSTOMER_LNG], zoom: 14 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-  // Real Bahir Dar dark map tiles (OpenStreetMap CartoDB Dark)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(map);
+  const pickup = [11.5980, 37.3820];
+  const dropoff = [11.5936, 37.3950];
 
-  // Customer pulsing blue dot
-  const customerIcon = L.divIcon({
-    className: '',
-    html: '<div class="customer-pin"></div>',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
-  });
-  const customerMarker = L.marker([CUSTOMER_LAT, CUSTOMER_LNG], { icon: customerIcon })
-    .addTo(map)
-    .bindPopup('<b>📍 Your Location</b><br>Bahir Dar City Center');
-
-  // Driver markers map (id -> marker)
-  const driverMarkers = {};
-
-  // ── Fetch nearest drivers and update pins every 5 seconds ──
-  async function updateNearbyDrivers() {
-    try {
-      const res = await fetch(
-        API_BASE + '/driver/nearby?lat=' + CUSTOMER_LAT + '&lng=' + CUSTOMER_LNG + '&radius=15'
-      );
-      const data = await res.json();
-      if (!data.success) return;
-
-      const freshIds = new Set(data.drivers.map(d => d.id));
-
-      // Remove stale markers (driver went offline)
-      Object.keys(driverMarkers).forEach(id => {
-        if (!freshIds.has(parseInt(id))) {
-          driverMarkers[id].remove();
-          delete driverMarkers[id];
-        }
-      });
-
-      // Add/update driver markers
-      data.drivers.forEach((driver, index) => {
-        const isNearest = index === 0;
-        const label = (isNearest ? '⭐ ' : '🚗 ') + driver.name.split(' ')[0];
-        const distText = driver.distance_km + ' km · ' + driver.eta_minutes + ' min';
-
-        const icon = L.divIcon({
-          className: '',
-          html: '<div class="driver-pin ' + (isNearest ? 'nearest' : '') + '">' + label + '</div>',
-          iconSize: [120, 28],
-          iconAnchor: [60, 14]
-        });
-
-        const popupContent =
-          '<div style="font-family:-apple-system,sans-serif">' +
-          '<b>' + driver.name + '</b><br>' +
-          '🚗 ' + driver.vehicle_type + ' · ' + driver.vehicle_plate + '<br>' +
-          '⭐ ' + driver.rating + '<br>' +
-          '📍 ' + distText +
-          (isNearest ? '<br><span style="color:#05A357;font-weight:900">✅ Nearest Driver</span>' : '') +
-          '</div>';
-
-        if (driverMarkers[driver.id]) {
-          // Smoothly move existing marker
-          driverMarkers[driver.id].setLatLng([driver.lat, driver.lng]);
-          driverMarkers[driver.id].setIcon(icon);
-        } else {
-          // Create new marker
-          driverMarkers[driver.id] = L.marker([driver.lat, driver.lng], { icon })
-            .addTo(map)
-            .bindPopup(popupContent);
-        }
-      });
-
-    } catch (e) {
-      // Backend might not be running — show demo fallback pins
-      showDemoPins();
-    }
-  }
-
-  // Demo fallback pins (shown when backend is offline)
-  let demoShown = false;
-  function showDemoPins() {
-    if (demoShown) return;
-    demoShown = true;
-    const demoPins = [
-      { lat: 11.6041, lng: 37.3724, name: 'Amanuel B.', km: '1.4', min: '3', nearest: true },
-      { lat: 11.5880, lng: 37.3812, name: 'Tewodros K.', km: '2.1', min: '5', nearest: false },
-      { lat: 11.5936, lng: 37.3950, name: 'Meron T.', km: '3.3', min: '8', nearest: false },
-    ];
-    demoPins.forEach((d, i) => {
-      const icon = L.divIcon({
-        className: '',
-        html: '<div class="driver-pin ' + (d.nearest ? 'nearest' : '') + '">' +
-              (d.nearest ? '⭐ ' : '🚗 ') + d.name + '</div>',
-        iconSize: [130, 28], iconAnchor: [65, 14]
-      });
-      L.marker([d.lat, d.lng], { icon })
-        .addTo(map)
-        .bindPopup('<b>' + d.name + '</b><br>📍 ' + d.km + ' km · ' + d.min + ' min ETA');
-    });
-  }
-
-  // Start polling
-  updateNearbyDrivers();
-  setInterval(updateNearbyDrivers, 5000);
-
-  // Bahir Dar key landmarks
-  const landmarks = [
-    { lat: 11.6041, lng: 37.3724, name: '✈️ Bahir Dar Airport' },
-    { lat: 11.5936, lng: 37.3950, name: '🏨 Grand Resort Hotel' },
-    { lat: 11.5880, lng: 37.3812, name: '🎓 Bahir Dar University' },
-    { lat: 11.5810, lng: 37.3870, name: '🚌 Bus Terminal' },
-  ];
-  landmarks.forEach(l => {
-    L.marker([l.lat, l.lng], {
-      icon: L.divIcon({
-        className: '',
-        html: '<div class="dist-label">' + l.name + '</div>',
-        iconSize: [160, 22], iconAnchor: [80, 11]
-      })
-    }).addTo(map);
-  });
-
+  L.marker(pickup, { icon: L.divIcon({ className: 'pin-a', html: 'A' }) }).addTo(map);
+  L.marker(dropoff, { icon: L.divIcon({ className: 'pin-b', html: 'B' }) }).addTo(map);
+  L.polyline([pickup, [11.5960, 37.3888], dropoff], { color: '#000000', weight: 4 }).addTo(map);
 </script>
 </body>
 </html>
 `;
 
-export default function MapScreen() {
-  const { t } = useLanguage();
-  const [selectedRide, setSelectedRide] = useState(null);
-  const [isRequested, setIsRequested] = useState(false);
-  const [rideOptions, setRideOptions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [matchStep, setMatchStep] = useState(0);
-  const [showReceipt, setShowReceipt] = useState(false);
-  const spinAnim = useRef(new Animated.Value(0)).current;
+export default function MapScreenWeb() {
+  const [startLocation, setStartLocation] = useState('My location: Jan Moskov Library / ጃን ሞስኮቭ');
+  const [destination, setDestination]     = useState('Abay mado market (Gebeya)');
+  const [selectedRide, setSelectedRide]   = useState('1');
+  const [isRequested, setIsRequested]     = useState(false);
+  const [isMinimized, setIsMinimized]     = useState(false);
+  const [rideOptions, setRideOptions]     = useState([]);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   useEffect(() => {
     fetchRideOptions().then((data) => {
       setRideOptions(data);
-      setSelectedRide(data[0]?.id?.toString() || '1');
-      setLoading(false);
+      if (data && data.length > 0) setSelectedRide(data[0].id.toString());
     });
   }, []);
 
-  useEffect(() => {
-    if (isRequested) {
-      Animated.loop(
-        Animated.timing(spinAnim, { toValue: 1, duration: 1200, useNativeDriver: true })
-      ).start();
-      let step = 0;
-      const interval = setInterval(() => {
-        step += 1;
-        if (step >= MATCHING_STEPS.length) {
-          clearInterval(interval);
-          setShowReceipt(true);
-        } else {
-          setMatchStep(step);
-        }
-      }, 1400);
-      return () => clearInterval(interval);
-    } else {
-      spinAnim.setValue(0);
-      setMatchStep(0);
-    }
-  }, [isRequested]);
-
-  const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const activeRide = rideOptions.find(
-    (r) => r.id?.toString() === selectedRide || r.id === selectedRide
-  );
-
-  const mapHTML = buildMapHTML(API_BASE, CUSTOMER_LAT, CUSTOMER_LNG);
-
   return (
     <View style={styles.container}>
-      {/* ── Real Bahir Dar Leaflet Map ── */}
-      <View style={styles.mapContainer}>
-        <iframe
-          title="AMEN Ride Map — Bahir Dar"
-          srcDoc={mapHTML}
-          style={styles.iframeMap}
-          frameBorder="0"
-        />
+      {/* Leaflet Web Map */}
+      <iframe
+        title="Bahir Dar Interactive Map"
+        srcDoc={buildMapHTML(API_BASE, CUSTOMER_LAT, CUSTOMER_LNG)}
+        style={styles.iframeMap}
+      />
+
+      {/* Floating Top Location Inputs (Image 2) */}
+      <View style={styles.topInputCard}>
+        <View style={styles.inputRow}>
+          <View style={styles.badgeA}>
+            <Text style={styles.badgeText}>A</Text>
+          </View>
+          <TextInput
+            style={styles.locationInput}
+            value={startLocation}
+            onChangeText={setStartLocation}
+            placeholder="Search start location..."
+          />
+        </View>
+
+        <View style={styles.inputDivider} />
+
+        <View style={styles.inputRow}>
+          <View style={styles.badgeB}>
+            <Text style={styles.badgeText}>B</Text>
+          </View>
+          <TextInput
+            style={styles.locationInput}
+            value={destination}
+            onChangeText={setDestination}
+            placeholder="Search destination..."
+          />
+          <TouchableOpacity style={styles.plusBtn}>
+            <Text style={styles.plusText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* ── Address Route Bar (top overlay) ── */}
-      <View style={styles.addressBar}>
-        <View style={styles.addressRow}>
-          <View style={styles.pickupDot} />
-          <Text style={styles.addressText} numberOfLines={1}>📍 Your Location — Bahir Dar</Text>
-        </View>
-        <View style={styles.addressDivider} />
-        <View style={styles.addressRow}>
-          <View style={styles.dropoffDot} />
-          <Text style={styles.addressText} numberOfLines={1}>Where to? Tap to set destination</Text>
-        </View>
+      {/* Top Floating ETA Badge */}
+      <View style={styles.etaFloatingBadge}>
+        <Text style={styles.etaText}>1 min</Text>
       </View>
 
-      {/* ── Uber-style Booking Bottom Sheet ── */}
-      <View style={styles.bottomSheet}>
-        {!isRequested ? (
-          <>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{t('chooseRide')}</Text>
+      {/* Bottom Sheet Card (Minimizable / Expandable) */}
+      <View style={[styles.bottomSheet, isMinimized && styles.bottomSheetMinimized]}>
+        <TouchableOpacity
+          style={styles.dragHandle}
+          onPress={() => setIsMinimized(!isMinimized)}
+        >
+          <View style={styles.handleBar} />
+          <Text style={styles.minimizeChevron}>{isMinimized ? '▲ Expand' : '▼ Minimize'}</Text>
+        </TouchableOpacity>
 
-            {loading ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.loadingText}>{t('loadingOptions')}</Text>
-              </View>
-            ) : (
-              <ScrollView style={styles.optionsList} showsVerticalScrollIndicator={false}>
-                {rideOptions.map((ride) => {
-                  const isSelected =
-                    ride.id?.toString() === selectedRide || ride.id === selectedRide;
-                  return (
-                    <TouchableOpacity
-                      key={ride.id}
-                      style={[styles.rideRow, isSelected && styles.rideRowSelected]}
-                      onPress={() => setSelectedRide(ride.id?.toString())}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.rideIcon}>{ride.icon}</Text>
-                      <View style={styles.rideInfo}>
-                        <View style={styles.rideTitleRow}>
-                          <Text style={styles.rideName}>{ride.name}</Text>
-                          <Text style={styles.rideCapacity}>👤 4</Text>
-                        </View>
-                        <Text style={styles.rideSub}>
-                          {ride.eta_minutes} min · {ride.description || 'Direct ride'}
-                        </Text>
-                      </View>
-                      <Text style={styles.ridePrice}>{ride.base_price} ETB</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            )}
+        {isMinimized ? (
+          /* Minimized Compact View (Image 3) */
+          <View style={styles.minimizedContent}>
+            <Text style={styles.rideProgressTitle}>Ride in Progress</Text>
+            <Text style={styles.driverName}>Name: Abraham</Text>
+            <Text style={styles.driverRating}>Rating: ⭐⭐⭐⭐⭐ 4.6</Text>
 
-            <TouchableOpacity
-              style={[styles.confirmBtn, !activeRide && styles.confirmBtnDisabled]}
-              onPress={() => setIsRequested(true)}
-              disabled={!activeRide}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.confirmBtnText}>
-                Choose {activeRide?.name || 'AMEN Standard'}
-              </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <View style={styles.matchingContainer}>
-            <View style={styles.sheetHandle} />
-            <Animated.Text style={[styles.spinnerEmoji, { transform: [{ rotate: spin }] }]}>
-              🔄
-            </Animated.Text>
-            <Text style={styles.matchTitle}>{t('requestingRide')}</Text>
-            <View style={styles.steps}>
-              {MATCHING_STEPS.map((step, i) => (
-                <Text
-                  key={i}
-                  style={[
-                    styles.stepText,
-                    i < matchStep && styles.stepDone,
-                    i === matchStep && styles.stepActive,
-                  ]}
-                >
-                  {step}
-                </Text>
-              ))}
+            <View style={styles.locSummaryRow}>
+              <Text style={styles.locDotGreen}>🟢 From: </Text>
+              <Text style={styles.locSummaryText}>{startLocation}</Text>
             </View>
+            <View style={styles.locSummaryRow}>
+              <Text style={styles.locDotRed}>🔴 To: </Text>
+              <Text style={styles.locSummaryText}>{destination}</Text>
+            </View>
+
+            <Text style={styles.rideFooterMsg}>Ride in progress - Enjoy your trip!</Text>
+
             <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => setIsRequested(false)}
-              activeOpacity={0.9}
+              style={styles.completeBtn}
+              onPress={() => setShowRatingModal(true)}
             >
-              <Text style={styles.cancelBtnText}>{t('cancelRequest')}</Text>
+              <Text style={styles.completeBtnText}>Complete Ride & Rate</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          /* Expanded Card View (Image 1 & Image 2) */
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.cardHeading}>Your driver is here</Text>
+            <Text style={styles.cardSubheading}>The driver is waiting for you</Text>
+
+            {/* Vehicle Card Badge */}
+            <View style={styles.vehicleDetailsCard}>
+              <Text style={styles.vehicleModelName}>Toyota Camry</Text>
+              <View style={styles.badgePillRow}>
+                <View style={styles.colorPill}>
+                  <Text style={styles.colorPillText}>Black</Text>
+                </View>
+                <View style={styles.platePill}>
+                  <Text style={styles.platePillText}>55810AA</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Ride Selector Row */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
+              {rideOptions.map((ride) => (
+                <TouchableOpacity
+                  key={ride.id}
+                  style={[styles.rideCard, selectedRide === ride.id.toString() && styles.rideCardActive]}
+                  onPress={() => setSelectedRide(ride.id.toString())}
+                >
+                  <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
+                  <Text style={styles.rideName}>{ride.name}</Text>
+                  <Text style={styles.ridePrice}>~{ride.base_price || 200.23} ETB</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={styles.paymentBadgeRow}>
+              <Text style={styles.paymentIcon}>💵</Text>
+              <Text style={styles.paymentText}>Cash</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.setPickupBtn}
+              onPress={() => setIsRequested(true)}
+            >
+              <Text style={styles.setPickupText}>
+                {isRequested ? 'Driver Confirmed ✅' : 'Set pick-up point'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         )}
       </View>
 
-      <ReceiptModal
-        visible={showReceipt}
-        onClose={() => { setShowReceipt(false); setIsRequested(false); }}
-        tripData={{
-          fare: activeRide?.base_price || 210,
-          pickup_name: 'Your Location, Bahir Dar',
-          dropoff_name: 'Grand Resort Hotel, Lake Tana',
-        }}
+      <RatingModal
+        visible={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={() => setShowRatingModal(false)}
+        driverName="Abraham"
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  mapContainer: { width: '100%', height: '100%' },
-  iframeMap: { width: '100%', height: '100%', border: 'none' },
-
-  addressBar: {
-    position: 'absolute', top: 50, left: 16, right: 16, zIndex: 10,
-    backgroundColor: '#181818', borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: '#262626',
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
-  addressRow: { flexDirection: 'row', alignItems: 'center' },
-  pickupDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#3B82F6', marginRight: 12 },
-  dropoffDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFFFFF', marginRight: 12 },
-  addressDivider: { width: 1, height: 10, backgroundColor: '#333', marginLeft: 4.5, marginVertical: 2 },
-  addressText: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', flex: 1 },
-
+  iframeMap: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 0,
+  },
+  topInputCard: {
+    position: 'absolute',
+    top: 30,
+    left: 20,
+    right: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+    zIndex: 100,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeA: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  badgeB: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F59E0B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  locationInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A',
+    outlineStyle: 'none',
+  },
+  plusBtn: {
+    paddingHorizontal: 8,
+  },
+  plusText: {
+    fontSize: 22,
+    color: '#64748B',
+  },
+  inputDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 8,
+    marginLeft: 34,
+  },
+  etaFloatingBadge: {
+    position: 'absolute',
+    top: 155,
+    alignSelf: 'center',
+    backgroundColor: '#000000',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 100,
+  },
+  etaText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 14,
+  },
   bottomSheet: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#121212', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingTop: 10, paddingBottom: 32, paddingHorizontal: 16,
-    borderTopWidth: 1, borderColor: '#262626', maxHeight: height * 0.52,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: 460,
+    zIndex: 100,
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
   },
-  sheetHandle: {
-    width: 36, height: 4, borderRadius: 2, backgroundColor: '#333',
-    alignSelf: 'center', marginBottom: 14,
+  bottomSheetMinimized: {
+    maxHeight: 240,
+    backgroundColor: '#F8FAFC',
   },
-  sheetTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 12 },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 10 },
-  loadingText: { color: '#A0A0A0', fontSize: 13 },
-  optionsList: { maxHeight: 200, marginBottom: 16 },
-  rideRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12,
-    borderRadius: 14, marginBottom: 6, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#181818',
+  dragHandle: {
+    alignItems: 'center',
+    paddingBottom: 10,
+    cursor: 'pointer',
   },
-  rideRowSelected: { borderColor: '#FFFFFF', backgroundColor: '#262626' },
-  rideIcon: { fontSize: 32, marginRight: 14 },
-  rideInfo: { flex: 1 },
-  rideTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rideName: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
-  rideCapacity: { fontSize: 11, color: '#A0A0A0' },
-  rideSub: { fontSize: 11, color: '#A0A0A0', marginTop: 2 },
-  ridePrice: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
-  confirmBtn: {
-    backgroundColor: '#FFFFFF', borderRadius: 30, paddingVertical: 16,
-    alignItems: 'center', justifyContent: 'center',
+  handleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    marginBottom: 4,
   },
-  confirmBtnDisabled: { opacity: 0.4 },
-  confirmBtnText: { color: '#000000', fontSize: 16, fontWeight: '900' },
-
-  matchingContainer: { alignItems: 'center', paddingVertical: 10 },
-  spinnerEmoji: { fontSize: 48, marginBottom: 14 },
-  matchTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 16 },
-  steps: { width: '100%', marginBottom: 16 },
-  stepText: { fontSize: 13, color: '#7C7C7C', marginBottom: 8, textAlign: 'center' },
-  stepDone: { color: '#05A357' },
-  stepActive: { color: '#FFFFFF', fontWeight: '800' },
-  cancelBtn: {
-    backgroundColor: '#262626', borderRadius: 30, paddingVertical: 14,
-    paddingHorizontal: 30, width: '100%', alignItems: 'center',
+  minimizeChevron: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
   },
-  cancelBtnText: { color: '#EF4444', fontWeight: '800', fontSize: 15 },
+  minimizedContent: {
+    paddingVertical: 4,
+  },
+  rideProgressTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  driverName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  driverRating: {
+    fontSize: 13,
+    color: '#D97706',
+    marginVertical: 2,
+  },
+  locSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  locDotGreen: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '700',
+  },
+  locDotRed: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '700',
+  },
+  locSummaryText: {
+    fontSize: 13,
+    color: '#475569',
+    flex: 1,
+  },
+  rideFooterMsg: {
+    fontSize: 12,
+    color: '#64748B',
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  completeBtn: {
+    backgroundColor: '#0D9488',
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  completeBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  cardHeading: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  cardSubheading: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 14,
+  },
+  vehicleDetailsCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
+  },
+  vehicleModelName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  badgePillRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  colorPill: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  colorPillText: {
+    fontWeight: '800',
+    color: '#0F172A',
+    fontSize: 12,
+  },
+  platePill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  platePillText: {
+    fontWeight: '800',
+    color: '#0F172A',
+    fontSize: 12,
+  },
+  rideSelectorRow: {
+    flexDirection: 'row',
+    marginBottom: 14,
+  },
+  rideCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    width: 140,
+    cursor: 'pointer',
+  },
+  rideCardActive: {
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+  },
+  rideIcon: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
+  rideName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  ridePrice: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  paymentBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 12,
+    gap: 6,
+  },
+  paymentIcon: {
+    fontSize: 16,
+  },
+  paymentText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  setPickupBtn: {
+    backgroundColor: '#F59E0B',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    cursor: 'pointer',
+  },
+  setPickupText: {
+    color: '#0F172A',
+    fontWeight: '900',
+    fontSize: 16,
+  },
 });
