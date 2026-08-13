@@ -99,12 +99,14 @@ export default function MapScreenWeb() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#000000' }]}>
-      {/* Leaflet Web Map */}
-      <iframe
-        title="Bahir Dar Interactive Map"
-        srcDoc={buildMapHTML(API_BASE, startCoords.lat, startCoords.lng, destCoords.lat, destCoords.lng)}
-        style={styles.iframeMap}
-      />
+      {/* Leaflet Web Map Container */}
+      <View style={styles.iframeContainer}>
+        <iframe
+          title="Bahir Dar Interactive Map"
+          srcDoc={buildMapHTML(API_BASE, startCoords.lat, startCoords.lng, destCoords.lat, destCoords.lng)}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        />
+      </View>
 
       {/* Floating Interactive Location Card */}
       <View style={[styles.topInputCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
@@ -291,12 +293,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  iframeMap: {
+  iframeContainer: {
+    flex: 1,
     width: '100%',
     height: '100%',
-    borderWidth: 0,
   },
   topInputCard: {
+
     position: 'absolute',
     top: 30,
     left: 20,

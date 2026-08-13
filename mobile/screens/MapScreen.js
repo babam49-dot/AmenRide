@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
+  Platform,
 } from 'react-native';
+
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { fetchRideOptions } from '../services/tripsApi';
 import { useTheme } from '../context/ThemeContext';
@@ -25,7 +27,13 @@ const BAHIR_DAR_PRESETS = [
 ];
 
 export default function MapScreen() {
+  if (Platform.OS === 'web') {
+    const MapScreenWeb = require('./MapScreen.web').default;
+    return <MapScreenWeb />;
+  }
+
   const { mode } = useTheme();
+
   const isDark = mode === 'dark';
 
   const [startLocation, setStartLocation]   = useState(BAHIR_DAR_PRESETS[0].name);

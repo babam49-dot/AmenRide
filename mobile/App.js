@@ -8,12 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 
-
-// Import Screens
+// Import Screens (Platform specific MapScreen resolution)
 import HomeScreen from './screens/HomeScreen';
-import MapScreen from './screens/MapScreen';
+import MapScreenNative from './screens/MapScreen';
+import MapScreenWeb from './screens/MapScreen.web';
 import DriverScreen from './screens/DriverScreen';
 import SettingsScreen from './screens/SettingsScreen';
+
+const MapScreen = Platform.OS === 'web' ? MapScreenWeb : MapScreenNative;
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -26,7 +28,6 @@ const TAB_ICONS = {
   Account:  { active: 'person-circle', inactive: 'person-circle-outline' },
 };
 
-// Professional Uber-style tab icon using Ionicons
 function UberTabIcon({ name, focused }) {
   const iconSet = TAB_ICONS[name] || { active: 'ellipse', inactive: 'ellipse-outline' };
   const iconName = focused ? iconSet.active : iconSet.inactive;
@@ -46,7 +47,6 @@ function UberTabIcon({ name, focused }) {
     </View>
   );
 }
-
 
 function TabNavigator() {
   const { t } = useLanguage();
