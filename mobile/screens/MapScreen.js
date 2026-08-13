@@ -9,6 +9,11 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { fetchRideOptions } from '../services/tripsApi';
+import { useTheme } from '../context/ThemeContext';
+import RatingModal from '../components/RatingModal';
+
+const { width, height } = Dimensions.get('window');
 
 let MapView, Marker, Polyline, PROVIDER_GOOGLE;
 if (Platform.OS !== 'web') {
@@ -23,12 +28,6 @@ if (Platform.OS !== 'web') {
   }
 }
 
-import { fetchRideOptions } from '../services/tripsApi';
-import { useTheme } from '../context/ThemeContext';
-import RatingModal from '../components/RatingModal';
-
-const { width, height } = Dimensions.get('window');
-
 const BAHIR_DAR_PRESETS = [
   { name: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar', lat: 11.5980, lng: 37.3820 },
   { name: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore', lat: 11.5936, lng: 37.3950 },
@@ -38,6 +37,28 @@ const BAHIR_DAR_PRESETS = [
   { name: 'Bole International Airport', subtitle: 'Addis Ababa', lat: 8.9779, lng: 38.7993 },
 ];
 
+// Haversine formula: Real distance in kilometers
+function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return parseFloat((R * c).toFixed(2));
+}
+
+// Calculate dynamic ETA in minutes (avg 30 km/h speed + 2 min buffer)
+function getDynamicEtaMinutes(distanceKm) {
+  if (!distanceKm || distanceKm <= 0.1) return 2;
+  const driveMins = Math.round((distanceKm / 30) * 60);
+  return Math.max(2, driveMins + 2);
+}
+
 export default function MapScreen() {
   if (Platform.OS === 'web') {
     const MapScreenWeb = require('./MapScreen.web').default;
@@ -45,7 +66,6 @@ export default function MapScreen() {
   }
 
   const { mode } = useTheme();
-
   const isDark = mode === 'dark';
 
   const [startLocation, setStartLocation]   = useState(BAHIR_DAR_PRESETS[0].name);
@@ -53,7 +73,7 @@ export default function MapScreen() {
   const [destination, setDestination]       = useState(BAHIR_DAR_PRESETS[1].name);
   const [destCoords, setDestCoords]         = useState({ latitude: 11.5936, longitude: 37.3950 });
 
-  const [activeInput, setActiveInput]       = useState(null); // 'start' | 'dest' | null
+  const [activeInput, setActiveInput]       = useState(null);
   const [selectedRide, setSelectedRide]     = useState('1');
   const [isRequested, setIsRequested]       = useState(false);
   const [isMinimized, setIsMinimized]       = useState(false);
@@ -78,6 +98,15 @@ export default function MapScreen() {
     setActiveInput(null);
   };
 
+  // Real Dynamic Calculations
+  const distanceKm = getHaversineDistanceKm(
+    startCoords.latitude,
+    startCoords.longitude,
+    destCoords.latitude,
+    destCoords.longitude
+  );
+  const etaMinutes = getDynamicEtaMinutes(distanceKm);
+
   const routePolyline = [
     startCoords,
     {
@@ -89,7 +118,6 @@ export default function MapScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
-
       {/* Real Map View */}
       <MapView
         provider={PROVIDER_GOOGLE}
@@ -116,7 +144,7 @@ export default function MapScreen() {
         </Marker>
       </MapView>
 
-      {/* Floating Interactive Location Card */}
+      {/* Floating Location Card */}
       <View style={[styles.topInputCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
         <View style={styles.inputRow}>
           <View style={styles.badgeA}>
@@ -174,12 +202,12 @@ export default function MapScreen() {
         )}
       </View>
 
-      {/* Floating ETA Badge */}
+      {/* Dynamic Top Floating ETA Badge (Calculates Real Time & Distance) */}
       <View style={styles.etaFloatingBadge}>
-        <Text style={styles.etaText}>1 min</Text>
+        <Text style={styles.etaText}>{etaMinutes} min ({distanceKm} km)</Text>
       </View>
 
-      {/* Bottom Sheet Card with Clean Drag Bar (No Text) */}
+      {/* Bottom Sheet Card */}
       <View
         style={[
           styles.bottomSheet,
@@ -187,7 +215,6 @@ export default function MapScreen() {
           isMinimized && styles.bottomSheetMinimized,
         ]}
       >
-        {/* Sleek Pill Handle Bar - Hand drag / tap trigger (No Text) */}
         <TouchableOpacity
           style={styles.dragHandle}
           activeOpacity={0.7}
@@ -197,10 +224,10 @@ export default function MapScreen() {
         </TouchableOpacity>
 
         {isMinimized ? (
-          /* Minimized Compact View */
+          /* Minimized Compact Summary */
           <View style={styles.minimizedContent}>
             <Text style={[styles.rideProgressTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-              Ride in Progress
+              Ride in Progress ({etaMinutes} min • {distanceKm} km)
             </Text>
             <Text style={[styles.driverName, { color: isDark ? '#E2E8F0' : '#334155' }]}>
               Name: Abraham
@@ -233,9 +260,11 @@ export default function MapScreen() {
           /* Expanded Full Card View */
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.cardHeading, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-              Your driver is here
+              Your driver is here ({etaMinutes} min away)
             </Text>
-            <Text style={styles.cardSubheading}>The driver is waiting for you</Text>
+            <Text style={styles.cardSubheading}>
+              Driver is waiting • Distance: {distanceKm} km
+            </Text>
 
             {/* Vehicle Details Card */}
             <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
@@ -252,25 +281,28 @@ export default function MapScreen() {
               </View>
             </View>
 
-            {/* Ride Selector */}
+            {/* Ride Selector Row with Dynamic Calculated Fares */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
-              {rideOptions.map((ride) => (
-                <TouchableOpacity
-                  key={ride.id}
-                  style={[
-                    styles.rideCard,
-                    { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
-                    selectedRide === ride.id.toString() && styles.rideCardActive,
-                  ]}
-                  onPress={() => setSelectedRide(ride.id.toString())}
-                >
-                  <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                  <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                    {ride.name}
-                  </Text>
-                  <Text style={styles.ridePrice}>~{ride.base_price || 200.23} ETB</Text>
-                </TouchableOpacity>
-              ))}
+              {rideOptions.map((ride) => {
+                const dynamicFare = Math.round((ride.base_price || 80) + distanceKm * 25);
+                return (
+                  <TouchableOpacity
+                    key={ride.id}
+                    style={[
+                      styles.rideCard,
+                      { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+                      selectedRide === ride.id.toString() && styles.rideCardActive,
+                    ]}
+                    onPress={() => setSelectedRide(ride.id.toString())}
+                  >
+                    <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
+                    <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                      {ride.name}
+                    </Text>
+                    <Text style={styles.ridePrice}>~{dynamicFare} ETB</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
             <View style={styles.paymentBadgeRow}>

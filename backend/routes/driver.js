@@ -11,6 +11,8 @@ router.get('/nearby', driverController.getNearbyDrivers);
 
 // POST /api/driver/location — Broadcast dynamic driver GPS coordinates
 router.post('/location', driverController.updateDriverLocation);
+router.post('/:id/location', driverController.updateDriverLocation);
+
 
 // GET /api/driver/:id — Retrieve driver profile by ID
 router.get('/:id', driverController.getDriverById);

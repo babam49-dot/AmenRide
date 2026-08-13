@@ -24,6 +24,26 @@ const BAHIR_DAR_PRESETS = [
   { name: 'Bole International Airport', subtitle: 'Addis Ababa', lat: 8.9779, lng: 38.7993 },
 ];
 
+function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return parseFloat((R * c).toFixed(2));
+}
+
+function getDynamicEtaMinutes(distanceKm) {
+  if (!distanceKm || distanceKm <= 0.1) return 2;
+  const driveMins = Math.round((distanceKm / 30) * 60);
+  return Math.max(2, driveMins + 2);
+}
+
 const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng) => `
 <!DOCTYPE html>
 <html>
@@ -97,9 +117,16 @@ export default function MapScreenWeb() {
     setActiveInput(null);
   };
 
+  const distanceKm = getHaversineDistanceKm(
+    startCoords.lat,
+    startCoords.lng,
+    destCoords.lat,
+    destCoords.lng
+  );
+  const etaMinutes = getDynamicEtaMinutes(distanceKm);
+
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
-
       {/* Leaflet Web Map Container */}
       <View style={styles.iframeContainer}>
         <iframe
@@ -165,12 +192,12 @@ export default function MapScreenWeb() {
         )}
       </View>
 
-      {/* Floating ETA Badge */}
+      {/* Dynamic Floating ETA Badge */}
       <View style={styles.etaFloatingBadge}>
-        <Text style={styles.etaText}>1 min</Text>
+        <Text style={styles.etaText}>{etaMinutes} min ({distanceKm} km)</Text>
       </View>
 
-      {/* Bottom Sheet Card with Clean Drag Bar (No Text) */}
+      {/* Bottom Sheet Card */}
       <View
         style={[
           styles.bottomSheet,
@@ -187,10 +214,10 @@ export default function MapScreenWeb() {
         </TouchableOpacity>
 
         {isMinimized ? (
-          /* Minimized Compact View */
+          /* Minimized Compact Summary */
           <View style={styles.minimizedContent}>
             <Text style={[styles.rideProgressTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-              Ride in Progress
+              Ride in Progress ({etaMinutes} min • {distanceKm} km)
             </Text>
             <Text style={[styles.driverName, { color: isDark ? '#E2E8F0' : '#334155' }]}>
               Name: Abraham
@@ -223,9 +250,11 @@ export default function MapScreenWeb() {
           /* Expanded Card View */
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.cardHeading, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-              Your driver is here
+              Your driver is here ({etaMinutes} min away)
             </Text>
-            <Text style={styles.cardSubheading}>The driver is waiting for you</Text>
+            <Text style={styles.cardSubheading}>
+              Driver is waiting • Distance: {distanceKm} km
+            </Text>
 
             {/* Vehicle Details Card */}
             <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
@@ -242,25 +271,28 @@ export default function MapScreenWeb() {
               </View>
             </View>
 
-            {/* Ride Selector Row */}
+            {/* Ride Selector Row with Dynamic Calculated Fares */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
-              {rideOptions.map((ride) => (
-                <TouchableOpacity
-                  key={ride.id}
-                  style={[
-                    styles.rideCard,
-                    { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
-                    selectedRide === ride.id.toString() && styles.rideCardActive,
-                  ]}
-                  onPress={() => setSelectedRide(ride.id.toString())}
-                >
-                  <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                  <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                    {ride.name}
-                  </Text>
-                  <Text style={styles.ridePrice}>~{ride.base_price || 200.23} ETB</Text>
-                </TouchableOpacity>
-              ))}
+              {rideOptions.map((ride) => {
+                const dynamicFare = Math.round((ride.base_price || 80) + distanceKm * 25);
+                return (
+                  <TouchableOpacity
+                    key={ride.id}
+                    style={[
+                      styles.rideCard,
+                      { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+                      selectedRide === ride.id.toString() && styles.rideCardActive,
+                    ]}
+                    onPress={() => setSelectedRide(ride.id.toString())}
+                  >
+                    <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
+                    <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                      {ride.name}
+                    </Text>
+                    <Text style={styles.ridePrice}>~{dynamicFare} ETB</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
             <View style={styles.paymentBadgeRow}>
@@ -300,7 +332,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   topInputCard: {
-
     position: 'absolute',
     top: 30,
     left: 20,

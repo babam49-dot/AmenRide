@@ -34,7 +34,8 @@ async function getNearbyDrivers(req, res) {
 
 async function updateDriverLocation(req, res) {
   try {
-    const { driverId, lat, lng, isOnline } = req.body;
+    const driverId = req.params.id || req.body.driverId;
+    const { lat, lng, isOnline } = req.body;
 
     if (!driverId || lat === undefined || lng === undefined) {
       return res.status(400).json({
@@ -42,6 +43,7 @@ async function updateDriverLocation(req, res) {
         error: 'Missing required parameters: driverId, lat, lng',
       });
     }
+
 
     const updatedDriver = await DriverModel.updateLocation(
       driverId,
