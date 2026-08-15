@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
-
+import { useTheme } from '../context/ThemeContext';
 
 const RATING_TAGS = ['Smooth Drive', 'Polite Driver', 'Clean Vehicle', 'Great Route', 'Punctual'];
 
 export default function RatingModal({ visible, onClose, onSubmit, driverName = 'Driver' }) {
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
   const [rating, setRating] = useState(5);
   const [selectedTags, setSelectedTags] = useState([]);
   const [comment, setComment] = useState('');
@@ -22,12 +24,23 @@ export default function RatingModal({ visible, onClose, onSubmit, driverName = '
     onClose();
   };
 
+  const dynamicStyles = {
+    container: { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
+    title: { color: isDark ? '#F8FAFC' : '#0F172A' },
+    subtitle: { color: isDark ? '#94A3B8' : '#64748B' },
+    input: { backgroundColor: isDark ? '#0F172A' : '#F8FAFC', color: isDark ? '#F8FAFC' : '#0F172A', borderColor: isDark ? '#334155' : '#E2E8F0' },
+    cancelBtn: { backgroundColor: isDark ? '#334155' : '#F1F5F9' },
+    cancelText: { color: isDark ? '#CBD5E1' : '#64748B' },
+    tagPill: { backgroundColor: isDark ? '#0F172A' : '#F1F5F9', borderColor: isDark ? '#334155' : '#E2E8F0' },
+    tagText: { color: isDark ? '#CBD5E1' : '#475569' },
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Rate your trip with {driverName}</Text>
-          <Text style={styles.subtitle}>How was your ride experience?</Text>
+        <View style={[styles.container, dynamicStyles.container]}>
+          <Text style={[styles.title, dynamicStyles.title]}>Rate your trip with {driverName}</Text>
+          <Text style={[styles.subtitle, dynamicStyles.subtitle]}>How was your ride experience?</Text>
 
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
@@ -37,34 +50,34 @@ export default function RatingModal({ visible, onClose, onSubmit, driverName = '
             ))}
           </View>
 
-          <Text style={styles.tagsHeader}>Quick Feedback</Text>
+          <Text style={[styles.tagsHeader, dynamicStyles.title]}>Quick Feedback</Text>
           <View style={styles.tagsContainer}>
             {RATING_TAGS.map((tag) => {
               const active = selectedTags.includes(tag);
               return (
                 <TouchableOpacity
                   key={tag}
-                  style={[styles.tagPill, active && styles.tagPillActive]}
+                  style={[styles.tagPill, dynamicStyles.tagPill, active && styles.tagPillActive]}
                   onPress={() => toggleTag(tag)}
                 >
-                  <Text style={[styles.tagText, active && styles.tagTextActive]}>{tag}</Text>
+                  <Text style={[styles.tagText, dynamicStyles.tagText, active && styles.tagTextActive]}>{tag}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, dynamicStyles.input]}
             placeholder="Add additional comments (optional)..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
             value={comment}
             onChangeText={setComment}
             multiline
           />
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelText}>Skip</Text>
+            <TouchableOpacity style={[styles.cancelBtn, dynamicStyles.cancelBtn]} onPress={onClose}>
+              <Text style={[styles.cancelText, dynamicStyles.cancelText]}>Skip</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
               <Text style={styles.submitText}>Submit Rating</Text>
@@ -79,12 +92,11 @@ export default function RatingModal({ visible, onClose, onSubmit, driverName = '
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     padding: 20,
   },
   container: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -95,12 +107,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0F172A',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
     textAlign: 'center',
     marginVertical: 6,
   },
@@ -120,7 +130,6 @@ const styles = StyleSheet.create({
   tagsHeader: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#334155',
     marginBottom: 8,
   },
   tagsContainer: {
@@ -133,9 +142,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   tagPillActive: {
     backgroundColor: '#CCFBF1',
@@ -143,16 +150,13 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 12,
-    color: '#475569',
   },
   tagTextActive: {
     color: '#0F766E',
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     borderRadius: 10,
     padding: 12,
     height: 70,
@@ -170,10 +174,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: '#F1F5F9',
   },
   cancelText: {
-    color: '#64748B',
     fontWeight: '600',
   },
   submitBtn: {
