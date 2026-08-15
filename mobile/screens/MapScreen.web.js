@@ -148,6 +148,7 @@ export default function MapScreenWeb() {
             onChangeText={setStartLocation}
             onFocus={() => setActiveInput('start')}
             placeholder="Search start location..."
+            placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
           />
         </View>
 
@@ -163,6 +164,7 @@ export default function MapScreenWeb() {
             onChangeText={setDestination}
             onFocus={() => setActiveInput('dest')}
             placeholder="Search destination..."
+            placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
           />
           <TouchableOpacity style={styles.plusBtn}>
             <Text style={styles.plusText}>+</Text>
@@ -171,7 +173,7 @@ export default function MapScreenWeb() {
 
         {/* Dynamic Search Suggestions Dropdown */}
         {activeInput && (
-          <View style={[styles.suggestionsBox, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
+          <View style={[styles.suggestionsBox, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
             <Text style={styles.suggestionsHeader}>Suggested Locations in Bahir Dar</Text>
             {BAHIR_DAR_PRESETS.map((item, idx) => (
               <TouchableOpacity
@@ -184,7 +186,7 @@ export default function MapScreenWeb() {
                   <Text style={[styles.suggestionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
                     {item.name}
                   </Text>
-                  <Text style={styles.suggestionSub}>{item.subtitle}</Text>
+                  <Text style={[styles.suggestionSub, { color: isDark ? '#94A3B8' : '#64748B' }]}>{item.subtitle}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -237,7 +239,7 @@ export default function MapScreenWeb() {
               </Text>
             </View>
 
-            <Text style={styles.rideFooterMsg}>Ride in progress - Enjoy your trip!</Text>
+            <Text style={[styles.rideFooterMsg, { color: isDark ? '#94A3B8' : '#64748B' }]}>Ride in progress - Enjoy your trip!</Text>
 
             <TouchableOpacity
               style={styles.completeBtn}
@@ -252,12 +254,12 @@ export default function MapScreenWeb() {
             <Text style={[styles.cardHeading, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
               Your driver is here ({etaMinutes} min away)
             </Text>
-            <Text style={styles.cardSubheading}>
+            <Text style={[styles.cardSubheading, { color: isDark ? '#94A3B8' : '#64748B' }]}>
               Driver is waiting • Distance: {distanceKm} km
             </Text>
 
             {/* Vehicle Details Card */}
-            <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+            <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC', borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
               <Text style={[styles.vehicleModelName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
                 Toyota Camry
               </Text>
@@ -280,7 +282,7 @@ export default function MapScreenWeb() {
                     key={ride.id}
                     style={[
                       styles.rideCard,
-                      { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' },
+                      { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' },
                       selectedRide === ride.id.toString() && styles.rideCardActive,
                     ]}
                     onPress={() => setSelectedRide(ride.id.toString())}
@@ -289,7 +291,7 @@ export default function MapScreenWeb() {
                     <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
                       {ride.name}
                     </Text>
-                    <Text style={styles.ridePrice}>~{dynamicFare} ETB</Text>
+                    <Text style={[styles.ridePrice, { color: isDark ? '#38BDF8' : '#0D9488' }]}>~{dynamicFare} ETB</Text>
                   </TouchableOpacity>
                 );
               })}
