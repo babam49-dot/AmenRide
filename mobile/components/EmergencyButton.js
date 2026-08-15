@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function EmergencyButton({ currentTripId, driverInfo }) {
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleTriggerSOS = () => {
@@ -13,6 +16,13 @@ export default function EmergencyButton({ currentTripId, driverInfo }) {
     );
   };
 
+  const dynamicStyles = {
+    dialog: { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
+    description: { color: isDark ? '#CBD5E1' : '#475569' },
+    cancelBtn: { backgroundColor: isDark ? '#334155' : '#F1F5F9' },
+    cancelText: { color: isDark ? '#F8FAFC' : '#475569' },
+  };
+
   return (
     <>
       <TouchableOpacity style={styles.sosButton} onPress={() => setModalVisible(true)}>
@@ -21,9 +31,9 @@ export default function EmergencyButton({ currentTripId, driverInfo }) {
 
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.overlay}>
-          <View style={styles.dialog}>
+          <View style={[styles.dialog, dynamicStyles.dialog]}>
             <Text style={styles.title}>Emergency SOS Assistance</Text>
-            <Text style={styles.description}>
+            <Text style={[styles.description, dynamicStyles.description]}>
               Are you in immediate danger? Pressing confirm will share your live GPS updates with local emergency authorities in Bahir Dar.
             </Text>
 
@@ -34,8 +44,8 @@ export default function EmergencyButton({ currentTripId, driverInfo }) {
             </View>
 
             <View style={styles.actions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
+              <TouchableOpacity style={[styles.cancelBtn, dynamicStyles.cancelBtn]} onPress={() => setModalVisible(false)}>
+                <Text style={[styles.cancelText, dynamicStyles.cancelText]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmBtn} onPress={handleTriggerSOS}>
                 <Text style={styles.confirmText}>CONFIRM SOS</Text>
@@ -68,7 +78,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   dialog: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
   },
@@ -81,7 +90,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: '#475569',
     lineHeight: 20,
     textAlign: 'center',
     marginBottom: 16,
@@ -108,11 +116,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
   },
   cancelText: {
-    color: '#475569',
     fontWeight: '600',
   },
   confirmBtn: {
