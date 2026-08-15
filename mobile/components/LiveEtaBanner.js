@@ -1,18 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function LiveEtaBanner({ etaMinutes = 5, distanceKm = 1.8, statusText = 'Driver En Route' }) {
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+
+  const dynamicStyles = {
+    banner: { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#1E293B' : '#E2E8F0' },
+    status: { color: isDark ? '#F8FAFC' : '#0F172A' },
+    distance: { color: isDark ? '#94A3B8' : '#64748B' },
+  };
+
   return (
-    <View style={styles.banner}>
+    <View style={[styles.banner, dynamicStyles.banner]}>
       <View style={styles.leftSection}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>LIVE GPS</Text>
         </View>
-        <Text style={styles.status}>{statusText}</Text>
+        <Text style={[styles.status, dynamicStyles.status]}>{statusText}</Text>
       </View>
       <View style={styles.rightSection}>
         <Text style={styles.eta}>{etaMinutes} min</Text>
-        <Text style={styles.distance}>{distanceKm} km away</Text>
+        <Text style={[styles.distance, dynamicStyles.distance]}>{distanceKm} km away</Text>
       </View>
     </View>
   );
@@ -23,11 +33,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0F172A',
     borderRadius: 14,
     padding: 14,
     marginHorizontal: 16,
     marginTop: 10,
+    borderWidth: 1,
     elevation: 5,
   },
   leftSection: {
@@ -47,7 +57,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   status: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -55,12 +64,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   eta: {
-    color: '#38BDF8',
+    color: '#0284C7',
     fontSize: 18,
     fontWeight: '700',
   },
   distance: {
-    color: '#94A3B8',
     fontSize: 12,
   },
 });
