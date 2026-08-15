@@ -33,13 +33,12 @@ const POPULAR_DESTINATIONS = [
 
 export default function HomeScreen({ navigation }) {
   const { lang, toggleLanguage, t } = useLanguage();
-  const { mode } = useTheme();
+  const { mode, theme } = useTheme();
   const isDark = mode === 'dark';
   const [activeRole, setActiveRole] = useState('rider');
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [selectedReceiptTrip, setSelectedReceiptTrip] = useState(null);
-
 
   useEffect(() => {
     fetchTrips(1).then((data) => {
@@ -48,24 +47,37 @@ export default function HomeScreen({ navigation }) {
     });
   }, []);
 
+  const dynamicStyles = {
+    container: { backgroundColor: theme?.background || (isDark ? '#0F172A' : '#F8FAFC') },
+    headerTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    cardBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
+    pillBg: { backgroundColor: isDark ? '#262626' : '#F1F5F9', borderColor: isDark ? '#333333' : '#CBD5E1' },
+    textPrimary: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    textSecondary: { color: isDark ? '#A0A0A0' : '#64748B' },
+    activeRolePill: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    activeRoleText: { color: isDark ? '#000000' : '#FFFFFF' },
+    subtleDivider: { borderBottomColor: isDark ? '#262626' : '#E2E8F0' },
+    promoBtnBg: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    promoBtnText: { color: isDark ? '#000000' : '#FFFFFF' },
+  };
+
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
+      style={[styles.container, dynamicStyles.container]}
       showsVerticalScrollIndicator={false}
     >
-
       {/* Top Header */}
       <View style={styles.topRow}>
-        <Text style={styles.uberLogo}>
+        <Text style={[styles.uberLogo, dynamicStyles.headerTitle]}>
           Uber <Text style={styles.uberSubLogo}>AMEN</Text>
         </Text>
 
         <View style={styles.headerRightRow}>
-          <TouchableOpacity style={styles.langPill} onPress={toggleLanguage}>
-            <Text style={styles.langText}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
+          <TouchableOpacity style={[styles.langPill, dynamicStyles.pillBg]} onPress={toggleLanguage}>
+            <Text style={[styles.langText, dynamicStyles.textPrimary]}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
           </TouchableOpacity>
 
-          <View style={styles.roleContainer}>
+          <View style={[styles.roleContainer, dynamicStyles.cardBg]}>
             {[
               { key: 'rider', label: 'Rider' },
               { key: 'driver', label: 'Driver' },
@@ -73,10 +85,10 @@ export default function HomeScreen({ navigation }) {
             ].map((r) => (
               <TouchableOpacity
                 key={r.key}
-                style={[styles.rolePill, activeRole === r.key && styles.rolePillActive]}
+                style={[styles.rolePill, activeRole === r.key && dynamicStyles.activeRolePill]}
                 onPress={() => setActiveRole(r.key)}
               >
-                <Text style={[styles.roleText, activeRole === r.key && styles.roleTextActive]}>
+                <Text style={[styles.roleText, dynamicStyles.textSecondary, activeRole === r.key && dynamicStyles.activeRoleText]}>
                   {r.label}
                 </Text>
               </TouchableOpacity>
@@ -87,15 +99,15 @@ export default function HomeScreen({ navigation }) {
 
       {/* Where to Search Bar */}
       <TouchableOpacity
-        style={styles.searchPill}
+        style={[styles.searchPill, dynamicStyles.cardBg]}
         onPress={() => navigation.navigate('Services')}
         activeOpacity={0.9}
       >
         <Text style={styles.searchIcon}>🔍</Text>
-        <Text style={styles.searchPlaceholder}>{t('whereTo')}</Text>
+        <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
 
-        <View style={styles.timePill}>
-          <Text style={styles.timeText}>⏱️ {t('pickupNow')}</Text>
+        <View style={[styles.timePill, dynamicStyles.pillBg]}>
+          <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
         </View>
       </TouchableOpacity>
 
@@ -104,13 +116,13 @@ export default function HomeScreen({ navigation }) {
         {POPULAR_DESTINATIONS.map((dest, idx) => (
           <TouchableOpacity
             key={idx}
-            style={styles.chip}
+            style={[styles.chip, dynamicStyles.cardBg]}
             onPress={() => navigation.navigate('Services', { destination: dest.title })}
           >
             <Text style={styles.chipIcon}>📍</Text>
             <View>
-              <Text style={styles.chipTitle}>{dest.title}</Text>
-              <Text style={styles.chipSub}>{dest.subtitle}</Text>
+              <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
+              <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -122,9 +134,9 @@ export default function HomeScreen({ navigation }) {
       ) : (
         <>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('suggestions')}</Text>
+            <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('suggestions')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Services')}>
-              <Text style={styles.seeAllText}>{t('seeAll')}</Text>
+              <Text style={[styles.seeAllText, dynamicStyles.textSecondary]}>{t('seeAll')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -132,37 +144,37 @@ export default function HomeScreen({ navigation }) {
             {UBER_SUGGESTIONS.map((item) => (
               <TouchableOpacity
                 key={item.name}
-                style={styles.suggestionCard}
+                style={[styles.suggestionCard, dynamicStyles.cardBg]}
                 onPress={() => navigation.navigate(item.screen)}
                 activeOpacity={0.85}
               >
-                <View style={styles.suggestionIconBox}>
+                <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
                   <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
                 </View>
-                <Text style={styles.suggestionName}>{item.name}</Text>
-                <Text style={styles.suggestionSub}>{item.sub}</Text>
+                <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
+                <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <View style={styles.promoCard}>
+          <View style={[styles.promoCard, dynamicStyles.cardBg]}>
             <View style={styles.promoTextContainer}>
               <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
-              <Text style={styles.promoTitle}>{t('goAnywhere')}</Text>
-              <Text style={styles.promoDesc}>
+              <Text style={[styles.promoTitle, dynamicStyles.textPrimary]}>{t('goAnywhere')}</Text>
+              <Text style={[styles.promoDesc, dynamicStyles.textSecondary]}>
                 {activeRole === 'driver'
                   ? 'Today: 1,450 ETB Earned · 8 Trips Completed'
                   : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
               </Text>
 
               <TouchableOpacity
-                style={styles.promoBtn}
+                style={[styles.promoBtn, dynamicStyles.promoBtnBg]}
                 onPress={() =>
                   navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
                 }
                 activeOpacity={0.9}
               >
-                <Text style={styles.promoBtnText}>
+                <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
                   {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
                 </Text>
               </TouchableOpacity>
@@ -173,30 +185,30 @@ export default function HomeScreen({ navigation }) {
 
       {/* Recent Trips */}
       <View style={styles.recentSection}>
-        <Text style={styles.sectionTitle}>{t('recentActivity')}</Text>
+        <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('recentActivity')}</Text>
 
         {loadingTrips ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color="#FFFFFF" size="small" />
-            <Text style={styles.loadingText}>{t('loadingTrips')}</Text>
+            <ActivityIndicator color={isDark ? '#FFFFFF' : '#0D9488'} size="small" />
+            <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>{t('loadingTrips')}</Text>
           </View>
         ) : (
           trips.slice(0, 4).map((trip, i) => (
             <TouchableOpacity
               key={trip.id || i}
-              style={styles.tripRow}
+              style={[styles.tripRow, dynamicStyles.subtleDivider]}
               activeOpacity={0.8}
               onPress={() => setSelectedReceiptTrip(trip)}
             >
-              <View style={styles.tripIconBox}>
+              <View style={[styles.tripIconBox, dynamicStyles.pillBg]}>
                 <Text style={styles.tripIcon}>📍</Text>
               </View>
               <View style={styles.tripDetails}>
-                <Text style={styles.tripTitle} numberOfLines={1}>{trip.dropoff_name}</Text>
-                <Text style={styles.tripAddr} numberOfLines={1}>{trip.dropoff_addr}</Text>
+                <Text style={[styles.tripTitle, dynamicStyles.textPrimary]} numberOfLines={1}>{trip.dropoff_name}</Text>
+                <Text style={[styles.tripAddr, dynamicStyles.textSecondary]} numberOfLines={1}>{trip.dropoff_addr}</Text>
               </View>
               <View style={styles.tripRight}>
-                <Text style={styles.tripPrice}>{Math.round(trip.fare)} ETB</Text>
+                <Text style={[styles.tripPrice, dynamicStyles.textPrimary]}>{Math.round(trip.fare)} ETB</Text>
                 <Text style={styles.receiptTag}>🧾 Receipt</Text>
               </View>
             </TouchableOpacity>
@@ -218,7 +230,6 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'web' ? 20 : 52,
   },
@@ -236,7 +247,6 @@ const styles = StyleSheet.create({
   uberLogo: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   uberSubLogo: {
@@ -244,52 +254,38 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   langPill: {
-    backgroundColor: '#262626',
     borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#333333',
   },
   langText: {
-    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
   },
   roleContainer: {
     flexDirection: 'row',
-    backgroundColor: '#181818',
     borderRadius: 18,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   rolePill: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 14,
   },
-  rolePillActive: {
-    backgroundColor: '#FFFFFF',
-  },
   roleText: {
-    color: '#A0A0A0',
     fontSize: 10,
     fontWeight: '700',
-  },
-  roleTextActive: {
-    color: '#000000',
   },
   searchPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#181818',
     borderRadius: 30,
     paddingVertical: 14,
     paddingHorizontal: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   searchIcon: {
     fontSize: 18,
@@ -299,16 +295,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   timePill: {
-    backgroundColor: '#262626',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   timeText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -318,25 +311,21 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#181818',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   chipIcon: {
     fontSize: 14,
     marginRight: 8,
   },
   chipTitle: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
   },
   chipSub: {
-    color: '#8E8E93',
     fontSize: 10,
   },
   sectionHeader: {
@@ -348,10 +337,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
   },
   seeAllText: {
-    color: '#A0A0A0',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -362,18 +349,15 @@ const styles = StyleSheet.create({
   },
   suggestionCard: {
     width: (width - 48) / 4,
-    backgroundColor: '#181818',
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#262626',
   },
   suggestionIconBox: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#262626',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -384,20 +368,16 @@ const styles = StyleSheet.create({
   suggestionName: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   suggestionSub: {
     fontSize: 9,
-    color: '#A0A0A0',
     marginTop: 2,
   },
   promoCard: {
-    backgroundColor: '#181818',
     borderRadius: 20,
     padding: 20,
     marginBottom: 26,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   promoTextContainer: { flex: 1 },
   promoBadge: {
@@ -411,24 +391,20 @@ const styles = StyleSheet.create({
   promoTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
     marginBottom: 8,
   },
   promoDesc: {
     fontSize: 13,
-    color: '#A0A0A0',
     lineHeight: 19,
     marginBottom: 16,
   },
   promoBtn: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 22,
     alignSelf: 'flex-start',
   },
   promoBtnText: {
-    color: '#000000',
     fontSize: 14,
     fontWeight: '800',
   },
@@ -444,7 +420,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   loadingText: {
-    color: '#A0A0A0',
     fontSize: 13,
   },
   tripRow: {
@@ -452,13 +427,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#181818',
   },
   tripIconBox: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#262626',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -470,11 +443,9 @@ const styles = StyleSheet.create({
   tripTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   tripAddr: {
     fontSize: 12,
-    color: '#A0A0A0',
     marginTop: 2,
   },
   tripRight: {
@@ -483,7 +454,6 @@ const styles = StyleSheet.create({
   tripPrice: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
   },
   receiptTag: {
     fontSize: 10,
@@ -492,3 +462,4 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 });
+
