@@ -269,14 +269,14 @@ export default function MapScreen() {
             {/* Vehicle Details Card */}
             <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC', borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
               <Text style={[styles.vehicleModelName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                Toyota Camry
+                Toyota Camry Sedan
               </Text>
               <View style={styles.badgePillRow}>
                 <View style={styles.colorPill}>
                   <Text style={styles.colorPillText}>Black</Text>
                 </View>
                 <View style={styles.platePill}>
-                  <Text style={styles.platePillText}>55810AA</Text>
+                  <Text style={styles.platePillText}>BD-3-5581</Text>
                 </View>
               </View>
             </View>
@@ -284,35 +284,47 @@ export default function MapScreen() {
             {/* Ride Selector Row with Dynamic Calculated Fares */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
               {rideOptions.map((ride) => {
-                const dynamicFare = Math.round((ride.base_price || 80) + distanceKm * 25);
+                const dynamicFare = Math.round((ride.base_price || ride.basePriceETB || 80) + distanceKm * 25);
+                const isSelected = selectedRide === ride.id.toString();
+
                 return (
                   <TouchableOpacity
                     key={ride.id}
                     style={[
                       styles.rideCard,
                       { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' },
-                      selectedRide === ride.id.toString() && styles.rideCardActive,
+                      isSelected && styles.rideCardActive,
                     ]}
                     onPress={() => setSelectedRide(ride.id.toString())}
                   >
                     <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                    <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                      {ride.name}
+                    <Text
+                      style={[
+                        styles.rideName,
+                        { color: isSelected ? '#0F172A' : (isDark ? '#F8FAFC' : '#0F172A') },
+                      ]}
+                    >
+                      {ride.name || ride.title}
                     </Text>
-                    <Text style={[styles.ridePrice, { color: isDark ? '#38BDF8' : '#0D9488' }]}>~{dynamicFare} ETB</Text>
+                    <Text
+                      style={[
+                        styles.ridePrice,
+                        { color: isSelected ? '#0D9488' : (isDark ? '#38BDF8' : '#0D9488') },
+                      ]}
+                    >
+                      ~{dynamicFare} ETB
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            <View style={styles.paymentBadgeRow}>
-              <Text style={styles.paymentIcon}>💵</Text>
-              <Text style={[styles.paymentText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Cash</Text>
-            </View>
-
             <TouchableOpacity
               style={styles.setPickupBtn}
-              onPress={() => setIsRequested(true)}
+              onPress={() => {
+                setIsRequested(true);
+                setIsMinimized(true);
+              }}
             >
               <Text style={styles.setPickupText}>
                 {isRequested ? 'Driver Confirmed ✅' : 'Set pick-up point'}

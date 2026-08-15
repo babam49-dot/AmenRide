@@ -98,6 +98,8 @@ export default function MapScreenWeb() {
   const [isMinimized, setIsMinimized]       = useState(false);
   const [rideOptions, setRideOptions]       = useState([]);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState('cash'); // 'cash' | 'telebirr' | 'cbe_birr'
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     fetchRideOptions().then((data) => {
@@ -117,6 +119,11 @@ export default function MapScreenWeb() {
     setActiveInput(null);
   };
 
+  const handleConfirmRide = () => {
+    setIsRequested(true);
+    setIsMinimized(true); // Auto-minimize bottom sheet to progress state on ride start
+  };
+
   const distanceKm = getHaversineDistanceKm(
     startCoords.lat,
     startCoords.lng,
@@ -124,6 +131,12 @@ export default function MapScreenWeb() {
     destCoords.lng
   );
   const etaMinutes = getDynamicEtaMinutes(distanceKm);
+
+  const getPaymentLabel = () => {
+    if (selectedPayment === 'telebirr') return '📱 Telebirr (+251 911 001 122)';
+    if (selectedPayment === 'cbe_birr') return '🏦 CBE Birr (1000 8899 7766)';
+    return '💵 Cash on Arrival';
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
@@ -239,11 +252,16 @@ export default function MapScreenWeb() {
               </Text>
             </View>
 
-            <Text style={[styles.rideFooterMsg, { color: isDark ? '#94A3B8' : '#64748B' }]}>Ride in progress - Enjoy your trip!</Text>
+            <Text style={[styles.rideFooterMsg, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+              Payment: {getPaymentLabel()}
+            </Text>
 
             <TouchableOpacity
               style={styles.completeBtn}
-              onPress={() => setShowRatingModal(true)}
+              onPress={() => {
+                setShowRatingModal(true);
+                setIsRequested(false);
+              }}
             >
               <Text style={styles.completeBtnText}>Complete Ride & Rate</Text>
             </TouchableOpacity>
@@ -261,14 +279,14 @@ export default function MapScreenWeb() {
             {/* Vehicle Details Card */}
             <View style={[styles.vehicleDetailsCard, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC', borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
               <Text style={[styles.vehicleModelName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                Toyota Camry
+                Toyota Camry Sedan
               </Text>
               <View style={styles.badgePillRow}>
                 <View style={styles.colorPill}>
                   <Text style={styles.colorPillText}>Black</Text>
                 </View>
                 <View style={styles.platePill}>
-                  <Text style={styles.platePillText}>55810AA</Text>
+                  <Text style={styles.platePillText}>BD-3-5581</Text>
                 </View>
               </View>
             </View>
@@ -276,35 +294,58 @@ export default function MapScreenWeb() {
             {/* Ride Selector Row with Dynamic Calculated Fares */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rideSelectorRow}>
               {rideOptions.map((ride) => {
-                const dynamicFare = Math.round((ride.base_price || 80) + distanceKm * 25);
+                const dynamicFare = Math.round((ride.base_price || ride.basePriceETB || 80) + distanceKm * 25);
+                const isSelected = selectedRide === ride.id.toString();
+
                 return (
                   <TouchableOpacity
                     key={ride.id}
                     style={[
                       styles.rideCard,
                       { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' },
-                      selectedRide === ride.id.toString() && styles.rideCardActive,
+                      isSelected && styles.rideCardActive,
                     ]}
                     onPress={() => setSelectedRide(ride.id.toString())}
                   >
                     <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
-                    <Text style={[styles.rideName, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                      {ride.name}
+                    <Text
+                      style={[
+                        styles.rideName,
+                        { color: isSelected ? '#0F172A' : (isDark ? '#F8FAFC' : '#0F172A') },
+                      ]}
+                    >
+                      {ride.name || ride.title}
                     </Text>
-                    <Text style={[styles.ridePrice, { color: isDark ? '#38BDF8' : '#0D9488' }]}>~{dynamicFare} ETB</Text>
+                    <Text
+                      style={[
+                        styles.ridePrice,
+                        { color: isSelected ? '#0D9488' : (isDark ? '#38BDF8' : '#0D9488') },
+                      ]}
+                    >
+                      ~{dynamicFare} ETB
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            <View style={styles.paymentBadgeRow}>
-              <Text style={styles.paymentIcon}>💵</Text>
-              <Text style={[styles.paymentText, { color: isDark ? '#E2E8F0' : '#334155' }]}>Cash</Text>
-            </View>
+            {/* Payment Method Selection Bar */}
+            <TouchableOpacity
+              style={[styles.paymentBadgeRow, { backgroundColor: isDark ? '#0F172A' : '#F1F5F9' }]}
+              onPress={() => setShowPaymentModal(true)}
+            >
+              <Text style={styles.paymentIcon}>
+                {selectedPayment === 'telebirr' ? '📱' : selectedPayment === 'cbe_birr' ? '🏦' : '💵'}
+              </Text>
+              <Text style={[styles.paymentText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
+                {getPaymentLabel()}
+              </Text>
+              <Text style={styles.paymentChangeBtn}>Change ▾</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.setPickupBtn}
-              onPress={() => setIsRequested(true)}
+              onPress={handleConfirmRide}
             >
               <Text style={styles.setPickupText}>
                 {isRequested ? 'Driver Confirmed ✅' : 'Set pick-up point'}
@@ -313,6 +354,53 @@ export default function MapScreenWeb() {
           </ScrollView>
         )}
       </View>
+
+      {/* Payment Selection Modal */}
+      {showPaymentModal && (
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.paymentModalBox, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
+            <Text style={[styles.modalTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>Select Payment Option</Text>
+            <Text style={styles.modalSub}>Choose how you wish to settle your fare in Bahir Dar</Text>
+
+            <TouchableOpacity
+              style={[styles.paymentOptionItem, selectedPayment === 'cash' && styles.paymentOptionActive]}
+              onPress={() => { setSelectedPayment('cash'); setShowPaymentModal(false); }}
+            >
+              <Text style={styles.optionIcon}>💵</Text>
+              <View style={styles.optionTextCol}>
+                <Text style={[styles.optionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>Cash on Arrival</Text>
+                <Text style={styles.optionDesc}>Pay the driver directly in cash at the end of trip</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.paymentOptionItem, selectedPayment === 'telebirr' && styles.paymentOptionActive]}
+              onPress={() => { setSelectedPayment('telebirr'); setShowPaymentModal(false); }}
+            >
+              <Text style={styles.optionIcon}>📱</Text>
+              <View style={styles.optionTextCol}>
+                <Text style={[styles.optionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>Telebirr Direct Wallet</Text>
+                <Text style={styles.optionDesc}>Transfer to Ethio Telecom Account: +251 911 001 122</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.paymentOptionItem, selectedPayment === 'cbe_birr' && styles.paymentOptionActive]}
+              onPress={() => { setSelectedPayment('cbe_birr'); setShowPaymentModal(false); }}
+            >
+              <Text style={styles.optionIcon}>🏦</Text>
+              <View style={styles.optionTextCol}>
+                <Text style={[styles.optionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>CBE Birr / Bank Transfer</Text>
+                <Text style={styles.optionDesc}>CBE Account: 1000 8899 7766 (AMEN Ride Tech)</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.closeModalBtn} onPress={() => setShowPaymentModal(false)}>
+              <Text style={styles.closeModalText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <RatingModal
         visible={showRatingModal}
@@ -599,9 +687,13 @@ const styles = StyleSheet.create({
   paymentBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    marginBottom: 12,
-    gap: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+    cursor: 'pointer',
   },
   paymentIcon: {
     fontSize: 16,
@@ -609,6 +701,12 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  paymentChangeBtn: {
+    color: '#0D9488',
+    fontSize: 12,
+    fontWeight: '800',
+    marginLeft: 6,
   },
   setPickupBtn: {
     backgroundColor: '#F59E0B',
@@ -622,5 +720,77 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '900',
     fontSize: 16,
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    zIndex: 999,
+  },
+  paymentModalBox: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 20,
+    padding: 20,
+    boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  modalSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 16,
+  },
+  paymentOptionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    marginBottom: 10,
+    cursor: 'pointer',
+  },
+  paymentOptionActive: {
+    borderColor: '#0D9488',
+    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+  },
+  optionIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  optionTextCol: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  optionDesc: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  closeModalBtn: {
+    backgroundColor: '#0D9488',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    cursor: 'pointer',
+  },
+  closeModalText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 14,
   },
 });
