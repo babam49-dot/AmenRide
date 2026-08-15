@@ -42,7 +42,7 @@ function CountdownTimer({ seconds, onExpire }) {
 
 export default function DriverScreen() {
   const { t } = useLanguage();
-  const { mode } = useTheme();
+  const { mode, theme } = useTheme();
   const isDark = mode === 'dark';
   const [isOnline, setIsOnline] = useState(false);
 
@@ -76,21 +76,30 @@ export default function DriverScreen() {
   const todayTrips = driver?.today_trips || 8;
   const maxWeekly = Math.max(...WEEKLY_EARNINGS.map((w) => w.amount));
 
+  const dynamicStyles = {
+    container: { backgroundColor: theme?.background || (isDark ? '#0F172A' : '#F8FAFC') },
+    cardBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
+    pillBg: { backgroundColor: isDark ? '#262626' : '#F1F5F9', borderColor: isDark ? '#333333' : '#CBD5E1' },
+    textPrimary: { color: isDark ? '#FFFFFF' : '#0F172A' },
+    textSecondary: { color: isDark ? '#A0A0A0' : '#64748B' },
+    divider: { backgroundColor: isDark ? '#262626' : '#E2E8F0' },
+  };
+
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
+      style={[styles.container, dynamicStyles.container]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('driverDashboard')}</Text>
-        <Text style={styles.headerSub}>Bahir Dar Fleet Partner 🇪🇹</Text>
+        <Text style={[styles.headerTitle, dynamicStyles.textPrimary]}>{t('driverDashboard')}</Text>
+        <Text style={[styles.headerSub, dynamicStyles.textSecondary]}>Bahir Dar Fleet Partner 🇪🇹</Text>
       </View>
 
       {/* GPS Status Badge */}
       {isOnline && (
-        <View style={[styles.gpsBadge, isTracking ? styles.gpsBadgeActive : styles.gpsBadgeWaiting]}>
+        <View style={[styles.gpsBadge, isTracking ? styles.gpsBadgeActive : dynamicStyles.cardBg]}>
           {isTracking && location ? (
             <Text style={styles.gpsBadgeText}>
               📡 Broadcasting GPS · {location.lat.toFixed(4)}°N, {location.lng.toFixed(4)}°E
@@ -98,33 +107,35 @@ export default function DriverScreen() {
           ) : gpsError ? (
             <Text style={styles.gpsBadgeText}>⚠️ {gpsError}</Text>
           ) : (
-            <Text style={styles.gpsBadgeText}>📍 Acquiring GPS signal...</Text>
+            <Text style={[styles.gpsBadgeText, dynamicStyles.textSecondary]}>📍 Acquiring GPS signal...</Text>
           )}
         </View>
       )}
 
       {loading && (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color="#FFFFFF" size="small" />
-          <Text style={styles.loadingText}>Loading driver profile...</Text>
+          <ActivityIndicator color={isDark ? '#FFFFFF' : '#0D9488'} size="small" />
+          <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>Loading driver profile...</Text>
         </View>
       )}
 
       {/* Online/Offline Banner */}
       <TouchableOpacity
-        style={[styles.statusBanner, isOnline ? styles.statusOnline : styles.statusOffline]}
+        style={[styles.statusBanner, isOnline ? styles.statusOnline : dynamicStyles.cardBg]}
         onPress={toggleOnline}
         activeOpacity={0.9}
       >
         <View>
-          <Text style={styles.statusLabel}>{isOnline ? t('youreOnline') : t('youreOffline')}</Text>
-          <Text style={styles.statusHint}>
+          <Text style={[styles.statusLabel, isOnline ? { color: '#FFFFFF' } : dynamicStyles.textPrimary]}>
+            {isOnline ? t('youreOnline') : t('youreOffline')}
+          </Text>
+          <Text style={[styles.statusHint, isOnline ? { color: '#E0E0E0' } : dynamicStyles.textSecondary]}>
             {isOnline ? t('onlineHint') : t('offlineHint')}
           </Text>
         </View>
 
         <Switch
-          trackColor={{ false: '#333333', true: '#00D154' }}
+          trackColor={{ false: '#CBD5E1', true: '#00D154' }}
           thumbColor="#FFFFFF"
           ios_backgroundColor="#262626"
           onValueChange={toggleOnline}
@@ -133,31 +144,31 @@ export default function DriverScreen() {
       </TouchableOpacity>
 
       {/* Net Earnings Hero Card */}
-      <View style={styles.earningsCard}>
-        <Text style={styles.earningsLabel}>{t('netEarnings')}</Text>
-        <Text style={styles.earningsVal}>{earnings.toLocaleString()} ETB</Text>
+      <View style={[styles.earningsCard, dynamicStyles.cardBg]}>
+        <Text style={[styles.earningsLabel, dynamicStyles.textSecondary]}>{t('netEarnings')}</Text>
+        <Text style={[styles.earningsVal, dynamicStyles.textPrimary]}>{earnings.toLocaleString()} ETB</Text>
 
-        <View style={styles.metaRow}>
+        <View style={[styles.metaRow, dynamicStyles.divider]}>
           <View style={styles.metaCol}>
-            <Text style={styles.metaVal}>{todayTrips}</Text>
-            <Text style={styles.metaLabel}>Trips</Text>
+            <Text style={[styles.metaVal, dynamicStyles.textPrimary]}>{todayTrips}</Text>
+            <Text style={[styles.metaLabel, dynamicStyles.textSecondary]}>Trips</Text>
           </View>
-          <View style={styles.metaDivider} />
+          <View style={[styles.metaDivider, dynamicStyles.divider]} />
           <View style={styles.metaCol}>
-            <Text style={styles.metaVal}>⭐ {driver?.rating || '4.92'}</Text>
-            <Text style={styles.metaLabel}>Rating</Text>
+            <Text style={[styles.metaVal, dynamicStyles.textPrimary]}>⭐ {driver?.rating || '4.92'}</Text>
+            <Text style={[styles.metaLabel, dynamicStyles.textSecondary]}>Rating</Text>
           </View>
-          <View style={styles.metaDivider} />
+          <View style={[styles.metaDivider, dynamicStyles.divider]} />
           <View style={styles.metaCol}>
-            <Text style={styles.metaVal}>{driver?.acceptance_rate || '96'}%</Text>
-            <Text style={styles.metaLabel}>Acceptance</Text>
+            <Text style={[styles.metaVal, dynamicStyles.textPrimary]}>{driver?.acceptance_rate || '96'}%</Text>
+            <Text style={[styles.metaLabel, dynamicStyles.textSecondary]}>Acceptance</Text>
           </View>
         </View>
       </View>
 
       {/* Weekly Revenue Bar Chart */}
-      <View style={styles.chartCard}>
-        <Text style={styles.chartTitle}>Weekly Revenue Breakdown</Text>
+      <View style={[styles.chartCard, dynamicStyles.cardBg]}>
+        <Text style={[styles.chartTitle, dynamicStyles.textPrimary]}>Weekly Revenue Breakdown</Text>
         <Text style={styles.chartSub}>Total Week: 10,200 ETB</Text>
 
         <View style={styles.barChartRow}>
@@ -165,8 +176,8 @@ export default function DriverScreen() {
             const heightPct = (item.amount / maxWeekly) * 100;
             return (
               <View key={item.day} style={styles.barCol}>
-                <Text style={styles.barVal}>{Math.round(item.amount / 1000)}k</Text>
-                <View style={styles.barTrack}>
+                <Text style={[styles.barVal, dynamicStyles.textSecondary]}>{Math.round(item.amount / 1000)}k</Text>
+                <View style={[styles.barTrack, dynamicStyles.pillBg]}>
                   <View
                     style={[
                       styles.barFill,
@@ -175,7 +186,7 @@ export default function DriverScreen() {
                     ]}
                   />
                 </View>
-                <Text style={[styles.barLabel, item.isToday && styles.barLabelToday]}>
+                <Text style={[styles.barLabel, dynamicStyles.textSecondary, item.isToday && styles.barLabelToday]}>
                   {item.day}
                 </Text>
               </View>
@@ -186,25 +197,25 @@ export default function DriverScreen() {
 
       {/* Trip Request Dispatch Modal */}
       {isOnline && hasRequest && (
-        <View style={styles.requestCard}>
+        <View style={[styles.requestCard, dynamicStyles.cardBg]}>
           <View style={styles.requestHeader}>
             <Text style={styles.requestBadge}>⚡ TRIP REQUEST</Text>
             <CountdownTimer seconds={15} onExpire={() => setHasRequest(false)} />
           </View>
 
           <View style={styles.fareRow}>
-            <Text style={styles.fareVal}>210.00 ETB</Text>
-            <Text style={styles.fareDist}>4.2 km · 12 min</Text>
+            <Text style={[styles.fareVal, dynamicStyles.textPrimary]}>210.00 ETB</Text>
+            <Text style={[styles.fareDist, dynamicStyles.textSecondary]}>4.2 km · 12 min</Text>
           </View>
 
-          <View style={styles.addrBox}>
-            <Text style={styles.addrText}>■ <Text style={styles.addrBold}>Pickup:</Text> Bahir Dar Airport</Text>
-            <Text style={styles.addrText}>● <Text style={styles.addrBold}>Dropoff:</Text> Grand Resort Hotel</Text>
+          <View style={[styles.addrBox, dynamicStyles.pillBg]}>
+            <Text style={[styles.addrText, dynamicStyles.textPrimary]}>■ <Text style={[styles.addrBold, dynamicStyles.textPrimary]}>Pickup:</Text> Bahir Dar Airport</Text>
+            <Text style={[styles.addrText, dynamicStyles.textPrimary]}>● <Text style={[styles.addrBold, dynamicStyles.textPrimary]}>Dropoff:</Text> Grand Resort Hotel</Text>
           </View>
 
           <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.declineBtn} onPress={() => setHasRequest(false)}>
-              <Text style={styles.declineBtnText}>Decline</Text>
+            <TouchableOpacity style={[styles.declineBtn, dynamicStyles.pillBg]} onPress={() => setHasRequest(false)}>
+              <Text style={[styles.declineBtnText, dynamicStyles.textSecondary]}>Decline</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -222,21 +233,21 @@ export default function DriverScreen() {
       )}
 
       {/* Account Details */}
-      <Text style={styles.sectionTitle}>Account Details</Text>
-      <View style={styles.card}>
+      <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>Account Details</Text>
+      <View style={[styles.card, dynamicStyles.cardBg]}>
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Vehicle</Text>
-          <Text style={styles.rowVal}>{driver?.vehicle_type || 'Standard Bajaj'}</Text>
+          <Text style={[styles.rowLabel, dynamicStyles.textSecondary]}>Vehicle</Text>
+          <Text style={[styles.rowVal, dynamicStyles.textPrimary]}>{driver?.vehicle_type || 'Standard Bajaj'}</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, dynamicStyles.divider]} />
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>License Plate</Text>
-          <Text style={styles.rowVal}>{driver?.vehicle_plate || 'BD-3-1029'}</Text>
+          <Text style={[styles.rowLabel, dynamicStyles.textSecondary]}>License Plate</Text>
+          <Text style={[styles.rowVal, dynamicStyles.textPrimary]}>{driver?.vehicle_plate || 'BD-3-1029'}</Text>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, dynamicStyles.divider]} />
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Total Lifetime Trips</Text>
-          <Text style={styles.rowVal}>{driver?.total_trips || 847}</Text>
+          <Text style={[styles.rowLabel, dynamicStyles.textSecondary]}>Total Lifetime Trips</Text>
+          <Text style={[styles.rowVal, dynamicStyles.textPrimary]}>{driver?.total_trips || 847}</Text>
         </View>
       </View>
 
@@ -248,7 +259,6 @@ export default function DriverScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   contentContainer: {
     paddingHorizontal: 16,
@@ -262,11 +272,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#FFFFFF',
   },
   headerSub: {
     fontSize: 13,
-    color: '#A0A0A0',
     marginTop: 2,
   },
 
@@ -275,7 +283,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   loadingText: {
-    color: '#A0A0A0',
     fontSize: 13,
   },
 
@@ -287,36 +294,28 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   statusOnline: {
     backgroundColor: '#00D154',
   },
-  statusOffline: {
-    backgroundColor: '#181818',
-  },
+  statusOffline: {},
   statusLabel: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#FFFFFF',
   },
   statusHint: {
     fontSize: 12,
-    color: '#E0E0E0',
     marginTop: 4,
   },
 
   earningsCard: {
-    backgroundColor: '#181818',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   earningsLabel: {
     fontSize: 12,
-    color: '#A0A0A0',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -324,7 +323,6 @@ const styles = StyleSheet.create({
   earningsVal: {
     fontSize: 34,
     fontWeight: '900',
-    color: '#FFFFFF',
     marginVertical: 8,
   },
   metaRow: {
@@ -333,22 +331,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#262626',
   },
   metaCol: { alignItems: 'center' },
-  metaVal: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
-  metaLabel: { fontSize: 11, color: '#A0A0A0', marginTop: 2 },
-  metaDivider: { width: 1, height: 26, backgroundColor: '#262626' },
+  metaVal: { fontSize: 16, fontWeight: '800' },
+  metaLabel: { fontSize: 11, marginTop: 2 },
+  metaDivider: { width: 1, height: 26 },
 
   chartCard: {
-    backgroundColor: '#181818',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#262626',
   },
-  chartTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
+  chartTitle: { fontSize: 16, fontWeight: '800' },
   chartSub: { fontSize: 12, color: '#00D154', marginTop: 2, fontWeight: '700', marginBottom: 16 },
   barChartRow: {
     flexDirection: 'row',
@@ -360,18 +355,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  barVal: { fontSize: 9, color: '#A0A0A0', marginBottom: 4, fontWeight: '700' },
+  barVal: { fontSize: 9, marginBottom: 4, fontWeight: '700' },
   barTrack: {
     width: 14,
     height: 80,
-    backgroundColor: '#262626',
     borderRadius: 7,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barFill: {
     width: '100%',
-    backgroundColor: '#666666',
+    backgroundColor: '#94A3B8',
     borderRadius: 7,
   },
   barFillToday: {
@@ -379,7 +373,6 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: 10,
-    color: '#A0A0A0',
     marginTop: 6,
     fontWeight: '700',
   },
@@ -388,7 +381,6 @@ const styles = StyleSheet.create({
   },
 
   requestCard: {
-    backgroundColor: '#181818',
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
@@ -407,13 +399,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   timerContainer: {
-    backgroundColor: '#262626',
+    backgroundColor: '#00D15422',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   timerText: {
-    color: '#FFFFFF',
+    color: '#00D154',
     fontWeight: '800',
     fontSize: 14,
   },
@@ -426,22 +418,19 @@ const styles = StyleSheet.create({
   fareVal: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#FFFFFF',
   },
   fareDist: {
     fontSize: 13,
-    color: '#A0A0A0',
     fontWeight: '600',
   },
   addrBox: {
-    backgroundColor: '#262626',
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
     gap: 8,
   },
-  addrText: { color: '#E0E0E0', fontSize: 13 },
-  addrBold: { fontWeight: '800', color: '#FFFFFF' },
+  addrText: { fontSize: 13 },
+  addrBold: { fontWeight: '800' },
 
   btnRow: {
     flexDirection: 'row',
@@ -449,12 +438,11 @@ const styles = StyleSheet.create({
   },
   declineBtn: {
     flex: 1,
-    backgroundColor: '#262626',
     borderRadius: 25,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  declineBtnText: { color: '#A0A0A0', fontWeight: '800' },
+  declineBtnText: { fontWeight: '800' },
   acceptBtn: {
     flex: 1,
     backgroundColor: '#00D154',
@@ -467,24 +455,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
     marginBottom: 12,
   },
   card: {
-    backgroundColor: '#181818',
     borderRadius: 20,
     paddingHorizontal: 18,
     borderWidth: 1,
-    borderColor: '#262626',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 16,
   },
-  rowLabel: { fontSize: 14, color: '#A0A0A0' },
-  rowVal: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  divider: { height: 1, backgroundColor: '#262626' },
+  rowLabel: { fontSize: 14 },
+  rowVal: { fontSize: 14, fontWeight: '700' },
+  divider: { height: 1 },
 
   gpsBadge: {
     borderRadius: 12,
@@ -497,14 +482,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,209,84,0.15)',
     borderColor: '#00D154',
   },
-  gpsBadgeWaiting: {
-    backgroundColor: '#181818',
-    borderColor: '#333333',
-  },
   gpsBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#A0A0A0',
     fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
   },
 });
