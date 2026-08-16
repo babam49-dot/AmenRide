@@ -16,12 +16,12 @@ const { width, height } = Dimensions.get('window');
 const API_BASE = 'http://localhost:5000/api';
 
 const BAHIR_DAR_PRESETS = [
-  { name: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar', lat: 11.5980, lng: 37.3820 },
-  { name: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore', lat: 11.5936, lng: 37.3950 },
-  { name: 'Blue Nile Bridge', subtitle: 'Abay River Crossing', lat: 11.6050, lng: 37.3810 },
-  { name: 'Bahir Dar University', subtitle: 'Kebele 11, Main Campus', lat: 11.5850, lng: 37.3780 },
-  { name: 'Poly-Technic College', subtitle: 'Kebele 08, Bahir Dar', lat: 11.5900, lng: 37.3850 },
-  { name: 'Belay Zeleke Airport', subtitle: 'Bahir Dar Airport (BJR)', lat: 11.6080, lng: 37.3216 },
+  { name: 'Felege Hiwot Hospital', subtitle: 'Referral Hospital, Bahir Dar', lat: 11.6080, lng: 37.3699 },
+  { name: 'Grand Resort & Spa', subtitle: 'Lake Tana Shore, Near Stadium', lat: 11.5936, lng: 37.3908 },
+  { name: 'Abay River Bridge', subtitle: 'Blue Nile Cable Bridge, Bahir Dar', lat: 11.4210, lng: 37.4082 },
+  { name: 'Bahir Dar University (Peda)', subtitle: 'Main Peda Campus, Bahir Dar', lat: 11.5978, lng: 37.3956 },
+  { name: 'BDU Institute of Technology', subtitle: 'BiT Campus, Bahir Dar University', lat: 11.5917, lng: 37.3908 },
+  { name: 'Dejazmach Belay Zeleke Airport', subtitle: 'Bahir Dar Airport (BJR)', lat: 11.6081, lng: 37.3214 },
 ];
 
 function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
