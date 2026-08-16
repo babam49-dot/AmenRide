@@ -65,12 +65,6 @@ const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng, isRequested
       width: 24px; height: 24px; text-align: center; line-height: 24px; font-weight: bold;
       border: 2px solid #FFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-    .car-marker {
-      font-size: 26px;
-      text-align: center;
-      transition: all 0.5s ease-in-out;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-    }
   </style>
 </head>
 <body>
@@ -88,20 +82,6 @@ const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng, isRequested
   const midLng = (${startLng} + ${destLng})/2;
   const poly = L.polyline([pickup, [midLat, midLng], dropoff], { color: '#0D9488', weight: 5, opacity: 0.8 }).addTo(map);
   map.fitBounds(poly.getBounds(), { padding: [40, 40] });
-
-  // Animated Live Car Marker En-Route to Destination
-  const carIcon = L.divIcon({ className: 'car-marker', html: '🚗' });
-  const liveCarMarker = L.marker(pickup, { icon: carIcon }).addTo(map);
-
-  let step = 0;
-  const totalSteps = 100;
-  setInterval(() => {
-    step = (step + 1) % totalSteps;
-    const progress = step / totalSteps;
-    const currentLat = ${startLat} + (${destLat} - ${startLat}) * progress;
-    const currentLng = ${startLng} + (${destLng} - ${startLng}) * progress;
-    liveCarMarker.setLatLng([currentLat, currentLng]);
-  }, 300);
 </script>
 </body>
 </html>
