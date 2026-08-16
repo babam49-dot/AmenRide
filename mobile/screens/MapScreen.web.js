@@ -19,9 +19,9 @@ const BAHIR_DAR_PRESETS = [
   { name: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar', lat: 11.5980, lng: 37.3820 },
   { name: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore', lat: 11.5936, lng: 37.3950 },
   { name: 'Blue Nile Bridge', subtitle: 'Abay River Crossing', lat: 11.6050, lng: 37.3810 },
-  { name: 'Bahir Dar University', subtitle: 'Kebele 11, Bahir Dar', lat: 11.5850, lng: 37.3780 },
+  { name: 'Bahir Dar University', subtitle: 'Kebele 11, Main Campus', lat: 11.5850, lng: 37.3780 },
   { name: 'Poly-Technic College', subtitle: 'Kebele 08, Bahir Dar', lat: 11.5900, lng: 37.3850 },
-  { name: 'Bole International Airport', subtitle: 'Addis Ababa', lat: 8.9779, lng: 38.7993 },
+  { name: 'Belay Zeleke Airport', subtitle: 'Bahir Dar Airport (BJR)', lat: 11.6080, lng: 37.3216 },
 ];
 
 function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
@@ -44,7 +44,7 @@ function getDynamicEtaMinutes(distanceKm) {
   return Math.max(2, driveMins + 2);
 }
 
-const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng) => `
+const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng, isRequested) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -65,6 +65,12 @@ const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng) => `
       width: 24px; height: 24px; text-align: center; line-height: 24px; font-weight: bold;
       border: 2px solid #FFF; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
+    .car-marker {
+      font-size: 26px;
+      text-align: center;
+      transition: all 0.5s ease-in-out;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
   </style>
 </head>
 <body>
@@ -77,7 +83,25 @@ const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng) => `
 
   L.marker(pickup, { icon: L.divIcon({ className: 'pin-a', html: 'A' }) }).addTo(map);
   L.marker(dropoff, { icon: L.divIcon({ className: 'pin-b', html: 'B' }) }).addTo(map);
-  L.polyline([pickup, [(${startLat} + ${destLat})/2 + 0.001, (${startLng} + ${destLng})/2], dropoff], { color: '#000000', weight: 4 }).addTo(map);
+  
+  const midLat = (${startLat} + ${destLat})/2 + 0.001;
+  const midLng = (${startLng} + ${destLng})/2;
+  const poly = L.polyline([pickup, [midLat, midLng], dropoff], { color: '#0D9488', weight: 5, opacity: 0.8 }).addTo(map);
+  map.fitBounds(poly.getBounds(), { padding: [40, 40] });
+
+  // Animated Live Car Marker En-Route to Destination
+  const carIcon = L.divIcon({ className: 'car-marker', html: '🚗' });
+  const liveCarMarker = L.marker(pickup, { icon: carIcon }).addTo(map);
+
+  let step = 0;
+  const totalSteps = 100;
+  setInterval(() => {
+    step = (step + 1) % totalSteps;
+    const progress = step / totalSteps;
+    const currentLat = ${startLat} + (${destLat} - ${startLat}) * progress;
+    const currentLng = ${startLng} + (${destLng} - ${startLng}) * progress;
+    liveCarMarker.setLatLng([currentLat, currentLng]);
+  }, 300);
 </script>
 </body>
 </html>
@@ -133,6 +157,7 @@ export default function MapScreenWeb() {
   const etaMinutes = getDynamicEtaMinutes(distanceKm);
 
   const getPaymentLabel = () => {
+    if (selectedPayment === 'chapa') return '💳 Chapa Online (CBE / Abyssinia / Telebirr)';
     if (selectedPayment === 'telebirr') return '📱 Telebirr (+251 911 001 122)';
     if (selectedPayment === 'cbe_birr') return '🏦 CBE Birr (1000 8899 7766)';
     return '💵 Cash on Arrival';
@@ -335,12 +360,11 @@ export default function MapScreenWeb() {
               onPress={() => setShowPaymentModal(true)}
             >
               <Text style={styles.paymentIcon}>
-                {selectedPayment === 'telebirr' ? '📱' : selectedPayment === 'cbe_birr' ? '🏦' : '💵'}
+                {selectedPayment === 'chapa' ? '💳' : selectedPayment === 'telebirr' ? '📱' : selectedPayment === 'cbe_birr' ? '🏦' : '💵'}
               </Text>
               <Text style={[styles.paymentText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
                 {getPaymentLabel()}
               </Text>
-              <Text style={styles.paymentChangeBtn}>Change ▾</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -370,6 +394,17 @@ export default function MapScreenWeb() {
               <View style={styles.optionTextCol}>
                 <Text style={[styles.optionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>Cash on Arrival</Text>
                 <Text style={styles.optionDesc}>Pay the driver directly in cash at the end of trip</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.paymentOptionItem, selectedPayment === 'chapa' && styles.paymentOptionActive]}
+              onPress={() => { setSelectedPayment('chapa'); setShowPaymentModal(false); }}
+            >
+              <Text style={styles.optionIcon}>💳</Text>
+              <View style={styles.optionTextCol}>
+                <Text style={[styles.optionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>Chapa Online Payment Gateway</Text>
+                <Text style={styles.optionDesc}>Pay before ride via CBE, Bank of Abyssinia, Telebirr & Awash</Text>
               </View>
             </TouchableOpacity>
 
