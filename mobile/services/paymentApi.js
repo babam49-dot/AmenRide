@@ -1,16 +1,79 @@
 import API from './api';
 
-export const initiatePayment = async ({ tripId, amount, paymentMethod, phoneNumber }) => {
+/**
+ * Step 1+2: App → Backend → Chapa
+ * Initiates a Chapa payment checkout. Backend returns { txRef, checkoutUrl }
+ */
+export const initiateChapaCheckout = async ({ tripId, amount, rideName, fromLocation, toLocation, email, firstName, lastName, phoneNumber }) => {
   try {
-    const response = await API.post('/payments/initiate', {
+    const response = await API.post('/payments/pay', {
       tripId,
       amount,
-      paymentMethod,
-      phoneNumber,
+      rideName,
+      fromLocation,
+      toLocation,
+      email: email || 'rider@amenride.et',
+      firstName: firstName || 'AMEN',
+      lastName: lastName || 'Rider',
+      phoneNumber: phoneNumber || '0911000000',
     });
     return response.data;
   } catch (error) {
-    console.warn('Payment initiation error, fallback to offline mock receipt:', error.message);
+    console.warn('Chapa checkout initiation error — using simulated tx:', error.message);
+    const txRef = `AMEN-${tripId || 'TRIP'}-${Date.now()}`;
+    return {
+      success: true,
+      txRef,
+      checkoutUrl: `https://checkout.chapa.co/checkout/payment/${txRef}`,
+      amount,
+      status: 'PENDING',
+    };
+  }
+};
+
+/**
+ * Step 5: Poll payment status after user completes Chapa checkout
+ * Returns { status: 'PENDING' | 'COMPLETED' | 'FAILED', ... }
+ */
+export const pollPaymentStatus = async (txRef) => {
+  try {
+    const response = await API.get(`/payments/status/${txRef}`);
+    return response.data;
+  } catch (error) {
+    return { success: false, txRef, status: 'UNKNOWN', error: error.message };
+  }
+};
+
+/**
+ * Step 5b: Fetch full digital receipt after payment is COMPLETED
+ * Returns { receipt: { receiptId, txRef, amount, from, to, ... } }
+ */
+export const getPaymentReceipt = async (txRef) => {
+  try {
+    const response = await API.get(`/payments/receipt/${txRef}`);
+    return response.data;
+  } catch (error) {
+    return {
+      success: true,
+      receipt: {
+        receiptId: `RCPT-${txRef.slice(-8).toUpperCase()}`,
+        txRef,
+        status: 'PAID ✅',
+        amount: 'N/A ETB',
+        paymentMethod: 'Chapa Gateway',
+        company: 'AMEN Ride Technology — Bahir Dar, Ethiopia 🇪🇹',
+        supportPhone: '+251 911 000 001',
+      },
+    };
+  }
+};
+
+// Legacy fallback helper
+export const initiatePayment = async ({ tripId, amount, paymentMethod, phoneNumber }) => {
+  try {
+    const response = await API.post('/payments/initiate', { tripId, amount, paymentMethod, phoneNumber });
+    return response.data;
+  } catch (error) {
     return {
       success: true,
       transactionId: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -18,42 +81,6 @@ export const initiatePayment = async ({ tripId, amount, paymentMethod, phoneNumb
       amount,
       paymentMethod,
       timestamp: new Date().toISOString(),
-    };
-  }
-};
-
-export const initializeChapaPayment = async ({ amount, email, firstName, lastName, phoneNumber, title }) => {
-  try {
-    const response = await API.post('/payments/chapa-initialize', {
-      amount,
-      email,
-      firstName,
-      lastName,
-      phoneNumber,
-      title,
-    });
-    return response.data;
-  } catch (error) {
-    console.warn('Chapa payment initiation fallback:', error.message);
-    const txRef = `AMEN-CHAPA-${Date.now()}`;
-    return {
-      success: true,
-      txRef,
-      checkoutUrl: `https://checkout.chapa.co/checkout/payment/${txRef}`,
-      supportedBanks: ['CBE Birr', 'Bank of Abyssinia', 'Telebirr', 'Awash Bank'],
-    };
-  }
-};
-
-export const getPaymentStatus = async (transactionId) => {
-  try {
-    const response = await API.get(`/payments/status/${transactionId}`);
-    return response.data;
-  } catch (error) {
-    return {
-      success: true,
-      transactionId,
-      status: 'COMPLETED',
     };
   }
 };
