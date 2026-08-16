@@ -3,6 +3,7 @@ const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 
 router.post('/initiate', paymentController.initiatePayment);
+router.post('/chapa-initialize', paymentController.initializeChapaPayment);
 router.get('/status/:id', paymentController.getPaymentStatus);
 router.post('/webhook', paymentController.handleWebhook);
 
