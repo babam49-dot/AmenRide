@@ -33,7 +33,7 @@ export default function SettingsScreen() {
   const [loading, setLoading]     = useState(true);
   const [avatarUri, setAvatarUri] = useState(DEFAULT_AVATAR);
   const [showPresets, setShowPresets] = useState(false);
-  const [emergencyPhone, setEmergencyPhone] = useState('+251911999888');
+  const [emergencyPhone, setEmergencyPhone] = useState('+251 911 000 001 (Bahir Dar)');
   const [notifMessage, setNotifMessage]     = useState('');
 
   useEffect(() => {
