@@ -51,6 +51,12 @@ class RatingModel {
     };
   }
 
+  static validateRating(score, comment = '') {
+    const numScore = Math.max(1, Math.min(5, Number(score) || 5));
+    const cleanComment = String(comment).trim().slice(0, 300);
+    return { score: numScore, comment: cleanComment };
+  }
+
   static async getFleetSummary() {
     const totalRatings = ratingsDb.length;
     const avg = totalRatings
