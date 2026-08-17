@@ -4,10 +4,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 const DEMO_FLEET_DRIVERS = [
-  { id: 1, name: 'Abebe Bikila', vehicle: 'Standard Bajaj (BD-3-1029)', rating: 4.92, trips: 847, status: 'online' },
-  { id: 2, name: 'Tewodros Kassahun', vehicle: 'Executive Bajaj (BD-3-4820)', rating: 4.88, trips: 620, status: 'busy' },
-  { id: 3, name: 'Mulugeta Tesfaye', vehicle: 'Comfort Car (BD-2-7711)', rating: 4.95, trips: 1140, status: 'online' },
-  { id: 4, name: 'Aster Aweke', vehicle: 'Standard Bajaj (BD-3-9934)', rating: 4.79, trips: 310, status: 'offline' },
+  { id: 1, name: 'Abebe Bikila', vehicle: 'Standard Bajaj (BD-3-1029)', rating: 4.92, trips: 847, status: 'online', zone: 'Kebele 04' },
+  { id: 2, name: 'Tewodros Kassahun', vehicle: 'Executive Bajaj (BD-3-4820)', rating: 4.88, trips: 620, status: 'busy', zone: 'Lake Tana Port' },
+  { id: 3, name: 'Mulugeta Tesfaye', vehicle: 'Comfort Car (BD-2-7711)', rating: 4.95, trips: 1140, status: 'online', zone: 'Peda Campus' },
+  { id: 4, name: 'Aster Aweke', vehicle: 'Standard Bajaj (BD-3-9934)', rating: 4.79, trips: 310, status: 'offline', zone: 'Abay Mado' },
 ];
 
 export default function AdminConsole() {
