@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   Platform,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { fetchTrips } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,8 +17,6 @@ import ReceiptModal from '../components/ReceiptModal';
 import AdminConsole from '../components/AdminConsole';
 import PaymentMethodCard from '../components/PaymentMethodCard';
 
-import { BAHIR_DAR_PRESETS } from '../utils/bahirDarLocations';
-
 const { width } = Dimensions.get('window');
 
 const UBER_SUGGESTIONS = [
@@ -25,6 +24,20 @@ const UBER_SUGGESTIONS = [
   { name: 'Reserve', sub: 'Book in advance', emoji: '📅', screen: 'Services' },
   { name: 'Package', sub: 'Deliver items', emoji: '📦', screen: 'Services' },
   { name: 'Intercity', sub: 'Long distance', emoji: '🚌', screen: 'Services' },
+];
+
+const POPULAR_DESTINATIONS = [
+  { title: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar' },
+  { title: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore' },
+  { title: 'Blue Nile Bridge', subtitle: 'Abay River Crossing' },
+];
+
+// Actions shown when the floating button expands.
+// Feel free to swap the icons/labels/targets for whatever fits your app.
+const FAB_ACTIONS = [
+  { key: 'ride', label: 'Request Ride', emoji: '🚗', screen: 'Services' },
+  { key: 'reserve', label: 'Reserve', emoji: '📅', screen: 'Services' },
+  { key: 'support', label: 'Support', emoji: '💬', screen: 'Support' },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -43,6 +56,88 @@ export default function HomeScreen({ navigation }) {
     });
   }, []);
 
+  // ---------------------------------------------------------------------
+  // Floating Action Button state + animations
+  // ---------------------------------------------------------------------
+  const [fabOpen, setFabOpen] = useState(false);
+  const fabScale = useRef(new Animated.Value(1)).current; // press feedback
+  const fabRotate = useRef(new Animated.Value(0)).current; // + -> x rotation
+  const fabMenuAnim = useRef(new Animated.Value(0)).current; // menu expand
+  const fabTranslateY = useRef(new Animated.Value(0)).current; // hide on scroll
+  const lastScrollY = useRef(0);
+  const fabHidden = useRef(false);
+
+  const toggleFab = () => {
+    const next = !fabOpen;
+    setFabOpen(next);
+    Animated.parallel([
+      Animated.spring(fabRotate, {
+        toValue: next ? 1 : 0,
+        useNativeDriver: true,
+        friction: 6,
+        tension: 60,
+      }),
+      Animated.spring(fabMenuAnim, {
+        toValue: next ? 1 : 0,
+        useNativeDriver: true,
+        friction: 7,
+        tension: 70,
+      }),
+    ]).start();
+  };
+
+  const handleFabPressIn = () => {
+    Animated.spring(fabScale, {
+      toValue: 0.88,
+      useNativeDriver: true,
+      friction: 5,
+    }).start();
+  };
+
+  const handleFabPressOut = () => {
+    Animated.spring(fabScale, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 4,
+      tension: 120,
+    }).start();
+  };
+
+  const handleFabActionPress = (action) => {
+    toggleFab();
+    navigation.navigate(action.screen);
+  };
+
+  // Hide the FAB while scrolling down, bring it back when scrolling up
+  const handleScroll = (event) => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    const diff = currentY - lastScrollY.current;
+
+    if (Math.abs(diff) > 6) {
+      const shouldHide = diff > 0 && currentY > 40;
+      if (shouldHide !== fabHidden.current) {
+        fabHidden.current = shouldHide;
+        if (shouldHide && fabOpen) {
+          setFabOpen(false);
+          fabRotate.setValue(0);
+          fabMenuAnim.setValue(0);
+        }
+        Animated.spring(fabTranslateY, {
+          toValue: shouldHide ? 120 : 0,
+          useNativeDriver: true,
+          friction: 8,
+          tension: 60,
+        }).start();
+      }
+      lastScrollY.current = currentY;
+    }
+  };
+
+  const fabRotateDeg = fabRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '135deg'],
+  });
+
   const dynamicStyles = {
     container: { backgroundColor: theme?.background || (isDark ? '#0F172A' : '#F8FAFC') },
     headerTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
@@ -55,171 +150,260 @@ export default function HomeScreen({ navigation }) {
     subtleDivider: { borderBottomColor: isDark ? '#262626' : '#E2E8F0' },
     promoBtnBg: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
     promoBtnText: { color: isDark ? '#000000' : '#FFFFFF' },
+    fabBg: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    fabIconColor: isDark ? '#000000' : '#FFFFFF',
+    fabActionBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
   };
 
   return (
-    <ScrollView
-      style={[styles.container, dynamicStyles.container]}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Top Header */}
-      <View style={styles.topRow}>
-        <Text style={[styles.uberLogo, dynamicStyles.headerTitle]}>
-          Uber <Text style={styles.uberSubLogo}>AMEN</Text>
-        </Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={[styles.container, dynamicStyles.container]}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
+        {/* Top Header */}
+        <View style={styles.topRow}>
+          <Text style={[styles.uberLogo, dynamicStyles.headerTitle]}>
+            Uber <Text style={styles.uberSubLogo}>AMEN</Text>
+          </Text>
 
-        <View style={styles.headerRightRow}>
-          <TouchableOpacity style={[styles.langPill, dynamicStyles.pillBg]} onPress={toggleLanguage}>
-            <Text style={[styles.langText, dynamicStyles.textPrimary]}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
-          </TouchableOpacity>
+          <View style={styles.headerRightRow}>
+            <TouchableOpacity style={[styles.langPill, dynamicStyles.pillBg]} onPress={toggleLanguage}>
+              <Text style={[styles.langText, dynamicStyles.textPrimary]}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
+            </TouchableOpacity>
 
-          <View style={[styles.roleContainer, dynamicStyles.cardBg]}>
-            {[
-              { key: 'rider', label: 'Rider' },
-              { key: 'driver', label: 'Driver' },
-              { key: 'admin', label: 'Admin' },
-            ].map((r) => (
-              <TouchableOpacity
-                key={r.key}
-                style={[styles.rolePill, activeRole === r.key && dynamicStyles.activeRolePill]}
-                onPress={() => setActiveRole(r.key)}
-              >
-                <Text style={[styles.roleText, dynamicStyles.textSecondary, activeRole === r.key && dynamicStyles.activeRoleText]}>
-                  {r.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <View style={[styles.roleContainer, dynamicStyles.cardBg]}>
+              {[
+                { key: 'rider', label: 'Rider' },
+                { key: 'driver', label: 'Driver' },
+                { key: 'admin', label: 'Admin' },
+              ].map((r) => (
+                <TouchableOpacity
+                  key={r.key}
+                  style={[styles.rolePill, activeRole === r.key && dynamicStyles.activeRolePill]}
+                  onPress={() => setActiveRole(r.key)}
+                >
+                  <Text style={[styles.roleText, dynamicStyles.textSecondary, activeRole === r.key && dynamicStyles.activeRoleText]}>
+                    {r.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Where to Search Bar */}
-      <TouchableOpacity
-        style={[styles.searchPill, dynamicStyles.cardBg]}
-        onPress={() => navigation.navigate('Services')}
-        activeOpacity={0.9}
-      >
-        <Text style={styles.searchIcon}>🔍</Text>
-        <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
+        {/* Where to Search Bar */}
+        <TouchableOpacity
+          style={[styles.searchPill, dynamicStyles.cardBg]}
+          onPress={() => navigation.navigate('Services')}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
 
-        <View style={[styles.timePill, dynamicStyles.pillBg]}>
-          <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
-        </View>
-      </TouchableOpacity>
+          <View style={[styles.timePill, dynamicStyles.pillBg]}>
+            <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
+          </View>
+        </TouchableOpacity>
 
-      {/* Quick Destination Chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
-        {BAHIR_DAR_PRESETS.slice(0, 6).map((dest, idx) => (
-          <TouchableOpacity
-            key={idx}
-            style={[styles.chip, dynamicStyles.cardBg]}
-            onPress={() => navigation.navigate('Services', { destination: dest.name })}
-          >
-            <Text style={styles.chipIcon}>📍</Text>
-            <View>
-              <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.name}</Text>
-              <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
+        {/* Quick Destination Chips */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
+          {POPULAR_DESTINATIONS.map((dest, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={[styles.chip, dynamicStyles.cardBg]}
+              onPress={() => navigation.navigate('Services', { destination: dest.title })}
+            >
+              <Text style={styles.chipIcon}>📍</Text>
+              <View>
+                <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
+                <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Role specific content */}
+        {activeRole === 'admin' ? (
+          <AdminConsole />
+        ) : (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('suggestions')}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Services')}>
+                <Text style={[styles.seeAllText, dynamicStyles.textSecondary]}>{t('seeAll')}</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        ))}
+
+            <View style={styles.suggestionsGrid}>
+              {UBER_SUGGESTIONS.map((item) => (
+                <TouchableOpacity
+                  key={item.name}
+                  style={[styles.suggestionCard, dynamicStyles.cardBg]}
+                  onPress={() => navigation.navigate(item.screen)}
+                  activeOpacity={0.85}
+                >
+                  <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
+                    <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
+                  </View>
+                  <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
+                  <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={[styles.promoCard, dynamicStyles.cardBg]}>
+              <View style={styles.promoTextContainer}>
+                <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
+                <Text style={[styles.promoTitle, dynamicStyles.textPrimary]}>{t('goAnywhere')}</Text>
+                <Text style={[styles.promoDesc, dynamicStyles.textSecondary]}>
+                  {activeRole === 'driver'
+                    ? 'Today: 1,450 ETB Earned · 8 Trips Completed'
+                    : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
+                </Text>
+
+                <TouchableOpacity
+                  style={[styles.promoBtn, dynamicStyles.promoBtnBg]}
+                  onPress={() =>
+                    navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
+                  }
+                  activeOpacity={0.9}
+                >
+                  <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
+                    {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* Recent Trips */}
+        <View style={styles.recentSection}>
+          <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('recentActivity')}</Text>
+
+          {loadingTrips ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator color={isDark ? '#FFFFFF' : '#0D9488'} size="small" />
+              <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>{t('loadingTrips')}</Text>
+            </View>
+          ) : (
+            trips.slice(0, 4).map((trip, i) => (
+              <TouchableOpacity
+                key={trip.id || i}
+                style={[styles.tripRow, dynamicStyles.subtleDivider]}
+                activeOpacity={0.8}
+                onPress={() => setSelectedReceiptTrip(trip)}
+              >
+                <View style={[styles.tripIconBox, dynamicStyles.pillBg]}>
+                  <Text style={styles.tripIcon}>📍</Text>
+                </View>
+                <View style={styles.tripDetails}>
+                  <Text style={[styles.tripTitle, dynamicStyles.textPrimary]} numberOfLines={1}>{trip.dropoff_name}</Text>
+                  <Text style={[styles.tripAddr, dynamicStyles.textSecondary]} numberOfLines={1}>{trip.dropoff_addr}</Text>
+                </View>
+                <View style={styles.tripRight}>
+                  <Text style={[styles.tripPrice, dynamicStyles.textPrimary]}>{Math.round(trip.fare)} ETB</Text>
+                  <Text style={styles.receiptTag}>🧾 Receipt</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        <ReceiptModal
+          visible={!!selectedReceiptTrip}
+          onClose={() => setSelectedReceiptTrip(null)}
+          tripData={selectedReceiptTrip}
+        />
+
+        <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* Role specific content */}
-      {activeRole === 'admin' ? (
-        <AdminConsole />
-      ) : (
-        <>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('suggestions')}</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Services')}>
-              <Text style={[styles.seeAllText, dynamicStyles.textSecondary]}>{t('seeAll')}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.suggestionsGrid}>
-            {UBER_SUGGESTIONS.map((item) => (
-              <TouchableOpacity
-                key={item.name}
-                style={[styles.suggestionCard, dynamicStyles.cardBg]}
-                onPress={() => navigation.navigate(item.screen)}
-                activeOpacity={0.85}
-              >
-                <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
-                  <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
-                </View>
-                <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
-                <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={[styles.promoCard, dynamicStyles.cardBg]}>
-            <View style={styles.promoTextContainer}>
-              <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
-              <Text style={[styles.promoTitle, dynamicStyles.textPrimary]}>{t('goAnywhere')}</Text>
-              <Text style={[styles.promoDesc, dynamicStyles.textSecondary]}>
-                {activeRole === 'driver'
-                  ? 'Today: 1,450 ETB Earned · 8 Trips Completed'
-                  : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
-              </Text>
-
-              <TouchableOpacity
-                style={[styles.promoBtn, dynamicStyles.promoBtnBg]}
-                onPress={() =>
-                  navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
-                }
-                activeOpacity={0.9}
-              >
-                <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
-                  {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </>
-      )}
-
-      {/* Recent Trips */}
-      <View style={styles.recentSection}>
-        <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('recentActivity')}</Text>
-
-        {loadingTrips ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={isDark ? '#FFFFFF' : '#0D9488'} size="small" />
-            <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>{t('loadingTrips')}</Text>
-          </View>
-        ) : (
-          trips.slice(0, 4).map((trip, i) => (
-            <TouchableOpacity
-              key={trip.id || i}
-              style={[styles.tripRow, dynamicStyles.subtleDivider]}
-              activeOpacity={0.8}
-              onPress={() => setSelectedReceiptTrip(trip)}
-            >
-              <View style={[styles.tripIconBox, dynamicStyles.pillBg]}>
-                <Text style={styles.tripIcon}>📍</Text>
-              </View>
-              <View style={styles.tripDetails}>
-                <Text style={[styles.tripTitle, dynamicStyles.textPrimary]} numberOfLines={1}>{trip.dropoff_name}</Text>
-                <Text style={[styles.tripAddr, dynamicStyles.textSecondary]} numberOfLines={1}>{trip.dropoff_addr}</Text>
-              </View>
-              <View style={styles.tripRight}>
-                <Text style={[styles.tripPrice, dynamicStyles.textPrimary]}>{Math.round(trip.fare)} ETB</Text>
-                <Text style={styles.receiptTag}>🧾 Receipt</Text>
-              </View>
-            </TouchableOpacity>
-          ))
+      {/* ------------------------------------------------------------- */}
+      {/* Floating Action Button                                       */}
+      {/* ------------------------------------------------------------- */}
+      <Animated.View
+        pointerEvents="box-none"
+        style={[
+          styles.fabWrapper,
+          { transform: [{ translateY: fabTranslateY }] },
+        ]}
+      >
+        {/* Backdrop to close the menu when tapping outside */}
+        {fabOpen && (
+          <TouchableOpacity
+            style={styles.fabBackdrop}
+            activeOpacity={1}
+            onPress={toggleFab}
+          />
         )}
-      </View>
 
-      <ReceiptModal
-        visible={!!selectedReceiptTrip}
-        onClose={() => setSelectedReceiptTrip(null)}
-        tripData={selectedReceiptTrip}
-      />
+        {/* Mini action buttons */}
+        <View style={styles.fabActionsContainer} pointerEvents="box-none">
+          {FAB_ACTIONS.map((action, index) => {
+            const translateY = fabMenuAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -(index + 1) * 62],
+            });
+            const opacity = fabMenuAnim.interpolate({
+              inputRange: [0, 0.3, 1],
+              outputRange: [0, 0, 1],
+            });
+            const scale = fabMenuAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.4, 1],
+            });
 
-      <View style={{ height: 100 }} />
-    </ScrollView>
+            return (
+              <Animated.View
+                key={action.key}
+                pointerEvents={fabOpen ? 'auto' : 'none'}
+                style={[
+                  styles.fabActionRow,
+                  { transform: [{ translateY }, { scale }], opacity },
+                ]}
+              >
+                <View style={[styles.fabActionLabel, dynamicStyles.fabActionBg]}>
+                  <Text style={[styles.fabActionLabelText, dynamicStyles.textPrimary]}>
+                    {action.label}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.fabActionBtn, dynamicStyles.fabActionBg]}
+                  onPress={() => handleFabActionPress(action)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.fabActionEmoji}>{action.emoji}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        {/* Main button */}
+        <Animated.View style={{ transform: [{ scale: fabScale }] }}>
+          <TouchableOpacity
+            style={[styles.fabMain, dynamicStyles.fabBg]}
+            activeOpacity={0.9}
+            onPress={toggleFab}
+            onPressIn={handleFabPressIn}
+            onPressOut={handleFabPressOut}
+          >
+            <Animated.Text
+              style={[
+                styles.fabIcon,
+                { color: dynamicStyles.fabIconColor, transform: [{ rotate: fabRotateDeg }] },
+              ]}
+            >
+              +
+            </Animated.Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -456,6 +640,80 @@ const styles = StyleSheet.create({
     color: '#00D154',
     fontWeight: '700',
     marginTop: 3,
+  },
+
+  // ---- Floating Action Button styles ----
+  fabWrapper: {
+    position: 'absolute',
+    right: 20,
+    bottom: Platform.OS === 'ios' ? 34 : 24,
+    alignItems: 'flex-end',
+    zIndex: 999,
+    elevation: 20,
+  },
+  fabBackdrop: {
+    position: 'absolute',
+    top: -1000,
+    left: -1000,
+    right: -1000,
+    bottom: -1000,
+  },
+  fabActionsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    alignItems: 'flex-end',
+  },
+  fabActionRow: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fabActionLabel: {
+    marginRight: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  fabActionLabelText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  fabActionBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  fabActionEmoji: {
+    fontSize: 20,
+  },
+  fabMain: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  fabIcon: {
+    fontSize: 30,
+    fontWeight: '400',
+    lineHeight: 32,
   },
 });
 
