@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
  * Component: DriverStatusBadge
  * Reusable badge showing driver online/offline status with animated dot indicator.
  */
-export default function DriverStatusBadge({ isOnline = true, driverName = 'Driver' }) {
+export default function DriverStatusBadge({ isOnline = true, driverName = 'Driver', pulse = true }) {
   return (
     <View style={[styles.container, isOnline ? styles.onlineBg : styles.offlineBg]}>
       <View style={[styles.dot, isOnline ? styles.onlineDot : styles.offlineDot]} />
