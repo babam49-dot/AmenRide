@@ -4,6 +4,14 @@
  */
 const TripModel = require('../models/TripModel');
 
+function calculateSurgeMultiplier(hour = new Date().getHours()) {
+  // Peak Bahir Dar commuting hours (7-9 AM & 5-8 PM)
+  if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 20)) {
+    return 1.25;
+  }
+  return 1.0;
+}
+
 async function createTrip(req, res) {
   try {
     const { pickupAddress, pickupLat, pickupLng, dropoffAddress, dropoffLat, dropoffLng } = req.body;
