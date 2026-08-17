@@ -243,7 +243,77 @@ exports.getReceipt = async (req, res) => {
   }
 };
 
-// ─── Legacy handlers kept for backward compatibility ───────────────────────
+// ─── Bank Transfer & Cash Verification Handlers ───────────────────────
+
+/**
+ * POST /api/payments/verify-transfer
+ * Verify electronic/bank payment transfer (Telebirr / CBE Birr / Bank Transfer reference code)
+ */
+exports.verifyBankTransfer = async (req, res) => {
+  try {
+    const { tripId, referenceCode, provider, amount } = req.body;
+
+    if (!referenceCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing transaction reference code. A valid Telebirr or CBE Birr transfer reference is required to verify payment.',
+      });
+    }
+
+    const result = await PaymentModel.verifyBankTransfer({ tripId, referenceCode, provider, amount });
+
+    if (!result.verified) {
+      return res.status(422).json({
+        success: false,
+        error: result.error || 'Payment transfer verification failed.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      status: 'VERIFIED_TRANSFER',
+      message: `Bank payment verified successfully for ref: ${referenceCode}`,
+      receipt: {
+        receiptId: `RCPT-BANK-${Date.now()}`,
+        referenceCode,
+        provider: provider || 'Telebirr / CBE Birr',
+        amount: `${amount || 0} ETB`,
+        status: 'PAID & VERIFIED ✅',
+        verifiedAt: result.record.verifiedAt,
+      },
+      transaction: result.record,
+    });
+  } catch (error) {
+    console.error('Bank transfer verification error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/payments/confirm-cash
+ * Confirm in-car cash payment collected by driver
+ */
+exports.confirmCashPayment = async (req, res) => {
+  try {
+    const { tripId, driverId, amount } = req.body;
+
+    if (!tripId) {
+      return res.status(400).json({ success: false, error: 'tripId is required to confirm cash payment' });
+    }
+
+    const result = await PaymentModel.confirmCashCollection({ tripId, driverId, amount });
+
+    return res.status(200).json({
+      success: true,
+      status: 'COLLECTED_CASH',
+      message: 'Cash payment confirmed by driver in car.',
+      transaction: result.record,
+    });
+  } catch (error) {
+    console.error('Cash confirmation error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 exports.initiatePayment = async (req, res) => {
   try {

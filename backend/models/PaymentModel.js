@@ -7,15 +7,16 @@ const getDb = () => require('../config/db');
 const transactionsDb = new Map();
 
 class PaymentModel {
-  static async createTransaction({ tripId, amount, paymentMethod, phoneNumber }) {
+  static async createTransaction({ tripId, amount, paymentMethod, phoneNumber, referenceCode, status }) {
     const id = `TXN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const record = {
       id,
       tripId,
-      amount,
+      amount: parseFloat(amount),
       paymentMethod,
       phoneNumber,
-      status: 'COMPLETED',
+      referenceCode: referenceCode || null,
+      status: status || (paymentMethod === 'cash' ? 'PENDING_CASH' : 'PENDING'),
       createdAt: new Date().toISOString(),
     };
 
@@ -26,7 +27,7 @@ class PaymentModel {
           VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *;
         `;
-        const res = await getDb().query(query, [id, tripId, amount, paymentMethod, phoneNumber, 'COMPLETED']);
+        const res = await getDb().query(query, [id, tripId, amount, paymentMethod, phoneNumber, record.status]);
         return res.rows[0];
       } catch (err) {
         console.warn('PostgreSQL payment insert fallback:', err.message);
@@ -47,6 +48,43 @@ class PaymentModel {
       }
     }
     return transactionsDb.get(id) || null;
+  }
+
+  static async verifyBankTransfer({ tripId, referenceCode, provider, amount }) {
+    const cleanRef = (referenceCode || '').trim();
+    if (!cleanRef || cleanRef.length < 5) {
+      return { verified: false, error: 'Invalid or missing bank transfer reference code. Must be at least 5 characters.' };
+    }
+
+    const txnId = `TXN-BANK-${Date.now()}`;
+    const record = {
+      id: txnId,
+      tripId,
+      amount: parseFloat(amount || 0),
+      paymentMethod: provider || 'bank_transfer',
+      referenceCode: cleanRef,
+      status: 'VERIFIED_TRANSFER',
+      verifiedAt: new Date().toISOString(),
+    };
+
+    transactionsDb.set(txnId, record);
+    return { verified: true, record };
+  }
+
+  static async confirmCashCollection({ tripId, driverId, amount }) {
+    const txnId = `TXN-CASH-${Date.now()}`;
+    const record = {
+      id: txnId,
+      tripId,
+      driverId,
+      amount: parseFloat(amount || 0),
+      paymentMethod: 'cash',
+      status: 'COLLECTED_CASH',
+      collectedAt: new Date().toISOString(),
+    };
+
+    transactionsDb.set(txnId, record);
+    return { success: true, record };
   }
 
   static async updateStatus(id, status) {

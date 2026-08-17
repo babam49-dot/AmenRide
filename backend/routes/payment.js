@@ -15,6 +15,10 @@ router.get('/status/:txRef', paymentController.getPaymentStatus);
 // Step 5b: Fetch full digital receipt for a completed transaction
 router.get('/receipt/:txRef', paymentController.getReceipt);
 
+// ─── Bank Transfer & Cash Verification ─────────────────────────────────────
+router.post('/verify-transfer', paymentController.verifyBankTransfer);
+router.post('/confirm-cash', paymentController.confirmCashPayment);
+
 // ─── Legacy routes ─────────────────────────────────────────────────────────
 router.post('/initiate', paymentController.initiatePayment);
 router.post('/chapa-initialize', paymentController.initializeChapaPayment);
