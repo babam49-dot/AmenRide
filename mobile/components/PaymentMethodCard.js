@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 const PAYMENT_METHODS = [
-  { id: 'telebirr', name: 'Telebirr', icon: '📱', subtitle: 'Ethio Telecom Mobile Wallet' },
-  { id: 'cbe_birr', name: 'CBE Birr', icon: '🏦', subtitle: 'Commercial Bank of Ethiopia' },
-  { id: 'cash', name: 'Cash', icon: '💵', subtitle: 'Pay driver directly on arrival' },
+  { id: 'telebirr', name: 'Telebirr', icon: '📱', subtitle: 'Ethio Telecom Mobile Wallet (Transfer Verified)' },
+  { id: 'cbe_birr', name: 'CBE Birr', icon: '🏦', subtitle: 'Commercial Bank of Ethiopia (Transfer Verified)' },
+  { id: 'cash', name: 'Cash', icon: '💵', subtitle: 'Pay driver directly in car on arrival' },
 ];
 
 export default function PaymentMethodCard({ selectedMethod = 'telebirr', onSelectMethod }) {
