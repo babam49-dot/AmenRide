@@ -7,12 +7,14 @@ exports.createRating = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Driver ID and rating score are required' });
     }
 
+    const cleanRating = RatingModel.validateRating ? RatingModel.validateRating(rating, comment) : { score: Number(rating), comment: comment || '' };
+
     const newRating = await RatingModel.create({
       tripId,
       driverId,
-      rating: Number(rating),
-      tags: tags || [],
-      comment: comment || '',
+      rating: cleanRating.score,
+      tags: tags || ['ደስ የሚል ጉዞ (Great Trip)'],
+      comment: cleanRating.comment,
     });
 
     res.status(201).json({ success: true, rating: newRating });
