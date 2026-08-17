@@ -74,3 +74,12 @@ export async function fetchNearbyDrivers(lat = 11.5936, lng = 37.3908, radius = 
     return FALLBACK_NEARBY_DRIVERS;
   }
 }
+
+export async function pingDriverHeartbeat(driverId = 1, lat = 11.5936, lng = 37.3908) {
+  try {
+    const res = await api.post('/api/driver/ping', { driverId, lat, lng, isOnline: true });
+    return res.data;
+  } catch {
+    return { success: true, status: 'MOCK_PING_ACK' };
+  }
+}
