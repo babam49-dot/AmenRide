@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
-const RATING_TAGS = ['Smooth Drive', 'Polite Driver', 'Clean Vehicle', 'Great Route', 'Punctual'];
+const RATING_TAGS = ['ደስ የሚል ጉዞ (Smooth Drive)', 'ትህትና ያለው (Polite Driver)', 'ንጹህ መኪና (Clean Bajaj)', 'ፈጣን መንገድ (Great Route)', 'በሰዓቱ (Punctual)'];
 
 export default function RatingModal({ visible, onClose, onSubmit, driverName = 'Driver' }) {
   const { mode } = useTheme();
