@@ -14,6 +14,7 @@ const RIDE_TYPES = [
     perKmETB: 18,
     capacity: 3,
     icon: '🛺',
+    is_available: true,
   },
   {
     id: '2',
