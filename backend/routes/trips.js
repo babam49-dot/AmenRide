@@ -6,7 +6,7 @@ const { verifyAuthToken, rateLimiter } = require('../middleware/auth');
 // Apply rate limiter to trip routes
 router.use(rateLimiter);
 
-// GET /api/trips — Retrieve user trip history
+// GET /api/trips — Retrieve user trip history (supports ?status=COMPLETED&limit=10)
 router.get('/', tripController.getUserTrips);
 
 // POST /api/trips — Create a new trip request
