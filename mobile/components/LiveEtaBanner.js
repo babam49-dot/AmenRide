@@ -16,7 +16,7 @@ export default function LiveEtaBanner({ etaMinutes = 5, distanceKm = 1.8, status
     <View style={[styles.banner, dynamicStyles.banner]}>
       <View style={styles.leftSection}>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>LIVE GPS</Text>
+          <Text style={styles.badgeText}>LIVE GPS 🇪🇹</Text>
         </View>
         <Text style={[styles.status, dynamicStyles.status]}>{statusText}</Text>
       </View>
