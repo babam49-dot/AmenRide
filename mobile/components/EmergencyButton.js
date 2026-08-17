@@ -32,7 +32,7 @@ export default function EmergencyButton({ currentTripId, driverInfo }) {
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.overlay}>
           <View style={[styles.dialog, dynamicStyles.dialog]}>
-            <Text style={styles.title}>Emergency SOS Assistance</Text>
+            <Text style={styles.title}>Emergency SOS Assistance (Bahir Dar Police 991)</Text>
             <Text style={[styles.description, dynamicStyles.description]}>
               Are you in immediate danger? Pressing confirm will share your live GPS updates with local emergency authorities in Bahir Dar.
             </Text>
