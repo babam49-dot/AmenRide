@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
+const { rateLimiter } = require('../middleware/auth');
+
+router.use(rateLimiter);
 
 // ─── Full E2E Chapa Payment Flow ───────────────────────────────────────────
 // Step 1+2: App initiates payment → backend calls Chapa → returns checkout URL
