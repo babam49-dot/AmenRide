@@ -12,17 +12,10 @@ import { fetchRideOptions } from '../services/tripsApi';
 import { useTheme } from '../context/ThemeContext';
 import RatingModal from '../components/RatingModal';
 
+import { BAHIR_DAR_PRESETS, resolveBahirDarCoords } from '../utils/bahirDarLocations';
+
 const { width, height } = Dimensions.get('window');
 const API_BASE = 'http://localhost:5000/api';
-
-const BAHIR_DAR_PRESETS = [
-  { name: 'Felege Hiwot Hospital', subtitle: 'Referral Hospital, Bahir Dar', lat: 11.6080, lng: 37.3699 },
-  { name: 'Grand Resort & Spa', subtitle: 'Lake Tana Shore, Near Stadium', lat: 11.5936, lng: 37.3908 },
-  { name: 'Abay River Bridge', subtitle: 'Blue Nile Cable Bridge, Bahir Dar', lat: 11.4210, lng: 37.4082 },
-  { name: 'Bahir Dar University (Peda)', subtitle: 'Main Peda Campus, Bahir Dar', lat: 11.5978, lng: 37.3956 },
-  { name: 'BDU Institute of Technology', subtitle: 'BiT Campus, Bahir Dar University', lat: 11.5917, lng: 37.3908 },
-  { name: 'Dejazmach Belay Zeleke Airport', subtitle: 'Bahir Dar Airport (BJR)', lat: 11.6081, lng: 37.3214 },
-];
 
 function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -112,6 +105,27 @@ export default function MapScreenWeb() {
     });
   }, []);
 
+  const [transferRefCode, setTransferRefCode] = useState('');
+  const [transferVerified, setTransferVerified] = useState(false);
+  const [transferError, setTransferError] = useState('');
+  const [verifyingTransfer, setVerifyingTransfer] = useState(false);
+
+  const handleStartLocationChange = (text) => {
+    setStartLocation(text);
+    const coords = resolveBahirDarCoords(text);
+    if (coords && coords.lat) {
+      setStartCoords({ lat: coords.lat, lng: coords.lng });
+    }
+  };
+
+  const handleDestinationChange = (text) => {
+    setDestination(text);
+    const coords = resolveBahirDarCoords(text);
+    if (coords && coords.lat) {
+      setDestCoords({ lat: coords.lat, lng: coords.lng });
+    }
+  };
+
   const handleSelectPreset = (preset) => {
     if (activeInput === 'start') {
       setStartLocation(preset.name);
@@ -123,9 +137,48 @@ export default function MapScreenWeb() {
     setActiveInput(null);
   };
 
+  const handleVerifyBankTransfer = async () => {
+    if (!transferRefCode || transferRefCode.trim().length < 5) {
+      setTransferError('Please enter a valid Telebirr or CBE Birr transfer transaction reference (e.g. TLB-88771122).');
+      return;
+    }
+    setVerifyingTransfer(true);
+    setTransferError('');
+
+    try {
+      const res = await fetch(`${API_BASE}/payments/verify-transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tripId: `TRIP-WEB-${Date.now()}`,
+          referenceCode: transferRefCode,
+          provider: selectedPayment,
+          amount: 220,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setTransferVerified(true);
+        setTransferError('');
+      } else {
+        setTransferError(data.error || 'Transfer reference could not be verified by backend.');
+        setTransferVerified(false);
+      }
+    } catch (e) {
+      setTransferError('Network error verifying payment transfer with backend.');
+    } finally {
+      setVerifyingTransfer(false);
+    }
+  };
+
   const handleConfirmRide = () => {
+    if ((selectedPayment === 'telebirr' || selectedPayment === 'cbe_birr') && !transferVerified) {
+      setShowPaymentModal(true);
+      return;
+    }
     setIsRequested(true);
-    setIsMinimized(true); // Auto-minimize bottom sheet to progress state on ride start
+    setIsMinimized(true);
   };
 
   const distanceKm = getHaversineDistanceKm(
@@ -138,9 +191,9 @@ export default function MapScreenWeb() {
 
   const getPaymentLabel = () => {
     if (selectedPayment === 'chapa') return '💳 Chapa Online (CBE / Abyssinia / Telebirr)';
-    if (selectedPayment === 'telebirr') return '📱 Telebirr (+251 911 001 122)';
-    if (selectedPayment === 'cbe_birr') return '🏦 CBE Birr (1000 8899 7766)';
-    return '💵 Cash on Arrival';
+    if (selectedPayment === 'telebirr') return `📱 Telebirr ${transferVerified ? '✅ Verified' : '(Pending Ref)'}`;
+    if (selectedPayment === 'cbe_birr') return `🏦 CBE Birr ${transferVerified ? '✅ Verified' : '(Pending Ref)'}`;
+    return '💵 Cash on Arrival (Pay Driver in Car)';
   };
 
   return (
@@ -163,9 +216,9 @@ export default function MapScreenWeb() {
           <TextInput
             style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={startLocation}
-            onChangeText={setStartLocation}
+            onChangeText={handleStartLocationChange}
             onFocus={() => setActiveInput('start')}
-            placeholder="Search start location..."
+            placeholder="Search start location in Bahir Dar..."
             placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
           />
         </View>
@@ -179,9 +232,9 @@ export default function MapScreenWeb() {
           <TextInput
             style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
             value={destination}
-            onChangeText={setDestination}
+            onChangeText={handleDestinationChange}
             onFocus={() => setActiveInput('dest')}
-            placeholder="Search destination..."
+            placeholder="Search destination in Bahir Dar..."
             placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
           />
           <TouchableOpacity style={styles.plusBtn}>
@@ -390,7 +443,7 @@ export default function MapScreenWeb() {
 
             <TouchableOpacity
               style={[styles.paymentOptionItem, selectedPayment === 'telebirr' && styles.paymentOptionActive]}
-              onPress={() => { setSelectedPayment('telebirr'); setShowPaymentModal(false); }}
+              onPress={() => { setSelectedPayment('telebirr'); }}
             >
               <Text style={styles.optionIcon}>📱</Text>
               <View style={styles.optionTextCol}>
@@ -401,7 +454,7 @@ export default function MapScreenWeb() {
 
             <TouchableOpacity
               style={[styles.paymentOptionItem, selectedPayment === 'cbe_birr' && styles.paymentOptionActive]}
-              onPress={() => { setSelectedPayment('cbe_birr'); setShowPaymentModal(false); }}
+              onPress={() => { setSelectedPayment('cbe_birr'); }}
             >
               <Text style={styles.optionIcon}>🏦</Text>
               <View style={styles.optionTextCol}>
@@ -410,8 +463,58 @@ export default function MapScreenWeb() {
               </View>
             </TouchableOpacity>
 
+            {(selectedPayment === 'telebirr' || selectedPayment === 'cbe_birr') && (
+              <View style={{ marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: isDark ? '#0F172A' : '#F1F5F9' }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: isDark ? '#F8FAFC' : '#0F172A', marginBottom: 6 }}>
+                  Enter Transaction Reference Code:
+                </Text>
+                <TextInput
+                  style={{
+                    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                    borderWidth: 1,
+                    borderColor: transferVerified ? '#10B981' : (isDark ? '#334155' : '#CBD5E1'),
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    color: isDark ? '#FFF' : '#000',
+                    fontSize: 13,
+                    marginBottom: 8,
+                  }}
+                  value={transferRefCode}
+                  onChangeText={(text) => { setTransferRefCode(text); setTransferVerified(false); setTransferError(''); }}
+                  placeholder="e.g. TLB-88771122 or CBE-445566"
+                  placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
+                />
+
+                {transferError ? (
+                  <Text style={{ color: '#EF4444', fontSize: 11, marginBottom: 8, fontWeight: '600' }}>⚠️ {transferError}</Text>
+                ) : null}
+
+                {transferVerified ? (
+                  <Text style={{ color: '#10B981', fontSize: 12, marginBottom: 8, fontWeight: '700' }}>
+                    ✅ Payment Transfer Verified with Backend!
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#0D9488',
+                      borderRadius: 8,
+                      paddingVertical: 10,
+                      alignItems: 'center',
+                    }}
+                    onPress={handleVerifyBankTransfer}
+                    disabled={verifyingTransfer}
+                  >
+                    <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 12 }}>
+                      {verifyingTransfer ? 'Verifying with Backend...' : 'Verify Transfer Payment'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
             <TouchableOpacity style={styles.closeModalBtn} onPress={() => setShowPaymentModal(false)}>
-              <Text style={styles.closeModalText}>Close</Text>
+              <Text style={styles.closeModalText}>{transferVerified || selectedPayment === 'cash' ? 'Confirm & Close' : 'Close'}</Text>
             </TouchableOpacity>
           </View>
         </View>

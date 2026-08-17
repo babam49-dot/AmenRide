@@ -28,14 +28,7 @@ if (Platform.OS !== 'web') {
   }
 }
 
-const BAHIR_DAR_PRESETS = [
-  { name: 'Felege Hiwot Hospital', subtitle: 'Referral Hospital, Bahir Dar', lat: 11.6080, lng: 37.3699 },
-  { name: 'Grand Resort & Spa', subtitle: 'Lake Tana Shore, Near Stadium', lat: 11.5936, lng: 37.3908 },
-  { name: 'Abay River Bridge', subtitle: 'Blue Nile Cable Bridge, Bahir Dar', lat: 11.4210, lng: 37.4082 },
-  { name: 'Bahir Dar University (Peda)', subtitle: 'Main Peda Campus, Bahir Dar', lat: 11.5978, lng: 37.3956 },
-  { name: 'BDU Institute of Technology', subtitle: 'BiT Campus, Bahir Dar University', lat: 11.5917, lng: 37.3908 },
-  { name: 'Dejazmach Belay Zeleke Airport', subtitle: 'Bahir Dar Airport (BJR)', lat: 11.6081, lng: 37.3214 },
-];
+import { BAHIR_DAR_PRESETS, resolveBahirDarCoords } from '../utils/bahirDarLocations';
 
 // Haversine formula: Real distance in kilometers
 function getHaversineDistanceKm(lat1, lon1, lat2, lon2) {
