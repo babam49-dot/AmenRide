@@ -36,6 +36,7 @@ export default function FareEstimateCard({ option, selected, onSelect }) {
       <View style={styles.detailsContainer}>
         <View style={styles.titleRow}>
           <Text style={[styles.title, dynamicStyles.textPrimary]}>{option.title}</Text>
+          <Text style={styles.capacityBadge}>👥 {option.capacity || 3}</Text>
           {option.surgeMultiplier > 1.0 && (
             <View style={styles.surgeBadge}>
               <Text style={styles.surgeText}>{option.surgeMultiplier}x Surge</Text>
