@@ -42,3 +42,7 @@ export function formatCurrencyETB(amount) {
   const num = Math.round(amount || 0);
   return `${num.toLocaleString()} ETB`;
 }
+
+export function calculateSurgePrice(basePrice, multiplier = 1.0) {
+  return Math.round((basePrice || 0) * multiplier);
+}
