@@ -14,6 +14,12 @@ router.post('/location', driverController.updateDriverLocation);
 router.post('/:id/location', driverController.updateDriverLocation);
 
 
+// POST /api/driver/ping — Real-time driver heartbeat and GPS connection check
+router.post('/ping', driverController.pingDriverLocation);
+
+// GET /api/driver/status-check/:id — Verify active connectivity and timeout state
+router.get('/status-check/:id', driverController.checkDriverConnectionStatus);
+
 // GET /api/driver/:id — Retrieve driver profile by ID
 router.get('/:id', driverController.getDriverById);
 

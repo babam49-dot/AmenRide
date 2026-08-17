@@ -122,10 +122,66 @@ async function getDriverById(req, res) {
   }
 }
 
+async function pingDriverLocation(req, res) {
+  try {
+    const { driverId, lat, lng, isOnline } = req.body;
+    if (!driverId) {
+      return res.status(400).json({ success: false, error: 'driverId is required for heartbeat ping' });
+    }
+
+    const updated = await DriverModel.updateLocation(
+      driverId,
+      lat ? parseFloat(lat) : BAHIR_DAR_LAT,
+      lng ? parseFloat(lng) : BAHIR_DAR_LNG,
+      isOnline !== undefined ? Boolean(isOnline) : true
+    );
+
+    return res.status(200).json({
+      success: true,
+      status: 'PING_RECEIVED',
+      timestamp: new Date().toISOString(),
+      driverId,
+      connectionStatus: updated.is_online ? 'CONNECTED' : 'DISCONNECTED',
+      location: { lat: updated.lat, lng: updated.lng },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+async function checkDriverConnectionStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const driver = await DriverModel.findById(id);
+
+    if (!driver) {
+      return res.status(404).json({ success: false, error: 'Driver not found', isConnected: false });
+    }
+
+    const lastSeen = driver.last_updated ? new Date(driver.last_updated) : new Date();
+    const secondsAgo = Math.round((new Date() - lastSeen) / 1000);
+    const isConnected = driver.is_online && secondsAgo < 90;
+
+    return res.status(200).json({
+      success: true,
+      driverId: id,
+      driverName: driver.name,
+      isConnected,
+      connectionState: isConnected ? 'ACTIVE_ONLINE' : 'OFFLINE_TIMED_OUT',
+      lastSeenSecondsAgo: secondsAgo,
+      lastLocation: { lat: driver.lat, lng: driver.lng },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 module.exports = {
   getNearbyDrivers,
   updateDriverLocation,
   getDriverStats,
   getDriverById,
+  pingDriverLocation,
+  checkDriverConnectionStatus,
 };
 
