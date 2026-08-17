@@ -14,4 +14,13 @@ pool.on('error', (err) => {
   console.warn('⚠️  Server continues. Set DATABASE_URL in .env to connect to a valid database.');
 });
 
+pool.checkHealth = async () => {
+  try {
+    const res = await pool.query('SELECT NOW()');
+    return { status: 'HEALTHY', dbTime: res.rows[0].now };
+  } catch (err) {
+    return { status: 'DISCONNECTED', error: err.message };
+  }
+};
+
 module.exports = pool;
