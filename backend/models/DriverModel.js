@@ -142,6 +142,16 @@ class DriverModel {
       };
     }
   }
+  static async getLocationHistory(driverId) {
+    const driver = MOCK_DRIVERS.find((d) => String(d.id) === String(driverId)) || MOCK_DRIVERS[0];
+    return {
+      driverId,
+      name: driver.name,
+      history: [
+        { lat: driver.current_lat || 11.5940, lng: driver.current_lng || 37.3912, timestamp: new Date().toISOString() },
+      ],
+    };
+  }
 }
 
 module.exports = DriverModel;
