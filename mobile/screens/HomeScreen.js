@@ -16,6 +16,8 @@ import ReceiptModal from '../components/ReceiptModal';
 import AdminConsole from '../components/AdminConsole';
 import PaymentMethodCard from '../components/PaymentMethodCard';
 
+import { BAHIR_DAR_PRESETS } from '../utils/bahirDarLocations';
+
 const { width } = Dimensions.get('window');
 
 const UBER_SUGGESTIONS = [
@@ -23,12 +25,6 @@ const UBER_SUGGESTIONS = [
   { name: 'Reserve', sub: 'Book in advance', emoji: '📅', screen: 'Services' },
   { name: 'Package', sub: 'Deliver items', emoji: '📦', screen: 'Services' },
   { name: 'Intercity', sub: 'Long distance', emoji: '🚌', screen: 'Services' },
-];
-
-const POPULAR_DESTINATIONS = [
-  { title: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar' },
-  { title: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore' },
-  { title: 'Blue Nile Bridge', subtitle: 'Abay River Crossing' },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -113,15 +109,15 @@ export default function HomeScreen({ navigation }) {
 
       {/* Quick Destination Chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
-        {POPULAR_DESTINATIONS.map((dest, idx) => (
+        {BAHIR_DAR_PRESETS.slice(0, 6).map((dest, idx) => (
           <TouchableOpacity
             key={idx}
             style={[styles.chip, dynamicStyles.cardBg]}
-            onPress={() => navigation.navigate('Services', { destination: dest.title })}
+            onPress={() => navigation.navigate('Services', { destination: dest.name })}
           >
             <Text style={styles.chipIcon}>📍</Text>
             <View>
-              <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
+              <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.name}</Text>
               <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
             </View>
           </TouchableOpacity>
