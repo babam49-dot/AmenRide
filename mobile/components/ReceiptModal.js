@@ -35,7 +35,7 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
 
             <Text style={[styles.receiptTitle, dynamicStyles.textPrimary]}>{t('receiptTitle')}</Text>
             <Text style={styles.receiptId}>Receipt ID: AMEN-BD-{tripData.id || Math.floor(1000 + Math.random() * 9000)}</Text>
-            <Text style={[styles.dateText, dynamicStyles.textSecondary]}>{new Date().toLocaleDateString()} · Bahir Dar, Ethiopia 🇪🇹</Text>
+            <Text style={[styles.dateText, dynamicStyles.textSecondary]}>{new Date().toLocaleDateString()} · Bahir Dar, Ethiopia 🇪🇹 (TIN: 0098776655)</Text>
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
