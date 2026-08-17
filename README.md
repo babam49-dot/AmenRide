@@ -73,6 +73,15 @@ Nearest driver matched ⭐
 
 ---
 
+## 🔐 Advanced System Capabilities
+
+- **Bank Payment Verification**: Electronic transfer reference code verification (`POST /api/payments/verify-transfer`) for Telebirr and CBE Birr.
+- **In-Car Cash Confirmation**: Driver payment collection tracking (`POST /api/payments/confirm-cash`).
+- **Driver Heartbeat Monitoring**: Real-time driver GPS pinging (`POST /api/driver/ping`) & active connection timeout checks (`GET /api/driver/status-check/:id`).
+- **Real Bahir Dar City Geocoding**: 14+ real city landmarks (*Felege Hiwot, Grand Resort, BDU Peda, BiT, Belay Zeleke Airport, Bezawit Palace*) with exact GPS coordinates.
+
+---
+
 ## 🚀 Getting Started
 
 Check out [DEVELOPMENT.md](DEVELOPMENT.md) for full developer setup instructions, API specs, and database seeder guides.
