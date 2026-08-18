@@ -17,7 +17,7 @@ import ReceiptModal from '../components/ReceiptModal';
 import AdminConsole from '../components/AdminConsole';
 import PaymentMethodCard from '../components/PaymentMethodCard';
 
-const { width } = Dimensions.get('window');
+const { width, height: windowHeight } = Dimensions.get('window');
 
 const UBER_SUGGESTIONS = [
   { name: 'Ride', sub: 'Instant pickup', emoji: '🚗', screen: 'Services' },
@@ -29,6 +29,7 @@ const UBER_SUGGESTIONS = [
 const POPULAR_DESTINATIONS = [
   { title: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar' },
   { title: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore' },
+  { title: 'BDU Peda Campus', subtitle: 'Main Gate • Gate 1' },
   { title: 'Blue Nile Bridge', subtitle: 'Abay River Crossing' },
 ];
 
@@ -53,6 +54,9 @@ export default function HomeScreen({ navigation }) {
     fetchTrips(1).then((data) => {
       setTrips(data);
       setLoadingTrips(false);
+      // Reveal any rows that are already on-screen once they've laid out
+      // (covers the case where the list loads without the user scrolling).
+      setTimeout(() => checkRowReveals(lastScrollY.current), 250);
     });
   }, []);
 
@@ -66,6 +70,59 @@ export default function HomeScreen({ navigation }) {
   const fabTranslateY = useRef(new Animated.Value(0)).current; // hide on scroll
   const lastScrollY = useRef(0);
   const fabHidden = useRef(false);
+
+  // ---------------------------------------------------------------------
+  // Scroll-reveal for "Recent activity" rows
+  // ---------------------------------------------------------------------
+  const recentSectionY = useRef(0); // this section's Y within the ScrollView content
+  const rowLayouts = useRef({}); // index -> { y, height } relative to recentSectionY
+  const rowRevealed = useRef({}); // index -> bool, so we only animate once
+  const rowAnimsRef = useRef({}); // index -> { opacity, translateY }
+
+  const getRowAnim = (index) => {
+    if (!rowAnimsRef.current[index]) {
+      rowAnimsRef.current[index] = {
+        opacity: new Animated.Value(0),
+        translateY: new Animated.Value(28),
+      };
+    }
+    return rowAnimsRef.current[index];
+  };
+
+  const revealRow = (index) => {
+    if (rowRevealed.current[index]) return;
+    rowRevealed.current[index] = true;
+    const anim = getRowAnim(index);
+    Animated.parallel([
+      Animated.timing(anim.opacity, {
+        toValue: 1,
+        duration: 420,
+        delay: index * 90,
+        useNativeDriver: true,
+      }),
+      Animated.spring(anim.translateY, {
+        toValue: 0,
+        friction: 8,
+        tension: 60,
+        delay: index * 90,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const checkRowReveals = (scrollY) => {
+    const viewportBottom = scrollY + windowHeight;
+    Object.keys(rowLayouts.current).forEach((key) => {
+      const index = Number(key);
+      const layout = rowLayouts.current[index];
+      if (!layout) return;
+      const absoluteY = recentSectionY.current + layout.y;
+      // Reveal once the row is ~60px into the visible viewport
+      if (viewportBottom - 60 > absoluteY) {
+        revealRow(index);
+      }
+    });
+  };
 
   const toggleFab = () => {
     const next = !fabOpen;
@@ -108,10 +165,13 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate(action.screen);
   };
 
-  // Hide the FAB while scrolling down, bring it back when scrolling up
+  // Hide the FAB while scrolling down, bring it back when scrolling up;
+  // also reveal recent-activity rows as they scroll into view.
   const handleScroll = (event) => {
     const currentY = event.nativeEvent.contentOffset.y;
     const diff = currentY - lastScrollY.current;
+
+    checkRowReveals(currentY);
 
     if (Math.abs(diff) > 6) {
       const shouldHide = diff > 0 && currentY > 40;
@@ -138,27 +198,67 @@ export default function HomeScreen({ navigation }) {
     outputRange: ['0deg', '135deg'],
   });
 
+  // ---------------------------------------------------------------------
+  // Generic "press to shrink" interactivity, shared by every floating
+  // card/button on the screen (search bar, chips, suggestion cards,
+  // promo button, trip rows, language pill...).
+  // ---------------------------------------------------------------------
+  const pressScaleRefs = useRef({});
+  const getPressScale = (key) => {
+    if (!pressScaleRefs.current[key]) {
+      pressScaleRefs.current[key] = new Animated.Value(1);
+    }
+    return pressScaleRefs.current[key];
+  };
+  const handlePressIn = (key) => {
+    Animated.spring(getPressScale(key), {
+      toValue: 0.96,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 100,
+    }).start();
+  };
+  const handlePressOut = (key) => {
+    Animated.spring(getPressScale(key), {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 4,
+      tension: 120,
+    }).start();
+  };
+
   const dynamicStyles = {
-    container: { backgroundColor: theme?.background || (isDark ? '#0F172A' : '#F8FAFC') },
+    container: { backgroundColor: theme?.background || (isDark ? '#0B1220' : '#EEF2F6') },
     headerTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
-    cardBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
-    pillBg: { backgroundColor: isDark ? '#262626' : '#F1F5F9', borderColor: isDark ? '#333333' : '#CBD5E1' },
+    cardBg: {
+      backgroundColor: isDark ? '#161E2E' : '#FFFFFF',
+      borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.05)',
+    },
+    pillBg: { backgroundColor: isDark ? '#232C3D' : '#F1F5F9', borderColor: isDark ? '#333F55' : '#CBD5E1' },
     textPrimary: { color: isDark ? '#FFFFFF' : '#0F172A' },
     textSecondary: { color: isDark ? '#A0A0A0' : '#64748B' },
-    activeRolePill: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    activeRolePill: { backgroundColor: isDark ? '#FFFFFF' : '#2BFF6E' },
     activeRoleText: { color: isDark ? '#000000' : '#FFFFFF' },
     subtleDivider: { borderBottomColor: isDark ? '#262626' : '#E2E8F0' },
-    promoBtnBg: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    promoBtnBg: { backgroundColor: isDark ? '#FFFFFF' : '#00D154' },
     promoBtnText: { color: isDark ? '#000000' : '#FFFFFF' },
-    fabBg: { backgroundColor: isDark ? '#FFFFFF' : '#0D9488' },
+    fabBg: { backgroundColor: isDark ? '#FFFFFF' : '#2BFF6E' },
     fabIconColor: isDark ? '#000000' : '#FFFFFF',
     fabActionBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
+    glowOne: { backgroundColor: isDark ? 'rgba(13,148,136,0.20)' : '#2BFF6E' },
+    glowTwo: { backgroundColor: isDark ? 'rgba(0,209,84,0.12)' : '#2BFF6E' },
   };
 
   return (
     <View style={{ flex: 1 }}>
+      {/* Soft decorative glow behind everything, gives depth to the flat background */}
+      <View style={[styles.bgBase, dynamicStyles.container]} pointerEvents="none">
+        <View style={[styles.glowCircle, styles.glowOnePos, dynamicStyles.glowOne]} />
+        <View style={[styles.glowCircle, styles.glowTwoPos, dynamicStyles.glowTwo]} />
+      </View>
+
       <ScrollView
-        style={[styles.container, dynamicStyles.container]}
+        style={[styles.container, { backgroundColor: 'transparent' }]}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -170,11 +270,18 @@ export default function HomeScreen({ navigation }) {
           </Text>
 
           <View style={styles.headerRightRow}>
-            <TouchableOpacity style={[styles.langPill, dynamicStyles.pillBg]} onPress={toggleLanguage}>
-              <Text style={[styles.langText, dynamicStyles.textPrimary]}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: getPressScale('lang') }] }}>
+              <TouchableOpacity
+                style={[styles.langPill, dynamicStyles.pillBg, styles.floatingSoft]}
+                onPress={toggleLanguage}
+                onPressIn={() => handlePressIn('lang')}
+                onPressOut={() => handlePressOut('lang')}
+              >
+                <Text style={[styles.langText, dynamicStyles.textPrimary]}>{lang === 'en' ? '🌐 EN' : '🇪🇹 AM'}</Text>
+              </TouchableOpacity>
+            </Animated.View>
 
-            <View style={[styles.roleContainer, dynamicStyles.cardBg]}>
+            <View style={[styles.roleContainer, dynamicStyles.cardBg, styles.floatingSoft]}>
               {[
                 { key: 'rider', label: 'Rider' },
                 { key: 'driver', label: 'Driver' },
@@ -195,34 +302,44 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Where to Search Bar */}
-        <TouchableOpacity
-          style={[styles.searchPill, dynamicStyles.cardBg]}
-          onPress={() => navigation.navigate('Services')}
-          activeOpacity={0.9}
-        >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
+        <Animated.View style={{ transform: [{ scale: getPressScale('search') }] }}>
+          <TouchableOpacity
+            style={[styles.searchPill, dynamicStyles.cardBg, styles.floating]}
+            onPress={() => navigation.navigate('Services')}
+            onPressIn={() => handlePressIn('search')}
+            onPressOut={() => handlePressOut('search')}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.searchIcon}>🔍</Text>
+            <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
 
-          <View style={[styles.timePill, dynamicStyles.pillBg]}>
-            <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
-          </View>
-        </TouchableOpacity>
+            <View style={[styles.timePill, dynamicStyles.pillBg]}>
+              <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Quick Destination Chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
-          {POPULAR_DESTINATIONS.map((dest, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[styles.chip, dynamicStyles.cardBg]}
-              onPress={() => navigation.navigate('Services', { destination: dest.title })}
-            >
-              <Text style={styles.chipIcon}>📍</Text>
-              <View>
-                <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
-                <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {POPULAR_DESTINATIONS.map((dest, idx) => {
+            const chipKey = `chip-${idx}`;
+            return (
+              <Animated.View key={idx} style={{ transform: [{ scale: getPressScale(chipKey) }] }}>
+                <TouchableOpacity
+                  style={[styles.chip, dynamicStyles.cardBg, styles.floatingSoft]}
+                  onPress={() => navigation.navigate('Services', { destination: dest.title })}
+                  onPressIn={() => handlePressIn(chipKey)}
+                  onPressOut={() => handlePressOut(chipKey)}
+                >
+                  <Text style={styles.chipIcon}>📍</Text>
+                  <View>
+                    <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
+                    <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </ScrollView>
 
         {/* Role specific content */}
@@ -238,23 +355,29 @@ export default function HomeScreen({ navigation }) {
             </View>
 
             <View style={styles.suggestionsGrid}>
-              {UBER_SUGGESTIONS.map((item) => (
-                <TouchableOpacity
-                  key={item.name}
-                  style={[styles.suggestionCard, dynamicStyles.cardBg]}
-                  onPress={() => navigation.navigate(item.screen)}
-                  activeOpacity={0.85}
-                >
-                  <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
-                    <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
-                  </View>
-                  <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
-                  <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
-                </TouchableOpacity>
-              ))}
+              {UBER_SUGGESTIONS.map((item) => {
+                const suggKey = `sugg-${item.name}`;
+                return (
+                  <Animated.View key={item.name} style={{ transform: [{ scale: getPressScale(suggKey) }] }}>
+                    <TouchableOpacity
+                      style={[styles.suggestionCard, dynamicStyles.cardBg, styles.floating]}
+                      onPress={() => navigation.navigate(item.screen)}
+                      onPressIn={() => handlePressIn(suggKey)}
+                      onPressOut={() => handlePressOut(suggKey)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
+                        <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
+                      </View>
+                      <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
+                      <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
+              })}
             </View>
 
-            <View style={[styles.promoCard, dynamicStyles.cardBg]}>
+            <View style={[styles.promoCard, dynamicStyles.cardBg, styles.floating]}>
               <View style={styles.promoTextContainer}>
                 <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
                 <Text style={[styles.promoTitle, dynamicStyles.textPrimary]}>{t('goAnywhere')}</Text>
@@ -264,24 +387,34 @@ export default function HomeScreen({ navigation }) {
                     : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
                 </Text>
 
-                <TouchableOpacity
-                  style={[styles.promoBtn, dynamicStyles.promoBtnBg]}
-                  onPress={() =>
-                    navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
-                  }
-                  activeOpacity={0.9}
-                >
-                  <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
-                    {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
-                  </Text>
-                </TouchableOpacity>
+                <Animated.View style={{ transform: [{ scale: getPressScale('promo') }], alignSelf: 'flex-start' }}>
+                  <TouchableOpacity
+                    style={[styles.promoBtn, dynamicStyles.promoBtnBg, styles.floatingSoft]}
+                    onPress={() =>
+                      navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
+                    }
+                    onPressIn={() => handlePressIn('promo')}
+                    onPressOut={() => handlePressOut('promo')}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
+                      {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
               </View>
             </View>
           </>
         )}
 
         {/* Recent Trips */}
-        <View style={styles.recentSection}>
+        <View
+          style={styles.recentSection}
+          onLayout={(e) => {
+            recentSectionY.current = e.nativeEvent.layout.y;
+            checkRowReveals(lastScrollY.current);
+          }}
+        >
           <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('recentActivity')}</Text>
 
           {loadingTrips ? (
@@ -290,26 +423,48 @@ export default function HomeScreen({ navigation }) {
               <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>{t('loadingTrips')}</Text>
             </View>
           ) : (
-            trips.slice(0, 4).map((trip, i) => (
-              <TouchableOpacity
-                key={trip.id || i}
-                style={[styles.tripRow, dynamicStyles.subtleDivider]}
-                activeOpacity={0.8}
-                onPress={() => setSelectedReceiptTrip(trip)}
-              >
-                <View style={[styles.tripIconBox, dynamicStyles.pillBg]}>
-                  <Text style={styles.tripIcon}>📍</Text>
-                </View>
-                <View style={styles.tripDetails}>
-                  <Text style={[styles.tripTitle, dynamicStyles.textPrimary]} numberOfLines={1}>{trip.dropoff_name}</Text>
-                  <Text style={[styles.tripAddr, dynamicStyles.textSecondary]} numberOfLines={1}>{trip.dropoff_addr}</Text>
-                </View>
-                <View style={styles.tripRight}>
-                  <Text style={[styles.tripPrice, dynamicStyles.textPrimary]}>{Math.round(trip.fare)} ETB</Text>
-                  <Text style={styles.receiptTag}>🧾 Receipt</Text>
-                </View>
-              </TouchableOpacity>
-            ))
+            trips.slice(0, 4).map((trip, i) => {
+              const anim = getRowAnim(i);
+              return (
+                <Animated.View
+                  key={trip.id || i}
+                  onLayout={(e) => {
+                    rowLayouts.current[i] = {
+                      y: e.nativeEvent.layout.y,
+                      height: e.nativeEvent.layout.height,
+                    };
+                    checkRowReveals(lastScrollY.current);
+                  }}
+                  style={{
+                    opacity: anim.opacity,
+                    transform: [
+                      { translateY: anim.translateY },
+                      { scale: getPressScale(`trip-${i}`) },
+                    ],
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[styles.tripRow, dynamicStyles.cardBg, styles.floatingSoft]}
+                    activeOpacity={0.8}
+                    onPress={() => setSelectedReceiptTrip(trip)}
+                    onPressIn={() => handlePressIn(`trip-${i}`)}
+                    onPressOut={() => handlePressOut(`trip-${i}`)}
+                  >
+                    <View style={[styles.tripIconBox, dynamicStyles.pillBg]}>
+                      <Text style={styles.tripIcon}>📍</Text>
+                    </View>
+                    <View style={styles.tripDetails}>
+                      <Text style={[styles.tripTitle, dynamicStyles.textPrimary]} numberOfLines={1}>{trip.dropoff_name}</Text>
+                      <Text style={[styles.tripAddr, dynamicStyles.textSecondary]} numberOfLines={1}>{trip.dropoff_addr}</Text>
+                    </View>
+                    <View style={styles.tripRight}>
+                      <Text style={[styles.tripPrice, dynamicStyles.textPrimary]}>{Math.round(trip.fare)} ETB</Text>
+                      <Text style={styles.receiptTag}>🧾 Receipt</Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })
           )}
         </View>
 
@@ -606,7 +761,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    borderBottomWidth: 1,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 10,
   },
   tripIconBox: {
     width: 38,
@@ -642,9 +800,52 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
+  // ---- Decorative background ----
+  bgBase: {
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  glowCircle: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 200,
+  },
+  glowOnePos: {
+    top: -80,
+    right: -100,
+  },
+  glowTwoPos: {
+    top: 260,
+    left: -140,
+  },
+
+  // ---- Shared "floating" shadow, applied to every card-style surface ----
+  floating: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  floatingSoft: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
   // ---- Floating Action Button styles ----
   fabWrapper: {
-    position: 'absolute',
+    // 'fixed' anchors to the browser viewport on web (react-native-web),
+    // which is what makes it float correctly regardless of parent height.
+    // Native (iOS/Android) uses normal 'absolute' positioning.
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
     right: 20,
     bottom: Platform.OS === 'ios' ? 34 : 24,
     alignItems: 'flex-end',
