@@ -58,17 +58,17 @@ Nearest driver matched ⭐
 
 | Layer | Technology |
 |-------|-----------|
+| Web | React 18 + TypeScript + Vite + Tailwind CSS |
 | Mobile | React Native (Expo SDK 57) |
-| Web | React Native Web |
-| Navigation | React Navigation v7 |
+| Navigation | React Navigation v7 + Custom Glassmorphism BottomNav |
 | Maps | MapView + OpenStreetMap CartoDB Dark |
 | GPS | expo-location |
-| Icons | @expo/vector-icons (Ionicons) |
+| Icons | Lucide React + @expo/vector-icons |
 | Backend | Node.js + Express |
 | Controllers / Models | Modular DB Abstraction & Rate Limiter |
 | Database | PostgreSQL |
 | ORM | pg (node-postgres) |
-| Payment | Telebirr (🇪🇹) |
+| Payment | Telebirr (🇪🇹) & CBE Birr |
 | Language | English + አማርኛ (Amharic) |
 
 ---
