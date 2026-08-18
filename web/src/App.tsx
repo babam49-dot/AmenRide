@@ -13,6 +13,7 @@ import { DriverView } from './components/DriverView';
 import { AdminView } from './components/AdminView';
 import { ActivityView } from './components/ActivityView';
 import { AccountView } from './components/AccountView';
+import { LiveDriverMap } from './components/LiveDriverMap';
 import { LocationItem, ServiceCategory } from './types';
 import { serviceCategories } from './components/ServiceCategoriesGrid';
 
@@ -61,6 +62,10 @@ const MainContent: React.FC = () => {
             />
 
             <QuickLocationCards onSelectLocation={handleSelectLocation} />
+
+            <div className="px-4 my-4">
+              <LiveDriverMap />
+            </div>
 
             <ServiceCategoriesGrid
               onSelectService={handleSelectService}
