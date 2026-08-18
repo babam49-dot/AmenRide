@@ -59,6 +59,9 @@ export const translations = {
     tripCompleted: "Trip Completed Successfully",
     surgeApplied: "Peak Hours Surge Applied",
     cashPayment: "Cash / Telebirr",
+    emergencySos: "Emergency SOS Alert",
+    telebirrDirect: "Telebirr Electronic Transfer",
+    ratingTitle: "Rate Your Driver",
   },
   am: {
     welcome: "እንኳን ወደ አሜን በደህና መጡ",
@@ -120,5 +123,8 @@ export const translations = {
     tripCompleted: "ጉዞው በተሳካ ሁኔታ ተጠናቋል",
     surgeApplied: "የከፍተኛ ሰዓት ተጨማሪ ክፍያ ታስቧል",
     cashPayment: "በጥሬ ገንዘብ / ቴሌብር",
+    emergencySos: "የድንገተኛ አደጋ ጥሪ",
+    telebirrDirect: "የቴሌብር ክፍያ",
+    ratingTitle: "አሽከርካሪውን ይገምግሙ",
   },
 };
