@@ -4,6 +4,13 @@ const RatingModel = require('../models/RatingModel');
 const DriverModel = require('../models/DriverModel');
 const { BAHIR_DAR_LOCATIONS, findLocationByName } = require('../config/bahirDarLocations');
 
+const PromoModel = require('../models/PromoModel');
+const PayoutModel = require('../models/PayoutModel');
+const ScheduledTripModel = require('../models/ScheduledTripModel');
+const SurgeZoneModel = require('../models/SurgeZoneModel');
+const EmergencyModel = require('../models/EmergencyModel');
+const SavedPlaceModel = require('../models/SavedPlaceModel');
+
 async function runBackendTests() {
   console.log('🧪 Running Comprehensive Backend Test Suite...');
 
@@ -73,6 +80,34 @@ async function runBackendTests() {
   assert.strictEqual(stats.averageRating, 4.5, 'Average rating should be 4.5');
   console.log('  ✅ [PASS] RatingModel computes average driver rating correctly');
 
+  // Test 7: PromoModel
+  const promoRes = await PromoModel.validatePromoCode('AMENBAHIR', 200);
+  assert.strictEqual(promoRes.valid, true, 'AMENBAHIR promo should be valid');
+  assert.strictEqual(promoRes.discountAmountETB, 40, 'Discount amount for 200 ETB at 20% should be 40 ETB');
+  console.log('  ✅ [PASS] PromoModel validates promo codes and calculates discounts');
+
+  // Test 8: PayoutModel
+  const payout = await PayoutModel.requestPayout({ driverId: 1, amountETB: 500, paymentMethod: 'Telebirr', accountNumber: '0911000001' });
+  assert.ok(payout, 'Payout request should be created');
+  assert.strictEqual(payout.amount_etb, 500, 'Payout amount should match');
+  console.log('  ✅ [PASS] PayoutModel processes driver payout requests');
+
+  // Test 9: ScheduledTripModel
+  const schedule = await ScheduledTripModel.createSchedule({ userId: 1, pickupName: 'Airport', dropoffName: 'Hotel', scheduledTime: '2026-09-01T08:00:00Z', fareEstimate: 250 });
+  assert.strictEqual(schedule.status, 'SCHEDULED', 'Schedule status should be SCHEDULED');
+  console.log('  ✅ [PASS] ScheduledTripModel reserves future trips');
+
+  // Test 10: SurgeZoneModel & EmergencyModel & SavedPlaceModel
+  const zones = await SurgeZoneModel.getAllZones();
+  assert.ok(zones.length > 0, 'Surge zones should be retrieved');
+
+  const alert = await EmergencyModel.logAlert({ userId: 1, lat: 11.6, lng: 37.3, contactPhone: '991' });
+  assert.strictEqual(alert.status, 'DISPATCHED', 'Emergency alert should be DISPATCHED');
+
+  const places = await SavedPlaceModel.getPlaces(1);
+  assert.ok(places.length > 0, 'Saved places should be retrieved');
+  console.log('  ✅ [PASS] Surge, Emergency, and SavedPlace models function properly');
+
   console.log('\n🎉 ALL BACKEND TESTS PASSED SUCCESSFULLY!\n');
 }
 
@@ -80,3 +115,4 @@ runBackendTests().catch((err) => {
   console.error('❌ [TEST FAILED]:', err.message);
   process.exit(1);
 });
+

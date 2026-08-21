@@ -20,12 +20,17 @@
 - **Post-Trip Driver Ratings** — Interactive 5-star rating system, feedback tags, and reviews
 - **One-Tap Emergency SOS Alert** — Live GPS dispatch to local Bahir Dar police lines
 - **Amharic / English** — Full bilingual support (አማርኛ + English)
+- **Promo Discount Codes** — Real-time ETB discount calculations and voucher verification (`AMENBAHIR`, `TANA50`)
+- **Ride Scheduling** — Reserve future rides in advance with automated driver dispatch
+- **Saved Favorite Places** — Instant one-tap booking for Home, Work, and BDU campus
 
 ### Driver Partner
 - **Online/Offline Toggle** — Go online to start receiving trip requests
 - **Live GPS Broadcasting** — Phone location sent to backend every 5 seconds
-- **Weekly Revenue Chart** — Bar chart showing Mon–Sun earnings breakdown
+- **Weekly Revenue Chart & Payout Requests** — Request instant earnings cashout to Telebirr / CBE Birr
+- **Driver Document Verification** — License, Kebele ID, and Bajaj permit registration tracking
 - **Trip Request Alert** — 15-second countdown to accept or decline incoming requests
+
 
 ### Admin Dispatcher & Fleet Control
 - **Fleet Console** — Monitor all active drivers across Bahir Dar
