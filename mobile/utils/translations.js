@@ -62,6 +62,13 @@ export const translations = {
     emergencySos: "Emergency SOS Alert",
     telebirrDirect: "Telebirr Electronic Transfer",
     ratingTitle: "Rate Your Driver",
+    payoutHistory: "Payout History",
+    requestCashout: "Request Cashout to Telebirr / CBE",
+    savedPlaces: "Saved Places",
+    scheduledRides: "Scheduled Rides",
+    promoCode: "Promo Code",
+    safetyCenter: "Safety Center",
+    driverVerification: "Driver Verification",
   },
   am: {
     welcome: "እንኳን ወደ አሜን በደህና መጡ",
@@ -126,5 +133,13 @@ export const translations = {
     emergencySos: "የድንገተኛ አደጋ ጥሪ",
     telebirrDirect: "የቴሌብር ክፍያ",
     ratingTitle: "አሽከርካሪውን ይገምግሙ",
+    payoutHistory: "የክፍያ ታሪክ",
+    requestCashout: "በቴሌብር / ንግድ ባንክ ገንዘብ ማውጣት",
+    savedPlaces: "የተቀመጡ ቦታዎች",
+    scheduledRides: "የተያዙ ጉዞዎች",
+    promoCode: "ማስተዋወቂያ ኮድ",
+    safetyCenter: "የደህንነት ማዕከል",
+    driverVerification: "የአሽከርካሪ ማረጋገጫ",
   },
 };
+
