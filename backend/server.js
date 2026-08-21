@@ -28,6 +28,8 @@ app.use('/api/ratings',      require('./routes/rating'));
 app.use('/api/promos',          require('./routes/promo'));
 app.use('/api/payouts',         require('./routes/payout'));
 app.use('/api/scheduled-trips', require('./routes/scheduledTrips'));
+app.use('/api/surge-zones',     require('./routes/surge'));
+
 
 
 
