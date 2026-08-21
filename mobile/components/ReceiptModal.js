@@ -89,12 +89,22 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
                 <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('serviceFee')}</Text>
                 <Text style={[styles.fareVal, dynamicStyles.textPrimary]}>{serviceFee}.00 ETB</Text>
               </View>
+              {tripData.discount ? (
+                <>
+                  <View style={[styles.divider, dynamicStyles.divider]} />
+                  <View style={styles.fareRow}>
+                    <Text style={[styles.fareLabel, { color: '#10B981', fontWeight: '700' }]}>🎁 Promo Code Discount</Text>
+                    <Text style={[styles.fareVal, { color: '#10B981' }]}>-{tripData.discount}.00 ETB</Text>
+                  </View>
+                </>
+              ) : null}
               <View style={styles.dividerBold} />
               <View style={styles.fareRowTotal}>
                 <Text style={[styles.totalLabel, dynamicStyles.textPrimary]}>{t('totalPaid')}</Text>
-                <Text style={styles.totalVal}>{total}.00 ETB</Text>
+                <Text style={styles.totalVal}>{total - (tripData.discount || 0)}.00 ETB</Text>
               </View>
             </View>
+
 
             {/* Payment Method */}
             <View style={[styles.paymentBox, dynamicStyles.cardBg]}>
