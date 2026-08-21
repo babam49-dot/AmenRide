@@ -81,6 +81,11 @@ const translations: Record<Language, Record<string, string>> = {
     findingDriver: 'Finding nearest driver near you...',
     tripConfirmed: 'Ride Confirmed!',
     paymentMethod: 'Payment Method',
+    promoManagement: 'Promo Code Campaigns',
+    driverPayouts: 'Driver Earnings Payouts',
+    surgeZoneControl: 'Demand Surge Heatmap',
+    emergencyLogsTitle: 'Emergency SOS Logs',
+    verificationQueueTitle: 'Driver License Verification',
   },
   AM: {
     // Header
@@ -154,8 +159,14 @@ const translations: Record<Language, Record<string, string>> = {
     findingDriver: 'በቅርብ ያለ አሽከርካሪ በመፈለግ ላይ...',
     tripConfirmed: 'ጉዞዎ ተረጋግጧል!',
     paymentMethod: 'የክፍያ መንገድ',
+    promoManagement: 'የማስተዋወቂያ ኮዶች',
+    driverPayouts: 'የአሽከርካሪዎች ክፍያ',
+    surgeZoneControl: 'የከፍተኛ ፍላጎት ቦታዎች',
+    emergencyLogsTitle: 'የድንገተኛ አደጋ መዝገብ',
+    verificationQueueTitle: 'የአሽከርካሪዎች ማረጋገጫ',
   }
 };
+
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
