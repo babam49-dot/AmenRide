@@ -131,6 +131,22 @@ CREATE TABLE IF NOT EXISTS payouts (
   processed_at   TIMESTAMPTZ
 );
 
+-- Scheduled Trips
+CREATE TABLE IF NOT EXISTS scheduled_trips (
+  id             SERIAL PRIMARY KEY,
+  user_id        INTEGER REFERENCES users(id),
+  ride_option_id INTEGER REFERENCES ride_options(id),
+  pickup_name    VARCHAR(200) NOT NULL,
+  dropoff_name   VARCHAR(200) NOT NULL,
+  pickup_lat     DOUBLE PRECISION,
+  pickup_lng     DOUBLE PRECISION,
+  scheduled_time TIMESTAMPTZ NOT NULL,
+  fare_estimate  NUMERIC(10, 2) NOT NULL,
+  status         VARCHAR(30) DEFAULT 'SCHEDULED',
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 
 -- Demo trips
 INSERT INTO trips (user_id, driver_id, ride_option_id,
