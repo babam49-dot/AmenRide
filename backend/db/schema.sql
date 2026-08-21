@@ -168,6 +168,24 @@ INSERT INTO surge_zones (zone_name, lat, lng, radius_km, surge_multiplier) VALUE
   ('Lake Tana Resort Strip',     11.5936, 37.3950, 2.5, 1.30)
 ON CONFLICT (zone_name) DO NOTHING;
 
+-- Saved Places
+CREATE TABLE IF NOT EXISTS saved_places (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER REFERENCES users(id),
+  label       VARCHAR(50) NOT NULL, -- Home, Work, University, Gym
+  name        VARCHAR(200) NOT NULL,
+  address     VARCHAR(300),
+  lat         DOUBLE PRECISION,
+  lng         DOUBLE PRECISION,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO saved_places (user_id, label, name, address, lat, lng) VALUES
+  (1, 'Home', 'Kebele 11 Residence', 'Near BDU Poly Campus, Bahir Dar', 11.5880, 37.3812),
+  (1, 'Work', 'Commercial Bank Building', 'Kebele 03 Main St, Bahir Dar', 11.5936, 37.3908)
+ON CONFLICT DO NOTHING;
+
+
 
 
 
