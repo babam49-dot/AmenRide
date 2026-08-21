@@ -102,6 +102,36 @@ INSERT INTO ride_options (name, icon, eta_minutes, base_price, description, colo
   ('AMEN Intercity','🚌', 15, 350.00, 'Long-distance intercity transport',   '#10B981')
 ON CONFLICT DO NOTHING;
 
+-- Promo Codes
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id                   SERIAL PRIMARY KEY,
+  code                 VARCHAR(50) UNIQUE NOT NULL,
+  discount_percent     NUMERIC(5, 2) DEFAULT 0.00,
+  max_discount_etb     NUMERIC(10, 2) DEFAULT 50.00,
+  is_active            BOOLEAN DEFAULT TRUE,
+  expires_at           TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '30 days'),
+  created_at           TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO promo_codes (code, discount_percent, max_discount_etb, is_active) VALUES
+  ('AMENBAHIR', 20.00, 50.00, TRUE),
+  ('TANA50',    50.00, 100.00, TRUE),
+  ('WELCOME10', 10.00, 30.00, TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+-- Driver Payouts
+CREATE TABLE IF NOT EXISTS payouts (
+  id             SERIAL PRIMARY KEY,
+  driver_id      INTEGER REFERENCES drivers(id),
+  amount_etb     NUMERIC(10, 2) NOT NULL,
+  payment_method VARCHAR(50) DEFAULT 'Telebirr',
+  account_number VARCHAR(50) NOT NULL,
+  status         VARCHAR(30) DEFAULT 'PENDING',
+  requested_at   TIMESTAMPTZ DEFAULT NOW(),
+  processed_at   TIMESTAMPTZ
+);
+
+
 -- Demo trips
 INSERT INTO trips (user_id, driver_id, ride_option_id,
                    pickup_name, pickup_lat, pickup_lng, pickup_addr,
@@ -114,3 +144,4 @@ VALUES
   (1,1,1,'Bahir Dar Bus Terminal',11.5810,37.3870,'Kebele 01, Bahir Dar',    'Bahir Dar University', 11.5880,37.3812,'Kebele 11, Bahir Dar',   85.00,'completed',3.1,11, NOW()-INTERVAL '2 days'),
   (1,1,2,'Lake Tana Hotel',       11.5936,37.3950,'Kebele 03, Bahir Dar',    'Bahir Dar Airport',    11.6041,37.3724,'Felege Hiwot, Bahir Dar',280.00,'completed',5.6,18, NOW()-INTERVAL '3 days')
 ON CONFLICT DO NOTHING;
+
