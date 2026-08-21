@@ -30,6 +30,8 @@ app.use('/api/payouts',         require('./routes/payout'));
 app.use('/api/scheduled-trips', require('./routes/scheduledTrips'));
 app.use('/api/surge-zones',     require('./routes/surge'));
 app.use('/api/saved-places',    require('./routes/savedPlaces'));
+app.use('/api/emergency',       require('./routes/emergency'));
+
 
 
 

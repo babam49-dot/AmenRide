@@ -201,6 +201,23 @@ INSERT INTO driver_reviews (trip_id, driver_id, rating, comment, tags) VALUES
   ('TRIP-102', 1, 4.8, 'Very polite and punctual arrival', ARRAY['በሰዓቱ መድረስ (Punctual Arrival)'])
 ON CONFLICT DO NOTHING;
 
+-- Emergency SOS Logs
+CREATE TABLE IF NOT EXISTS emergency_logs (
+  id             SERIAL PRIMARY KEY,
+  user_id        INTEGER REFERENCES users(id),
+  lat            DOUBLE PRECISION NOT NULL,
+  lng            DOUBLE PRECISION NOT NULL,
+  contact_phone  VARCHAR(30) DEFAULT '+251911000000',
+  dispatch_target VARCHAR(100) DEFAULT 'Bahir Dar Central Police Line (991)',
+  status         VARCHAR(30) DEFAULT 'DISPATCHED',
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO emergency_logs (user_id, lat, lng, contact_phone, dispatch_target, status) VALUES
+  (1, 11.6080, 37.3699, '+251912345678', 'Felege Hiwot Police Station', 'RESOLVED')
+ON CONFLICT DO NOTHING;
+
+
 
 
 
