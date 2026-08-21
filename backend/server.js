@@ -25,8 +25,10 @@ app.use('/api/driver',       require('./routes/driver'));
 app.use('/api/ride-options', require('./routes/rideOptions'));
 app.use('/api/payments',     require('./routes/payment'));
 app.use('/api/ratings',      require('./routes/rating'));
-app.use('/api/promos',       require('./routes/promo'));
-app.use('/api/payouts',      require('./routes/payout'));
+app.use('/api/promos',          require('./routes/promo'));
+app.use('/api/payouts',         require('./routes/payout'));
+app.use('/api/scheduled-trips', require('./routes/scheduledTrips'));
+
 
 
 
