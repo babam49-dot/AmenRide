@@ -72,7 +72,26 @@ async function seedDatabase() {
     }
 
     console.log(`✅ Successfully seeded ${INITIAL_DRIVERS.length} drivers for Bahir Dar fleet.`);
+
+    // Seed Promos
+    await pool.query(`
+      INSERT INTO promo_codes (code, discount_percent, max_discount_etb) VALUES
+        ('AMENBAHIR', 20.00, 50.00),
+        ('TANA50', 50.00, 100.00)
+      ON CONFLICT (code) DO NOTHING;
+    `);
+
+    // Seed Surge Zones
+    await pool.query(`
+      INSERT INTO surge_zones (zone_name, lat, lng, radius_km, surge_multiplier) VALUES
+        ('Felege Hiwot Hospital Area', 11.6080, 37.3699, 2.0, 1.25),
+        ('Bahir Dar Airport Zone', 11.6041, 37.3724, 3.0, 1.40)
+      ON CONFLICT (zone_name) DO NOTHING;
+    `);
+
+    console.log('✅ Successfully seeded promos and surge zones.');
     process.exit(0);
+
   } catch (error) {
     console.error('❌ Seeding failed:', error.message);
     process.exit(1);
