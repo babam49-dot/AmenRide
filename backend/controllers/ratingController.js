@@ -41,3 +41,34 @@ exports.getOverallSummary = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.getDriverReviewHistory = async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    return res.status(200).json({
+      success: true,
+      driverId,
+      reviews: [
+        {
+          id: 1,
+          tripId: 'TRIP-101',
+          rating: 5.0,
+          comment: 'Safe driver and clean Bajaj vehicle!',
+          tags: ['ጥሩ ማሽከርከር (Safe Driving)', 'ንጹህ መኪና (Clean Vehicle)'],
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          tripId: 'TRIP-102',
+          rating: 4.8,
+          comment: 'Very polite and punctual arrival',
+          tags: ['በሰዓቱ መድረስ (Punctual Arrival)'],
+          createdAt: new Date().toISOString()
+        }
+      ]
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+

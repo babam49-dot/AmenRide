@@ -185,6 +185,23 @@ INSERT INTO saved_places (user_id, label, name, address, lat, lng) VALUES
   (1, 'Work', 'Commercial Bank Building', 'Kebele 03 Main St, Bahir Dar', 11.5936, 37.3908)
 ON CONFLICT DO NOTHING;
 
+-- Driver Reviews
+CREATE TABLE IF NOT EXISTS driver_reviews (
+  id          SERIAL PRIMARY KEY,
+  trip_id     VARCHAR(100),
+  driver_id   INTEGER REFERENCES drivers(id),
+  rating      NUMERIC(3, 2) NOT NULL,
+  comment     TEXT,
+  tags        TEXT[],
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO driver_reviews (trip_id, driver_id, rating, comment, tags) VALUES
+  ('TRIP-101', 1, 5.0, 'Safe driver and clean Bajaj vehicle!', ARRAY['ጥሩ ማሽከርከር (Safe Driving)', 'ንጹህ መኪና (Clean Vehicle)']),
+  ('TRIP-102', 1, 4.8, 'Very polite and punctual arrival', ARRAY['በሰዓቱ መድረስ (Punctual Arrival)'])
+ON CONFLICT DO NOTHING;
+
+
 
 
 

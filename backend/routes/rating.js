@@ -4,6 +4,8 @@ const ratingController = require('../controllers/ratingController');
 
 router.post('/', ratingController.createRating);
 router.get('/driver/:id', ratingController.getDriverRatings);
+router.get('/driver/:driverId/reviews', ratingController.getDriverReviewHistory);
 router.get('/summary', ratingController.getOverallSummary);
 
 module.exports = router;
+
