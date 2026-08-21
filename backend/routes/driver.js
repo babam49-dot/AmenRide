@@ -26,5 +26,12 @@ router.get('/:id', driverController.getDriverById);
 // GET /api/driver/:id/stats — Get driver aggregate metrics and completed trips
 router.get('/:id/stats', driverController.getDriverStats);
 
+// POST /api/driver/documents — Submit driver verification documents
+router.post('/documents', driverController.submitVerification);
+
+// PUT /api/driver/:id/verification — Update verification status (Admin)
+router.put('/:id/verification', driverController.updateVerificationStatus);
+
 module.exports = router;
+
 

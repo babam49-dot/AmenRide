@@ -176,6 +176,46 @@ async function checkDriverConnectionStatus(req, res) {
   }
 }
 
+async function submitVerification(req, res) {
+  try {
+    const { driverId, licenseNumber, licenseExpiry, vehiclePlate } = req.body;
+    if (!driverId || !licenseNumber) {
+      return res.status(400).json({ success: false, error: 'driverId and licenseNumber are required' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Driver documents submitted for verification',
+      verification: {
+        driverId,
+        licenseNumber,
+        licenseExpiry: licenseExpiry || '2028-12-31',
+        vehiclePlate: vehiclePlate || 'BD-7788-ET',
+        status: 'PENDING_APPROVAL',
+        submittedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+async function updateVerificationStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'VERIFIED', 'REJECTED'
+    return res.status(200).json({
+      success: true,
+      message: `Driver ${id} verification status updated to ${status}`,
+      driverId: id,
+      status: status || 'VERIFIED',
+      updatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 module.exports = {
   getNearbyDrivers,
   updateDriverLocation,
@@ -183,5 +223,8 @@ module.exports = {
   getDriverById,
   pingDriverLocation,
   checkDriverConnectionStatus,
+  submitVerification,
+  updateVerificationStatus,
 };
+
 

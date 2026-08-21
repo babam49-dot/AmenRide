@@ -89,10 +89,14 @@ ALTER TABLE drivers ADD COLUMN IF NOT EXISTS lng              DOUBLE PRECISION;
 ALTER TABLE drivers ADD COLUMN IF NOT EXISTS last_location_at TIMESTAMPTZ;
 ALTER TABLE drivers ADD COLUMN IF NOT EXISTS vehicle_color    VARCHAR(30) DEFAULT 'White';
 ALTER TABLE drivers ADD COLUMN IF NOT EXISTS phone           VARCHAR(20);
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS license_number   VARCHAR(50);
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS license_expiry   TIMESTAMPTZ;
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS verification_status VARCHAR(30) DEFAULT 'VERIFIED';
 ALTER TABLE trips   ADD COLUMN IF NOT EXISTS pickup_lat      DOUBLE PRECISION;
 ALTER TABLE trips   ADD COLUMN IF NOT EXISTS pickup_lng      DOUBLE PRECISION;
 ALTER TABLE trips   ADD COLUMN IF NOT EXISTS dropoff_lat     DOUBLE PRECISION;
 ALTER TABLE trips   ADD COLUMN IF NOT EXISTS dropoff_lng     DOUBLE PRECISION;
+
 
 -- Ride options
 INSERT INTO ride_options (name, icon, eta_minutes, base_price, description, color) VALUES
@@ -145,6 +149,25 @@ CREATE TABLE IF NOT EXISTS scheduled_trips (
   status         VARCHAR(30) DEFAULT 'SCHEDULED',
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Surge Zones
+CREATE TABLE IF NOT EXISTS surge_zones (
+  id               SERIAL PRIMARY KEY,
+  zone_name        VARCHAR(100) UNIQUE NOT NULL,
+  lat              DOUBLE PRECISION NOT NULL,
+  lng              DOUBLE PRECISION NOT NULL,
+  radius_km        NUMERIC(4, 2) DEFAULT 2.50,
+  surge_multiplier NUMERIC(3, 2) DEFAULT 1.00,
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO surge_zones (zone_name, lat, lng, radius_km, surge_multiplier) VALUES
+  ('Felege Hiwot Hospital Area', 11.6080, 37.3699, 2.0, 1.25),
+  ('Bahir Dar Airport Zone',     11.6041, 37.3724, 3.0, 1.40),
+  ('BDU Peda Campus Hub',        11.5880, 37.3812, 1.5, 1.15),
+  ('Lake Tana Resort Strip',     11.5936, 37.3950, 2.5, 1.30)
+ON CONFLICT (zone_name) DO NOTHING;
+
 
 
 
