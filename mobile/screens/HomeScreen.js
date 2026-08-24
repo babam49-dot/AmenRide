@@ -268,11 +268,11 @@ export default function HomeScreen({ navigation }) {
               AMEN
             </Text>
             <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}
+              style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}
               onPress={() => navigation.navigate('Services')}
             >
-              <Text style={{ fontSize: 11, color: '#FF2E2E', marginRight: 2 }}>📍</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#111111' }}>Felege Hiwot Square</Text>
+              <Text style={{ fontSize: 11, color: '#FF2E2E', marginRight: 5 }}>📍</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#111111', marginRight: 4 }}>Felege Hiwot Square</Text>
               <Text style={{ fontSize: 12, color: '#64748B' }}>›</Text>
             </TouchableOpacity>
           </View>
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   },
   serviceRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
   serviceCardWrap: {
