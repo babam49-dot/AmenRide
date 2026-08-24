@@ -1,80 +1,56 @@
 import React from 'react';
-import { MapPin, Hospital, Hotel, GraduationCap, Plane, Mountain, ShoppingBag } from 'lucide-react';
+import { GraduationCap, MapPin } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LocationItem } from '../types';
 
 export const bahirDarLocations: LocationItem[] = [
   {
     id: 'loc-1',
-    name: 'Felege Hiwot Hospital',
-    nameAm: 'ፌለገ ሕይወት ሆስፒታል',
-    subtext: 'Kebele 04 • Emergency Care',
-    subtextAm: 'ቀበሌ 04 • ድንገተኛ ሕክምና',
-    category: 'hospital',
+    name: 'BDU 5 Kilo Peda Campus',
+    nameAm: 'ባህር ዳር ዩኒቨርሲቲ 5 ኪሎ',
+    subtext: 'Bahir Dar, Arada, Kebele 11',
+    subtextAm: 'ባህር ዳር፣ አራዳ፣ ቀበሌ 11',
+    category: 'university',
     distance: '1.2 km',
     estTime: '4 min',
-    lat: 11.5932,
-    lng: 37.3871,
-  },
-  {
-    id: 'loc-2',
-    name: 'Grand Resort Hotel',
-    nameAm: 'ግራንድ ሪዞርት ሆቴል',
-    subtext: 'Lake Tana Shore',
-    subtextAm: 'የጣና ሐይቅ ዳርቻ',
-    category: 'hotel',
-    distance: '2.5 km',
-    estTime: '7 min',
-    lat: 11.601,
-    lng: 37.389,
-  },
-  {
-    id: 'loc-3',
-    name: 'BDU Peda Campus',
-    nameAm: 'ባህር ዳር ዩኒቨርሲቲ ፔዳ',
-    subtext: 'Main Gate • Gate 1',
-    subtextAm: 'ዋና በር • በር 1',
-    category: 'university',
-    distance: '3.1 km',
-    estTime: '8 min',
     lat: 11.585,
     lng: 37.395,
   },
   {
-    id: 'loc-4',
-    name: 'Belay Zeleke Airport',
-    nameAm: 'በላይ ዘለቀ አየር መንገድ',
-    subtext: 'Terminal Departure',
-    subtextAm: 'የመንገደኞች ተርሚናል',
-    category: 'airport',
-    distance: '8.4 km',
-    estTime: '15 min',
-    lat: 11.608,
-    lng: 37.321,
-  },
-  {
-    id: 'loc-5',
-    name: 'Bezawit Palace Viewpoint',
-    nameAm: 'በዛዊት ቤተ መንግሥት',
-    subtext: 'Abay River Exit View',
-    subtextAm: 'የዓባይ መውጫ ተመልካች',
+    id: 'loc-2',
+    name: 'Felege Hiwot Referral Hospital',
+    nameAm: 'ፌለገ ሕይወት ሪፈራል ሆስፒታል',
+    subtext: 'Bahir Dar, Kebele 04',
+    subtextAm: 'ባህር ዳር፣ ቀበሌ 04',
     category: 'landmark',
-    distance: '6.0 km',
-    estTime: '12 min',
-    lat: 11.615,
-    lng: 37.412,
+    distance: '2.5 km',
+    estTime: '7 min',
+    lat: 11.5932,
+    lng: 37.3871,
   },
   {
-    id: 'loc-6',
-    name: 'Kebele 11 Market',
-    nameAm: 'ቀበሌ 11 ገበያ ማዕከል',
-    subtext: 'City Commercial Center',
-    subtextAm: 'የከተማው የገበያ ማዕከል',
-    category: 'market',
-    distance: '1.8 km',
-    estTime: '5 min',
+    id: 'loc-3',
+    name: 'Atenatera Taxi Station',
+    nameAm: 'አጠናተራ ታክሲ ተርሚናል',
+    subtext: 'Bahir Dar, Main Bus Station, Kebele 01',
+    subtextAm: 'ባህር ዳር፣ ዋና አውቶቡስ ተርሚናል',
+    category: 'landmark',
+    distance: '3.1 km',
+    estTime: '8 min',
     lat: 11.597,
     lng: 37.382,
+  },
+  {
+    id: 'loc-4',
+    name: 'Grand Resort Hotel',
+    nameAm: 'ግራንድ ሪዞርት ሆቴል',
+    subtext: 'Bahir Dar, Lake Tana Shore, Kebele 03',
+    subtextAm: 'ባህር ዳር፣ ጣና ሐይቅ ዳርቻ',
+    category: 'landmark',
+    distance: '4.5 km',
+    estTime: '10 min',
+    lat: 11.601,
+    lng: 37.389,
   },
 ];
 
@@ -83,40 +59,12 @@ interface QuickLocationCardsProps {
 }
 
 export const QuickLocationCards: React.FC<QuickLocationCardsProps> = ({ onSelectLocation }) => {
-  const { language, t } = useLanguage();
-
-  const getCategoryIcon = (cat: LocationItem['category']) => {
-    switch (cat) {
-      case 'hospital':
-        return <Hospital className="w-4 h-4 text-red-400" />;
-      case 'hotel':
-        return <Hotel className="w-4 h-4 text-amber-400" />;
-      case 'university':
-        return <GraduationCap className="w-4 h-4 text-blue-400" />;
-      case 'airport':
-        return <Plane className="w-4 h-4 text-emerald-400" />;
-      case 'landmark':
-        return <Mountain className="w-4 h-4 text-purple-400" />;
-      case 'market':
-        return <ShoppingBag className="w-4 h-4 text-orange-400" />;
-      default:
-        return <MapPin className="w-4 h-4 text-amber-400" />;
-    }
-  };
+  const { language } = useLanguage();
 
   return (
-    <div className="w-full max-w-7xl mx-auto my-6 px-4">
-      {/* Title */}
-      <div className="flex items-center justify-between mb-3.5">
-        <h3 className="text-sm font-bold text-zinc-300 tracking-wide uppercase flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-amber-400" />
-          {t('quickDestinations')}
-        </h3>
-        <span className="text-[11px] font-semibold text-zinc-500">Bahir Dar 🇪🇹</span>
-      </div>
-
-      {/* Horizontal Scroll Chip Container */}
-      <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-2 pt-1 -mx-4 px-4">
+    <div className="w-full max-w-md mx-auto sm:max-w-5xl my-4 px-4">
+      {/* Vertical Suggested Destinations List */}
+      <div className="space-y-1 bg-white rounded-3xl p-2 shadow-sm border border-gray-100 divide-y divide-gray-100">
         {bahirDarLocations.map((loc) => {
           const name = language === 'EN' ? loc.name : loc.nameAm;
           const sub = language === 'EN' ? loc.subtext : loc.subtextAm;
@@ -125,23 +73,25 @@ export const QuickLocationCards: React.FC<QuickLocationCardsProps> = ({ onSelect
             <button
               key={loc.id}
               onClick={() => onSelectLocation(loc)}
-              className="flex items-center gap-3 px-4 py-3 bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800/90 hover:border-amber-500/40 rounded-2xl shrink-0 transition-all duration-200 active-press shadow-card-shadow group text-left max-w-xs"
+              className="w-full flex items-center gap-3.5 p-3.5 hover:bg-gray-50/80 transition-colors text-left group active:scale-[0.99]"
             >
-              <div className="w-9 h-9 rounded-xl bg-zinc-800 group-hover:bg-amber-500/15 flex items-center justify-center shrink-0 transition-colors">
-                {getCategoryIcon(loc.category)}
+              {/* Gray Circular Icon Badge */}
+              <div className="w-11 h-11 rounded-2xl bg-gray-100 text-gray-600 group-hover:bg-[#FF2E2E]/10 group-hover:text-[#FF2E2E] flex items-center justify-center shrink-0 transition-colors">
+                {loc.category === 'university' ? (
+                  <GraduationCap className="w-6 h-6" />
+                ) : (
+                  <MapPin className="w-6 h-6" />
+                )}
               </div>
 
-              <div className="truncate">
-                <h4 className="text-xs font-bold text-zinc-100 group-hover:text-amber-400 transition-colors truncate">
+              {/* Destination Details */}
+              <div className="truncate flex-1">
+                <h4 className="text-sm sm:text-base font-extrabold text-gray-900 group-hover:text-[#FF2E2E] transition-colors truncate">
                   {name}
                 </h4>
-                <p className="text-[11px] text-zinc-400 truncate mt-0.5">{sub}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                    {loc.estTime}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 font-semibold">{loc.distance}</span>
-                </div>
+                <p className="text-xs text-gray-400 truncate mt-0.5 font-medium">
+                  {sub}
+                </p>
               </div>
             </button>
           );
