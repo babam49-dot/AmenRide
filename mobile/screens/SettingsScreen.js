@@ -1,271 +1,175 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   ScrollView,
-  Switch,
-  Platform,
-  ActivityIndicator,
   Image,
-  TextInput,
+  Switch,
+  Alert,
 } from 'react-native';
-import { fetchDriver } from '../services/tripsApi';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
-
-const AVATAR_PRESETS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-];
-
-export default function SettingsScreen() {
-  const { lang, toggleLanguage, t } = useLanguage();
+export default function SettingsScreen({ navigation }) {
+  const { lang, toggleLanguage } = useLanguage();
   const { mode, toggleTheme } = useTheme();
-
-  const [pushNotif, setPushNotif] = useState(true);
-  const [driver, setDriver]       = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [avatarUri, setAvatarUri] = useState(DEFAULT_AVATAR);
-  const [showPresets, setShowPresets] = useState(false);
-  const [emergencyPhone, setEmergencyPhone] = useState('+251 911 000 001 (Bahir Dar)');
-  const [notifMessage, setNotifMessage]     = useState('');
-
-  useEffect(() => {
-    fetchDriver(1).then((d) => {
-      setDriver(d);
-      setLoading(false);
-    });
-  }, []);
-
-  const triggerNotifToast = (msg) => {
-    setNotifMessage(msg);
-    setTimeout(() => setNotifMessage(''), 3500);
-  };
-
-  // Zero-dependency Photo Uploader: Native HTML5 File Input on Web / Dynamic ImagePicker on Native
-  const handlePickPhonePhoto = async () => {
-    if (Platform.OS === 'web') {
-      try {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              if (event.target?.result) {
-                setAvatarUri(event.target.result);
-                triggerNotifToast('📷 Phone photo uploaded successfully!');
-              }
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-        input.click();
-      } catch (err) {
-        setShowPresets(true);
-      }
-    } else {
-      try {
-        // Dynamic try-require to prevent Metro bundling error when expo-image-picker is missing
-        const ImagePicker = require('expo-image-picker');
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          triggerNotifToast('⚠️ Permission required to access phone photos.');
-          return;
-        }
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          setAvatarUri(result.assets[0].uri);
-          triggerNotifToast('📷 Phone photo uploaded successfully!');
-        }
-      } catch (err) {
-        setShowPresets(!showPresets);
-        triggerNotifToast('📷 Choose avatar from presets below!');
-      }
-    }
-  };
-
-  const handlePushNotifToggle = (val) => {
-    setPushNotif(val);
-    if (val) {
-      triggerNotifToast('🔔 Push Notifications Enabled! You will receive live ride & safety alerts.');
-    } else {
-      triggerNotifToast('🔕 Push Notifications Disabled.');
-    }
-  };
-
-  const isDark = mode === 'dark';
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {/* Toast Banner */}
-      {notifMessage ? (
-        <View style={styles.toastBanner}>
-          <Text style={styles.toastText}>{notifMessage}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* User Profile Header */}
+      <View style={styles.profileHeader}>
+        <View style={styles.avatarWrap}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250' }}
+            style={styles.avatar}
+          />
         </View>
-      ) : null}
 
-      {/* Account Profile Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-          {t('account')}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.userName}>TEWANAY ZEWUDU GETNET</Text>
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.verifiedText}>✓</Text>
+          </View>
+        </View>
+
+        <Text style={styles.userPhone}>+251924765475</Text>
       </View>
 
-      {loading ? (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator color="#0D9488" size="small" />
-          <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }}>Loading profile...</Text>
+      {/* 4 Circular Action Buttons */}
+      <View style={styles.actionsGrid}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Orders', 'Viewing trip history...')}>
+          <View style={styles.actionCircle}>
+            <Text style={styles.actionEmoji}>🕒</Text>
+          </View>
+          <Text style={styles.actionLabel}>Orders</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Support', '24/7 Support center...')}>
+          <View style={styles.actionCircle}>
+            <Text style={styles.actionEmoji}>🎧</Text>
+          </View>
+          <Text style={styles.actionLabel}>Support</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('SavedPlacesScreen')}>
+          <View style={styles.actionCircle}>
+            <Text style={styles.actionEmoji}>📍</Text>
+          </View>
+          <Text style={styles.actionLabel}>Addresses</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionBtn} onPress={() => toggleLanguage()}>
+          <View style={styles.actionCircle}>
+            <Text style={styles.actionEmoji}>⚙️</Text>
+          </View>
+          <Text style={styles.actionLabel}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Card 1: Enable notifications */}
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+      >
+        <View style={styles.rowItem}>
+          <Text style={styles.rowEmoji}>🔔</Text>
+          <Text style={styles.rowTitle}>Enable notifications</Text>
         </View>
-      ) : (
-        <View style={[styles.profileRow, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-          <TouchableOpacity style={styles.avatarContainer} onPress={handlePickPhonePhoto}>
-            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-            <View style={styles.cameraBadge}>
-              <Text style={styles.cameraIcon}>📷</Text>
+        <Text style={styles.chevron}>›</Text>
+      </TouchableOpacity>
+
+      {/* Card 2: Discounts & Payment Methods */}
+      <View style={styles.cardGroup}>
+        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Discounts', 'Enter your promo code...')}>
+          <View style={styles.rowLeft}>
+            <Text style={styles.rowEmoji}>🎁</Text>
+            <View>
+              <Text style={styles.rowTitle}>Discounts</Text>
+              <Text style={styles.rowSub}>Enter promo code</Text>
             </View>
-          </TouchableOpacity>
-
-          <View style={styles.profileInfo}>
-            <Text style={[styles.name, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-              {driver?.name || 'Abebe Bikila'}
-            </Text>
-            <Text style={styles.email}>{driver?.email || 'abebe.b@amenride.com'}</Text>
-            <TouchableOpacity style={styles.uploadBtn} onPress={handlePickPhonePhoto}>
-              <Text style={styles.uploadBtnText}>Upload Photo from Device 📱</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      )}
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
 
-      {/* Avatar Presets Bar */}
-      {showPresets && (
-        <View style={[styles.presetBox, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-          <Text style={[styles.presetTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            Or Pick an Avatar Preset:
-          </Text>
-          <View style={styles.presetRow}>
-            {AVATAR_PRESETS.map((url, idx) => (
-              <TouchableOpacity key={idx} onPress={() => { setAvatarUri(url); setShowPresets(false); }}>
-                <Image source={{ uri: url }} style={styles.presetThumb} />
-              </TouchableOpacity>
-            ))}
+        <View style={styles.divider} />
+
+        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Payment Methods', 'Default: Cash')}>
+          <View style={styles.rowLeft}>
+            <Text style={styles.rowEmoji}>💳</Text>
+            <View>
+              <Text style={styles.rowTitle}>Payment methods</Text>
+              <Text style={styles.rowSub}>Cash</Text>
+            </View>
           </View>
-        </View>
-      )}
-
-      {/* Wallet Card */}
-      <View style={[styles.walletCard, { backgroundColor: isDark ? '#142E35' : '#E6FFFA' }]}>
-        <View>
-          <Text style={[styles.walletLabel, { color: isDark ? '#5EEAD4' : '#0F766E' }]}>
-            {t('uberCash')} Balance
-          </Text>
-          <Text style={[styles.walletVal, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            250.00 ETB
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.addFundsBtn}
-          onPress={() => triggerNotifToast('💳 Telebirr Top-Up Initiated for 100 ETB')}
-        >
-          <Text style={styles.addFundsText}>{t('addFunds')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 20 }}>💵</Text>
+            <Text style={styles.chevron}>›</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
-      {/* App Preferences */}
-      <Text style={[styles.sectionTitle, { color: isDark ? '#94A3B8' : '#64748B' }]}>
-        {t('appPreferences')}
-      </Text>
+      {/* Card 3: Earn as a Driver (Dark Callout Box #1C1C1E) */}
+      <TouchableOpacity
+        style={styles.driverBanner}
+        onPress={() => navigation.navigate('DriverScreen')}
+      >
+        <View style={styles.rowLeft}>
+          <View style={styles.starBadge}>
+            <Text style={{ color: '#000', fontWeight: '900', fontSize: 16 }}>★</Text>
+          </View>
+          <Text style={styles.driverBannerText}>Earn as a driver</Text>
+        </View>
+        <Text style={[styles.chevron, { color: '#FF2E2E' }]}>›</Text>
+      </TouchableOpacity>
 
-      <View style={[styles.card, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-        <TouchableOpacity style={styles.row} onPress={toggleLanguage}>
-          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            {t('language')}
-          </Text>
-          <Text style={styles.rowDetail}>{lang === 'en' ? 'English (EN)' : 'አማርኛ (AM)'}</Text>
+      {/* Card 4: Maps, Safety & Score */}
+      <View style={styles.cardGroup}>
+        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Improve Maps', 'Add places, fix errors...')}>
+          <View style={styles.rowLeft}>
+            <Text style={styles.rowEmoji}>🔖</Text>
+            <View>
+              <Text style={styles.rowTitle}>Improve maps</Text>
+              <Text style={styles.rowSub}>Add places, fix errors</Text>
+            </View>
+          </View>
+          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
-        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
+        <View style={styles.divider} />
 
-        <View style={styles.row}>
-          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            Dark Mode ({isDark ? 'ON' : 'OFF'})
-          </Text>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: '#CBD5E1', true: '#0D9488' }}
-            thumbColor={isDark ? '#FFFFFF' : '#7C7C7C'}
-          />
-        </View>
-
-        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
-
-        <View style={styles.row}>
-          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            Push Notifications
-          </Text>
-          <Switch
-            value={pushNotif}
-            onValueChange={handlePushNotifToggle}
-            trackColor={{ false: '#CBD5E1', true: '#0D9488' }}
-            thumbColor={pushNotif ? '#FFFFFF' : '#7C7C7C'}
-          />
-        </View>
-      </View>
-
-      {/* Safety & Security */}
-      <Text style={[styles.sectionTitle, { color: isDark ? '#94A3B8' : '#64748B' }]}>
-        🛡️ Safety & Trusted Contacts
-      </Text>
-
-      <View style={[styles.card, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-        <TouchableOpacity
-          style={styles.row}
-          onPress={() => triggerNotifToast('🚨 Live Trip Tracking link copied to clipboard!')}
-        >
-          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            Share Trip Status
-          </Text>
-          <Text style={styles.rowDetail}>Copy Link 🔗</Text>
+        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Safety Center', 'SOS and emergency features...')}>
+          <View style={styles.rowLeft}>
+            <Text style={styles.rowEmoji}>🛡️</Text>
+            <Text style={styles.rowTitle}>Safety</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
-        <View style={[styles.divider, { backgroundColor: isDark ? '#334155' : '#F1F5F9' }]} />
+        <View style={styles.divider} />
 
-        <View style={styles.columnRow}>
-          <Text style={[styles.rowText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-            Trusted Emergency Contact
-          </Text>
-          <TextInput
-            style={[
-              styles.phoneInput,
-              {
-                backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
-                color: isDark ? '#F8FAFC' : '#0F172A',
-                borderColor: isDark ? '#334155' : '#E2E8F0',
-              },
-            ]}
-            value={emergencyPhone}
-            onChangeText={setEmergencyPhone}
-          />
-        </View>
+        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Cancellation Score', 'Search speed is optimal!')}>
+          <View style={styles.rowLeft}>
+            <Text style={[styles.rowEmoji, { color: '#10B981' }]}>⭕</Text>
+            <View>
+              <Text style={styles.rowTitle}>Great! Few canceled rides</Text>
+              <Text style={styles.rowSub}>This affects ride search speed</Text>
+            </View>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Card 5: Information */}
+      <TouchableOpacity style={[styles.card, { marginBottom: 40 }]} onPress={() => Alert.alert('Information', 'AMEN Ride App v2.4.0 (Bahir Dar)')}>
+        <View style={styles.rowItem}>
+          <Text style={styles.rowEmoji}>ℹ️</Text>
+          <Text style={styles.rowTitle}>Information</Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -273,184 +177,162 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
   },
-  contentContainer: {
+  content: {
     padding: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: 24,
   },
-  toastBanner: {
-    backgroundColor: '#0D9488',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 14,
-  },
-  toastText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  header: {
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-  },
-  loadingBox: {
-    padding: 24,
+  profileHeader: {
     alignItems: 'center',
+    marginBottom: 20,
   },
-  profileRow: {
+  avatarWrap: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    elevation: 2,
+    gap: 6,
   },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 14,
+  userName: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111111',
+    letterSpacing: -0.3,
   },
-  avatarImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#0D9488',
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#0D9488',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
+  verifiedBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#3B82F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cameraIcon: {
-    fontSize: 12,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  email: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  uploadBtn: {
-    marginTop: 6,
-    backgroundColor: '#F0FDFA',
-    borderWidth: 1,
-    borderColor: '#0D9488',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  uploadBtnText: {
-    color: '#0F766E',
-    fontWeight: '700',
+  verifiedText: {
+    color: '#FFFFFF',
+    fontWeight: '900',
     fontSize: 11,
   },
-  presetBox: {
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  presetTitle: {
+  userPhone: {
     fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  presetRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  presetThumb: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#0D9488',
-  },
-  walletCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 18,
-    borderRadius: 14,
-    marginBottom: 20,
-  },
-  walletLabel: {
-    fontSize: 13,
+    color: '#94A3B8',
     fontWeight: '600',
+    marginTop: 2,
   },
-  walletVal: {
+  actionsGrid: {
+    flexDirection: 'row',
+    justify.content: 'space-around',
+    marginBottom: 18,
+  },
+  actionBtn: {
+    alignItems: 'center',
+  },
+  actionCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#EFEFF1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  actionEmoji: {
     fontSize: 22,
+  },
+  actionLabel: {
+    fontSize: 12,
     fontWeight: '800',
-    marginTop: 4,
-  },
-  addFundsBtn: {
-    backgroundColor: '#0D9488',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  addFundsText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 10,
-    marginLeft: 4,
+    color: '#111111',
   },
   card: {
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginBottom: 20,
-    elevation: 2,
-  },
-  row: {
+    backgroundColor: '#EFEFF1',
+    borderRadius: 22,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    marginBottom: 12,
   },
-  columnRow: {
-    paddingVertical: 12,
+  cardGroup: {
+    backgroundColor: '#EFEFF1',
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 12,
   },
-  rowText: {
+  rowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rowItemBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rowEmoji: {
+    fontSize: 22,
+  },
+  rowTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '800',
+    color: '#111111',
   },
-  rowDetail: {
-    fontSize: 13,
-    color: '#0D9488',
-    fontWeight: '600',
+  rowSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
   },
   divider: {
     height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 12,
   },
-  phoneInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 8,
-    fontSize: 14,
+  driverBanner: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 22,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  starBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FBBF24',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  driverBannerText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  chevron: {
+    fontSize: 22,
+    color: '#94A3B8',
+    fontWeight: '400',
   },
 });
