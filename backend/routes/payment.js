@@ -26,4 +26,9 @@ router.post('/confirm-cash', paymentController.confirmCashPayment);
 router.post('/initiate', paymentController.initiatePayment);
 router.post('/chapa-initialize', paymentController.initializeChapaPayment);
 
+// ─── Real Account Verification & Per-KM Deduction Engine ───────────────────
+router.post('/verify-and-deduct', paymentController.verifyAndDeductAccount);
+router.get('/sample-accounts', paymentController.getSampleAccounts);
+
 module.exports = router;
+

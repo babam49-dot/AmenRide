@@ -407,12 +407,25 @@ exports.getPaymentStatus = async (req, res) => {
   }
 };
 
-exports.handleWebhook = async (req, res) => {
+exports.verifyAndDeductAccount = async (req, res) => {
   try {
-    const { transactionId, status } = req.body;
-    const updated = await PaymentModel.updateStatus(transactionId, status || 'COMPLETED');
-    res.json({ success: true, transaction: updated });
+    const { accountNumber, provider, distanceKm, ratePerKm, baseFare, tripId } = req.body;
+    const result = await PaymentModel.verifyAndDeductAccount({ accountNumber, provider, distanceKm, ratePerKm, baseFare, tripId });
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.getSampleAccounts = async (req, res) => {
+  try {
+    const accounts = PaymentModel.getSampleAccounts();
+    return res.status(200).json({ success: true, accounts });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+

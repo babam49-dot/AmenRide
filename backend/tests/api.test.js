@@ -108,7 +108,22 @@ async function runBackendTests() {
   assert.ok(places.length > 0, 'Saved places should be retrieved');
   console.log('  ✅ [PASS] Surge, Emergency, and SavedPlace models function properly');
 
+  // Test 11: Real Account Verification & Per-KM Fare Deduction Engine
+  const deductRes = await PaymentModel.verifyAndDeductAccount({
+    accountNumber: '0911223344',
+    provider: 'Telebirr',
+    distanceKm: 4.0,
+    ratePerKm: 25,
+    baseFare: 40,
+    tripId: 'TRIP-TEST-KM'
+  });
+  assert.strictEqual(deductRes.success, true, 'Account deduction should succeed');
+  assert.strictEqual(deductRes.proof.deductedETB, 140, 'Fare for 4km @ 25ETB/km + 40 ETB base should be 140 ETB');
+  assert.strictEqual(deductRes.proof.remainingBalanceETB, 1360, '1500 - 140 should equal 1360 ETB');
+  console.log('  ✅ [PASS] PaymentModel verifies Telebirr/CBE account, calculates per-km fare, and deducts money cleanly');
+
   console.log('\n🎉 ALL BACKEND TESTS PASSED SUCCESSFULLY!\n');
+
 }
 
 runBackendTests().catch((err) => {
