@@ -68,10 +68,13 @@ const MainContent: React.FC = () => {
               selectedDestination={selectedDestination?.name}
             />
 
-            {/* 3. Suggested / Recent Destinations list */}
+            {/* 3. Live Driver GPS Map Canvas */}
+            <LiveDriverMap />
+
+            {/* 4. Suggested / Recent Destinations list */}
             <QuickLocationCards onSelectLocation={handleSelectLocation} />
 
-            {/* 4. Promo Banner */}
+            {/* 5. Promo Banner */}
             <HeroPromoCard onBookRide={() => setIsBookingOpen(true)} />
           </div>
         )}
