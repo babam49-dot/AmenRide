@@ -444,10 +444,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    gap: 10,
   },
   suggestionIcon: {
     fontSize: 16,
+    marginRight: 10,
   },
   suggestionTitle: {
     fontSize: 13,
@@ -573,13 +573,13 @@ const styles = StyleSheet.create({
   },
   badgePillRow: {
     flexDirection: 'row',
-    gap: 10,
   },
   colorPill: {
     backgroundColor: '#F59E0B',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    marginRight: 10,
   },
   colorPillText: {
     fontWeight: '800',
@@ -634,7 +634,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-end',
     marginBottom: 12,
-    gap: 6,
   },
   paymentIcon: {
     fontSize: 16,

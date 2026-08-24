@@ -723,7 +723,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
-    gap: 10,
     cursor: 'pointer',
   },
   suggestionIcon: {
@@ -857,13 +856,13 @@ const styles = StyleSheet.create({
   },
   badgePillRow: {
     flexDirection: 'row',
-    gap: 10,
   },
   colorPill: {
     backgroundColor: '#F59E0B',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    marginRight: 10,
   },
   colorPillText: {
     fontWeight: '800',
@@ -922,7 +921,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    gap: 8,
     cursor: 'pointer',
   },
   paymentIcon: {
