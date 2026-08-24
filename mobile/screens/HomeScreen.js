@@ -309,28 +309,54 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* 2x2 Yango Service Category Grid */}
+        {/* Yango Service Category Grid: Top horizontal cards + Bottom SQUARE shape cards */}
         <View style={styles.serviceGrid}>
-          {SERVICE_CATEGORIES.map((item, idx) => {
-            const cardKey = `service-${idx}`;
-            return (
-              <Animated.View key={item.name} style={[styles.serviceCardWrap, { transform: [{ scale: getPressScale(cardKey) }] }]}>
-                <TouchableOpacity
-                  style={[styles.serviceCard, { backgroundColor: '#F0F0F0' }]}
-                  onPress={() => navigation.navigate(item.screen)}
-                  onPressIn={() => handlePressIn(cardKey)}
-                  onPressOut={() => handlePressOut(cardKey)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.serviceEmoji}>{item.emoji}</Text>
-                  <Text style={styles.serviceName}>
-                    {item.name}
-                    {item.badge ? <Text style={styles.serviceBadge}> • {item.badge}</Text> : null}
-                  </Text>
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })}
+          {/* Top Row: Cargo & Transport */}
+          <View style={styles.serviceRow}>
+            {SERVICE_CATEGORIES.slice(0, 2).map((item, idx) => {
+              const cardKey = `service-${idx}`;
+              return (
+                <Animated.View key={item.name} style={[styles.serviceCardWrap, { transform: [{ scale: getPressScale(cardKey) }] }]}>
+                  <TouchableOpacity
+                    style={[styles.serviceCardTop, { backgroundColor: '#EFEFF1' }]}
+                    onPress={() => navigation.navigate(item.screen)}
+                    onPressIn={() => handlePressIn(cardKey)}
+                    onPressOut={() => handlePressOut(cardKey)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.serviceEmojiTop}>{item.emoji}</Text>
+                    <Text style={styles.serviceName}>{item.name}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
+
+          {/* Bottom Row: Delivery & Rides (SQUARE SHAPE 1:1 RATIO) */}
+          <View style={styles.serviceRow}>
+            {SERVICE_CATEGORIES.slice(2, 4).map((item, idx) => {
+              const cardKey = `service-${idx + 2}`;
+              return (
+                <Animated.View key={item.name} style={[styles.serviceCardWrap, { transform: [{ scale: getPressScale(cardKey) }] }]}>
+                  <TouchableOpacity
+                    style={[styles.serviceCardSquare, { backgroundColor: '#EFEFF1' }]}
+                    onPress={() => navigation.navigate(item.screen)}
+                    onPressIn={() => handlePressIn(cardKey)}
+                    onPressOut={() => handlePressOut(cardKey)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.squareIconBox}>
+                      <Text style={styles.serviceEmojiSquare}>{item.emoji}</Text>
+                    </View>
+                    <Text style={styles.serviceName}>
+                      {item.name}
+                      {item.badge ? <Text style={styles.serviceBadge}> • {item.badge}</Text> : null}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
         </View>
 
         {/* Yango-style pill "Where to?" search bar */}
@@ -657,28 +683,45 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 
-  // ── 2×2 Yango Service Grid ──
+  // ── 2×2 Yango Service Grid with Square Cards ──
   serviceGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingBottom: 8,
+  },
+  serviceRow: {
+    flexDirection: 'row',
     gap: 10,
+    marginBottom: 10,
   },
   serviceCardWrap: {
-    width: (width - 44) / 2,
+    flex: 1,
   },
-  serviceCard: {
-    borderRadius: 22,
-    paddingVertical: 18,
-    paddingHorizontal: 14,
+  serviceCardTop: {
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    minHeight: 120,
+    justifyContent: 'space-between',
+    height: 100,
   },
-  serviceEmoji: {
-    fontSize: 38,
-    marginBottom: 8,
+  serviceCardSquare: {
+    borderRadius: 28,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: (width - 42) / 2, // Perfect 1:1 Square Shape!
+  },
+  squareIconBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serviceEmojiTop: {
+    fontSize: 34,
+  },
+  serviceEmojiSquare: {
+    fontSize: 54,
   },
   serviceName: {
     fontSize: 14,
@@ -691,6 +734,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#64748B',
   },
+
 
   // ── Yango "Where to?" pill ──
   whereToBar: {
