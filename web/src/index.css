@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply bg-[#09090b] text-zinc-100 antialiased overflow-x-hidden;
+    @apply bg-[#F5F5F5] text-gray-900 antialiased overflow-x-hidden;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }

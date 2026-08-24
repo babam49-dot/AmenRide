@@ -34,12 +34,12 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-[#FF2E2E] selection:text-white">
       {/* Top Sticky Header */}
       <Header />
 
       {/* Main View Switching Logic */}
-      <main className="flex-1 w-full max-w-7xl mx-auto pb-24">
+      <main className="flex-1 w-full max-w-md mx-auto sm:max-w-5xl pb-28 overflow-y-auto">
         {activeTab === 'Services' ? (
           <ServiceCategoriesGrid
             onSelectService={handleSelectService}
@@ -54,24 +54,24 @@ const MainContent: React.FC = () => {
         ) : role === 'admin' ? (
           <AdminView />
         ) : (
-          /* Rider View Dashboard */
-          <div className="animate-fadeIn space-y-2">
-            <SearchDestinationBar
-              onOpenBooking={() => setIsBookingOpen(true)}
-              selectedDestination={selectedDestination?.name}
-            />
-
-            <QuickLocationCards onSelectLocation={handleSelectLocation} />
-
-            <div className="px-4 my-4">
-              <LiveDriverMap />
-            </div>
-
+          /* Rider View Dashboard — Yango layout order */
+          <div className="animate-fadeIn">
+            {/* 1. 2×2 Service Category Grid */}
             <ServiceCategoriesGrid
               onSelectService={handleSelectService}
               selectedServiceId={selectedService.id}
             />
 
+            {/* 2. "Where to?" pill search bar */}
+            <SearchDestinationBar
+              onOpenBooking={() => setIsBookingOpen(true)}
+              selectedDestination={selectedDestination?.name}
+            />
+
+            {/* 3. Suggested / Recent Destinations list */}
+            <QuickLocationCards onSelectLocation={handleSelectLocation} />
+
+            {/* 4. Promo Banner */}
             <HeroPromoCard onBookRide={() => setIsBookingOpen(true)} />
           </div>
         )}
