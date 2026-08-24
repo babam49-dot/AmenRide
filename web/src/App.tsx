@@ -34,7 +34,7 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-[#FF2E2E] selection:text-white">
+    <div className="min-h-screen bg-[#F5F5F5] text-gray-900 flex flex-col selection:bg-[#FF2E2E] selection:text-white">
       {/* Top Sticky Header */}
       <Header />
 
