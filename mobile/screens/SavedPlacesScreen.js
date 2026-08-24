@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 16 },
   inputLabel: { fontSize: 12, color: '#64748B', fontWeight: '700', marginTop: 10, marginBottom: 4 },
   input: { height: 44, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, fontSize: 14 },
-  modalActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  modalActions: { flexDirection: 'row', marginTop: 20 },
   cancelBtn: { flex: 1, padding: 12, alignItems: 'center' },
   cancelText: { color: '#64748B', fontWeight: '700' },
   submitBtn: { flex: 1.5, backgroundColor: '#0D9488', padding: 12, borderRadius: 10, alignItems: 'center' },

@@ -427,14 +427,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     marginBottom: 16,
-    gap: 8,
   },
   addrText: { fontSize: 13 },
   addrBold: { fontWeight: '800' },
 
   btnRow: {
     flexDirection: 'row',
-    gap: 12,
   },
   declineBtn: {
     flex: 1,
