@@ -1,49 +1,176 @@
-import React from 'react';
-import { User, Shield, CreditCard, Bell, HelpCircle, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ArrowLeft,
+  Clock,
+  Headphones,
+  MapPin,
+  Settings,
+  Bell,
+  Gift,
+  CreditCard,
+  Bookmark,
+  Shield,
+  CheckCircle2,
+  Info,
+  ChevronRight,
+  Sparkles,
+} from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export const AccountView: React.FC = () => {
   const { language } = useLanguage();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   return (
-    <div className="w-full max-w-7xl mx-auto my-6 px-4 space-y-6 pb-24 animate-fadeIn">
-      {/* Profile Card */}
-      <div className="p-6 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-black flex items-center justify-center font-extrabold text-2xl shadow-amber-glow">
-          AM
+    <div className="w-full max-w-md mx-auto sm:max-w-3xl my-4 px-4 space-y-4 pb-28 animate-fadeIn text-gray-900">
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between py-2">
+        <button className="p-2 rounded-full hover:bg-gray-200/80 transition">
+          <ArrowLeft className="w-6 h-6 text-gray-900" />
+        </button>
+      </div>
+
+      {/* User Profile Header (Circular Photo, Verified Name, Phone) */}
+      <div className="flex flex-col items-center text-center py-2 space-y-2">
+        {/* Large Circular Avatar */}
+        <div className="relative">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-200">
+            <img
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250&auto=format&fit=crop&q=80"
+              alt="TEWANAY ZEWUDU GETNET"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-extrabold text-white">Amen Rider</h2>
-          <p className="text-xs text-zinc-400">+251 91 800 1234 • Bahir Dar, Ethiopia</p>
-          <span className="inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
-            Gold Member
-          </span>
+
+        {/* Full Name & Verified Badge */}
+        <div className="flex items-center justify-center gap-1.5 pt-1">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 uppercase">
+            TEWANAY ZEWUDU GETNET
+          </h2>
+          <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+            ✓
+          </div>
+        </div>
+
+        {/* Phone Number */}
+        <p className="text-sm font-semibold text-gray-400 font-mono tracking-wide">
+          +251924765475
+        </p>
+      </div>
+
+      {/* 4 Circular Action Buttons Bar */}
+      <div className="grid grid-cols-4 gap-3 py-3">
+        {[
+          { label: 'Orders', icon: <Clock className="w-5 h-5" /> },
+          { label: 'Support', icon: <Headphones className="w-5 h-5" /> },
+          { label: 'Addresses', icon: <MapPin className="w-5 h-5" /> },
+          { label: 'Settings', icon: <Settings className="w-5 h-5" /> },
+        ].map((btn, idx) => (
+          <button
+            key={idx}
+            className="flex flex-col items-center gap-2 group active:scale-95 transition-transform"
+          >
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#EFEFF1] group-hover:bg-gray-200 text-gray-900 flex items-center justify-center shadow-sm">
+              {btn.icon}
+            </div>
+            <span className="text-xs font-extrabold text-gray-800 tracking-tight">
+              {btn.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Card 1: Enable notifications */}
+      <div className="bg-[#EFEFF1] rounded-3xl p-4 flex items-center justify-between hover:bg-gray-200/80 transition cursor-pointer shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="text-xl">🔔</div>
+          <span className="text-base font-extrabold text-gray-900">Enable notifications</span>
+        </div>
+        <ChevronRight className="w-5 h-5 text-gray-400" />
+      </div>
+
+      {/* Card 2: Discounts & Payment Methods */}
+      <div className="bg-[#EFEFF1] rounded-3xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="text-xl">🎁</div>
+            <div>
+              <h4 className="text-base font-extrabold text-gray-900">Discounts</h4>
+              <p className="text-xs text-gray-400 font-medium">Enter promo code</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </div>
+
+        <div className="border-t border-gray-300/60 pt-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="text-xl">💳</div>
+            <div>
+              <h4 className="text-base font-extrabold text-gray-900">Payment methods</h4>
+              <p className="text-xs text-gray-400 font-medium">Cash</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">💵</span>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </div>
         </div>
       </div>
 
-      {/* Account Settings Menu */}
-      <div className="p-4 rounded-3xl bg-zinc-900 border border-zinc-800 space-y-1">
-        {[
-          { icon: <CreditCard className="w-4 h-4 text-emerald-400" />, title: 'Payment Methods (Telebirr / CBE)', desc: 'Default: Telebirr Linked' },
-          { icon: <Shield className="w-4 h-4 text-amber-400" />, title: 'Safety & Emergency SOS', desc: 'Direct Bahir Dar Police Dispatch' },
-          { icon: <Bell className="w-4 h-4 text-blue-400" />, title: 'Notifications & Alerts', desc: 'Trip updates and promo offers' },
-          { icon: <HelpCircle className="w-4 h-4 text-purple-400" />, title: 'Help & Support Center', desc: '24/7 Bahir Dar Customer Line' },
-        ].map((item, idx) => (
-          <button
-            key={idx}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-zinc-800/80 transition-all text-left group active-press"
-          >
-            <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
-              {item.icon}
-            </div>
+      {/* Card 3: Earn as a Driver (Dark Callout Box #1C1C1E) */}
+      <div className="bg-[#1C1C1E] rounded-3xl p-5 flex items-center justify-between cursor-pointer hover:bg-black transition shadow-md">
+        <div className="flex items-center gap-3.5">
+          <div className="w-9 h-9 rounded-full bg-amber-400 text-black flex items-center justify-center font-black text-lg">
+            ★
+          </div>
+          <span className="text-base sm:text-lg font-extrabold text-white tracking-tight">
+            Earn as a driver
+          </span>
+        </div>
+        <ChevronRight className="w-5 h-5 text-red-500" />
+      </div>
+
+      {/* Card 4: Maps, Safety & Driver Score */}
+      <div className="bg-[#EFEFF1] rounded-3xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="text-xl">🔖</div>
             <div>
-              <h4 className="text-sm font-extrabold text-white group-hover:text-amber-400 transition-colors">
-                {item.title}
-              </h4>
-              <p className="text-xs text-zinc-400">{item.desc}</p>
+              <h4 className="text-base font-extrabold text-gray-900">Improve maps</h4>
+              <p className="text-xs text-gray-400 font-medium">Add places, fix errors</p>
             </div>
-          </button>
-        ))}
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </div>
+
+        <div className="border-t border-gray-300/60 pt-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="text-xl">🛡️</div>
+            <h4 className="text-base font-extrabold text-gray-900">Safety</h4>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </div>
+
+        <div className="border-t border-gray-300/60 pt-3 flex items-center justify-between cursor-pointer hover:opacity-80 transition">
+          <div className="flex items-center gap-3.5">
+            <div className="text-xl text-emerald-500">⭕</div>
+            <div>
+              <h4 className="text-base font-extrabold text-gray-900">Great! Few canceled rides</h4>
+              <p className="text-xs text-gray-400 font-medium">This affects ride search speed</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </div>
+      </div>
+
+      {/* Card 5: Information */}
+      <div className="bg-[#EFEFF1] rounded-3xl p-4 flex items-center justify-between hover:bg-gray-200/80 transition cursor-pointer shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="text-xl">ℹ️</div>
+          <span className="text-base font-extrabold text-gray-900">Information</span>
+        </div>
+        <ChevronRight className="w-5 h-5 text-gray-400" />
       </div>
     </div>
   );
