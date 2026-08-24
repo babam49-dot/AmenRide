@@ -19,22 +19,22 @@ import PaymentMethodCard from '../components/PaymentMethodCard';
 
 const { width, height: windowHeight } = Dimensions.get('window');
 
-const UBER_SUGGESTIONS = [
-  { name: 'Ride', sub: 'Instant pickup', emoji: '🚗', screen: 'Services' },
-  { name: 'Reserve', sub: 'Book in advance', emoji: '📅', screen: 'Services' },
-  { name: 'Package', sub: 'Deliver items', emoji: '📦', screen: 'Services' },
-  { name: 'Intercity', sub: 'Long distance', emoji: '🚌', screen: 'Services' },
+// Yango-style 2x2 service grid data
+const SERVICE_CATEGORIES = [
+  { name: 'Cargo', sub: 'Large goods & delivery', emoji: '🚚', screen: 'Services' },
+  { name: 'Transport', sub: 'City & intercity bus', emoji: '🚌', screen: 'Services' },
+  { name: 'Delivery', sub: 'Motorcycle courier', emoji: '🏍️', screen: 'Services' },
+  { name: 'Rides', sub: 'from 3 min', emoji: '🚘', screen: 'Services', badge: 'from 3 min' },
 ];
 
+// Suggested destinations (Yango vertical list style)
 const POPULAR_DESTINATIONS = [
-  { title: 'Felege Hiwot Hospital', subtitle: 'Kebele 04, Bahir Dar' },
-  { title: 'Grand Resort Hotel', subtitle: 'Lake Tana Shore' },
-  { title: 'BDU Peda Campus', subtitle: 'Main Gate • Gate 1' },
-  { title: 'Blue Nile Bridge', subtitle: 'Abay River Crossing' },
+  { title: 'BDU 5 Kilo Peda Campus', subtitle: 'Bahir Dar, Arada, Kebele 11', icon: '🎓' },
+  { title: 'Felege Hiwot Referral Hospital', subtitle: 'Bahir Dar, Kebele 04', icon: '📍' },
+  { title: 'Atenatera Taxi Station', subtitle: 'Bahir Dar, Main Bus Station, Kebele 01', icon: '📍' },
+  { title: 'Grand Resort Hotel', subtitle: 'Bahir Dar, Lake Tana Shore, Kebele 03', icon: '📍' },
 ];
 
-// Actions shown when the floating button expands.
-// Feel free to swap the icons/labels/targets for whatever fits your app.
 const FAB_ACTIONS = [
   { key: 'ride', label: 'Request Ride', emoji: '🚗', screen: 'Services' },
   { key: 'reserve', label: 'Reserve', emoji: '📅', screen: 'Services' },
@@ -228,25 +228,23 @@ export default function HomeScreen({ navigation }) {
   };
 
   const dynamicStyles = {
-    container: { backgroundColor: theme?.background || (isDark ? '#0B1220' : '#EEF2F6') },
-    headerTitle: { color: isDark ? '#FFFFFF' : '#0F172A' },
-    cardBg: {
-      backgroundColor: isDark ? '#161E2E' : '#FFFFFF',
-      borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.05)',
-    },
-    pillBg: { backgroundColor: isDark ? '#232C3D' : '#F1F5F9', borderColor: isDark ? '#333F55' : '#CBD5E1' },
-    textPrimary: { color: isDark ? '#FFFFFF' : '#0F172A' },
-    textSecondary: { color: isDark ? '#A0A0A0' : '#64748B' },
-    activeRolePill: { backgroundColor: isDark ? '#FFFFFF' : '#2BFF6E' },
-    activeRoleText: { color: isDark ? '#000000' : '#FFFFFF' },
-    subtleDivider: { borderBottomColor: isDark ? '#262626' : '#E2E8F0' },
-    promoBtnBg: { backgroundColor: isDark ? '#FFFFFF' : '#00D154' },
-    promoBtnText: { color: isDark ? '#000000' : '#FFFFFF' },
-    fabBg: { backgroundColor: isDark ? '#FFFFFF' : '#2BFF6E' },
-    fabIconColor: isDark ? '#000000' : '#FFFFFF',
-    fabActionBg: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#262626' : '#E2E8F0' },
-    glowOne: { backgroundColor: isDark ? 'rgba(13,148,136,0.20)' : '#2BFF6E' },
-    glowTwo: { backgroundColor: isDark ? 'rgba(0,209,84,0.12)' : '#2BFF6E' },
+    // Yango-style: white background
+    container: { backgroundColor: '#F5F5F5' },
+    headerTitle: { color: '#FF2E2E' },
+    cardBg: { backgroundColor: '#FFFFFF', borderColor: 'rgba(0,0,0,0.06)' },
+    pillBg: { backgroundColor: '#F1F5F9', borderColor: '#E2E8F0' },
+    textPrimary: { color: '#111111' },
+    textSecondary: { color: '#64748B' },
+    activeRolePill: { backgroundColor: '#FF2E2E' },
+    activeRoleText: { color: '#FFFFFF' },
+    subtleDivider: { borderBottomColor: '#E2E8F0' },
+    promoBtnBg: { backgroundColor: '#FFFFFF' },
+    promoBtnText: { color: '#FF2E2E' },
+    fabBg: { backgroundColor: '#FF2E2E' },
+    fabIconColor: '#FFFFFF',
+    fabActionBg: { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' },
+    glowOne: { backgroundColor: 'rgba(255,46,46,0.08)' },
+    glowTwo: { backgroundColor: 'rgba(255,46,46,0.04)' },
   };
 
   return (
@@ -263,11 +261,21 @@ export default function HomeScreen({ navigation }) {
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        {/* Top Header */}
+        {/* Top Header — Yango Red Branding */}
         <View style={styles.topRow}>
-          <Text style={[styles.uberLogo, dynamicStyles.headerTitle]}>
-            Uber <Text style={styles.uberSubLogo}>AMEN</Text>
-          </Text>
+          <View>
+            <Text style={[styles.uberLogo, { color: '#FF2E2E', fontStyle: 'italic', fontWeight: '900', letterSpacing: -1 }]}>
+              AMEN
+            </Text>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}
+              onPress={() => navigation.navigate('Services')}
+            >
+              <Text style={{ fontSize: 11, color: '#FF2E2E', marginRight: 2 }}>📍</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#111111' }}>Felege Hiwot Square</Text>
+              <Text style={{ fontSize: 12, color: '#64748B' }}>›</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.headerRightRow}>
             <Animated.View style={{ transform: [{ scale: getPressScale('lang') }] }}>
@@ -301,111 +309,96 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Where to Search Bar */}
-        <Animated.View style={{ transform: [{ scale: getPressScale('search') }] }}>
+        {/* 2x2 Yango Service Category Grid */}
+        <View style={styles.serviceGrid}>
+          {SERVICE_CATEGORIES.map((item, idx) => {
+            const cardKey = `service-${idx}`;
+            return (
+              <Animated.View key={item.name} style={[styles.serviceCardWrap, { transform: [{ scale: getPressScale(cardKey) }] }]}>
+                <TouchableOpacity
+                  style={[styles.serviceCard, { backgroundColor: '#F0F0F0' }]}
+                  onPress={() => navigation.navigate(item.screen)}
+                  onPressIn={() => handlePressIn(cardKey)}
+                  onPressOut={() => handlePressOut(cardKey)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.serviceEmoji}>{item.emoji}</Text>
+                  <Text style={styles.serviceName}>
+                    {item.name}
+                    {item.badge ? <Text style={styles.serviceBadge}> • {item.badge}</Text> : null}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        {/* Yango-style pill "Where to?" search bar */}
+        <Animated.View style={{ transform: [{ scale: getPressScale('search') }], marginHorizontal: 16, marginBottom: 8 }}>
           <TouchableOpacity
-            style={[styles.searchPill, dynamicStyles.cardBg, styles.floating]}
+            style={styles.whereToBar}
             onPress={() => navigation.navigate('Services')}
             onPressIn={() => handlePressIn('search')}
             onPressOut={() => handlePressOut('search')}
             activeOpacity={0.9}
           >
-            <Text style={styles.searchIcon}>🔍</Text>
-            <Text style={[styles.searchPlaceholder, dynamicStyles.textPrimary]}>{t('whereTo')}</Text>
-
-            <View style={[styles.timePill, dynamicStyles.pillBg]}>
-              <Text style={[styles.timeText, dynamicStyles.textPrimary]}>⏱️ {t('pickupNow')}</Text>
+            <Text style={styles.whereToIcon}>🚘</Text>
+            <Text style={styles.whereToText}>{t('whereTo')}</Text>
+            <View style={styles.whereToArrow}>
+              <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 18 }}>›</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Quick Destination Chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
+        {/* Yango-style vertical destinations list */}
+        <View style={styles.destList}>
           {POPULAR_DESTINATIONS.map((dest, idx) => {
             const chipKey = `chip-${idx}`;
             return (
-              <Animated.View key={idx} style={{ transform: [{ scale: getPressScale(chipKey) }] }}>
-                <TouchableOpacity
-                  style={[styles.chip, dynamicStyles.cardBg, styles.floatingSoft]}
-                  onPress={() => navigation.navigate('Services', { destination: dest.title })}
-                  onPressIn={() => handlePressIn(chipKey)}
-                  onPressOut={() => handlePressOut(chipKey)}
-                >
-                  <Text style={styles.chipIcon}>📍</Text>
-                  <View>
-                    <Text style={[styles.chipTitle, dynamicStyles.textPrimary]}>{dest.title}</Text>
-                    <Text style={[styles.chipSub, dynamicStyles.textSecondary]}>{dest.subtitle}</Text>
-                  </View>
-                </TouchableOpacity>
-              </Animated.View>
+              <TouchableOpacity
+                key={idx}
+                style={[styles.destRow, idx < POPULAR_DESTINATIONS.length - 1 && styles.destRowBorder]}
+                onPress={() => navigation.navigate('Services', { destination: dest.title })}
+                onPressIn={() => handlePressIn(chipKey)}
+                onPressOut={() => handlePressOut(chipKey)}
+              >
+                <View style={styles.destIconBadge}>
+                  <Text style={{ fontSize: 18 }}>{dest.icon}</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.destTitle}>{dest.title}</Text>
+                  <Text style={styles.destSub}>{dest.subtitle}</Text>
+                </View>
+              </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
 
-        {/* Role specific content */}
-        {activeRole === 'admin' ? (
-          <AdminConsole />
-        ) : (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, dynamicStyles.textPrimary]}>{t('suggestions')}</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Services')}>
-                <Text style={[styles.seeAllText, dynamicStyles.textSecondary]}>{t('seeAll')}</Text>
-              </TouchableOpacity>
+        {/* Yango-style Red Promo Banner */}
+        {activeRole !== 'admin' && (
+          <TouchableOpacity
+            style={styles.promoBanner}
+            onPress={() => navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')}
+            activeOpacity={0.9}
+          >
+            {/* Decorative diagonal blocks */}
+            <View style={styles.promoDiag1} />
+            <View style={styles.promoDiag2} />
+            <View style={styles.promoDiag3} />
+
+            <View style={{ zIndex: 2, maxWidth: '65%' }}>
+              <Text style={styles.promoBannerTitle}>
+                {activeRole === 'driver' ? 'DRIVER DASHBOARD' : 'TRY DELIVERY\nON AMEN'}
+              </Text>
+              <Text style={styles.promoBannerSub}>
+                {activeRole === 'driver'
+                  ? 'View your earnings & active trips'
+                  : 'Use 20% discount for your first 6 orders'}
+              </Text>
             </View>
-
-            <View style={styles.suggestionsGrid}>
-              {UBER_SUGGESTIONS.map((item) => {
-                const suggKey = `sugg-${item.name}`;
-                return (
-                  <Animated.View key={item.name} style={{ transform: [{ scale: getPressScale(suggKey) }] }}>
-                    <TouchableOpacity
-                      style={[styles.suggestionCard, dynamicStyles.cardBg, styles.floating]}
-                      onPress={() => navigation.navigate(item.screen)}
-                      onPressIn={() => handlePressIn(suggKey)}
-                      onPressOut={() => handlePressOut(suggKey)}
-                      activeOpacity={0.85}
-                    >
-                      <View style={[styles.suggestionIconBox, dynamicStyles.pillBg]}>
-                        <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
-                      </View>
-                      <Text style={[styles.suggestionName, dynamicStyles.textPrimary]}>{item.name}</Text>
-                      <Text style={[styles.suggestionSub, dynamicStyles.textSecondary]}>{item.sub}</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
-                );
-              })}
-            </View>
-
-            <View style={[styles.promoCard, dynamicStyles.cardBg, styles.floating]}>
-              <View style={styles.promoTextContainer}>
-                <Text style={styles.promoBadge}>Uber AMEN Bahir Dar 🇪🇹</Text>
-                <Text style={[styles.promoTitle, dynamicStyles.textPrimary]}>{t('goAnywhere')}</Text>
-                <Text style={[styles.promoDesc, dynamicStyles.textSecondary]}>
-                  {activeRole === 'driver'
-                    ? 'Today: 1,450 ETB Earned · 8 Trips Completed'
-                    : 'Fast, secure & reliable Bajaj ride-hailing in Bahir Dar.'}
-                </Text>
-
-                <Animated.View style={{ transform: [{ scale: getPressScale('promo') }], alignSelf: 'flex-start' }}>
-                  <TouchableOpacity
-                    style={[styles.promoBtn, dynamicStyles.promoBtnBg, styles.floatingSoft]}
-                    onPress={() =>
-                      navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')
-                    }
-                    onPressIn={() => handlePressIn('promo')}
-                    onPressOut={() => handlePressOut('promo')}
-                    activeOpacity={0.9}
-                  >
-                    <Text style={[styles.promoBtnText, dynamicStyles.promoBtnText]}>
-                      {activeRole === 'driver' ? t('driverDashboard') : t('bookRide')}
-                    </Text>
-                  </TouchableOpacity>
-                </Animated.View>
-              </View>
-            </View>
-          </>
+          </TouchableOpacity>
         )}
+        {activeRole === 'admin' && <AdminConsole />}
 
         {/* Recent Trips */}
         <View
@@ -663,6 +656,171 @@ const styles = StyleSheet.create({
   chipSub: {
     fontSize: 10,
   },
+
+  // ── 2×2 Yango Service Grid ──
+  serviceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  serviceCardWrap: {
+    width: (width - 44) / 2,
+  },
+  serviceCard: {
+    borderRadius: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minHeight: 120,
+  },
+  serviceEmoji: {
+    fontSize: 38,
+    marginBottom: 8,
+  },
+  serviceName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111111',
+    textAlign: 'center',
+  },
+  serviceBadge: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: '#64748B',
+  },
+
+  // ── Yango "Where to?" pill ──
+  whereToBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 50,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    marginBottom: 8,
+  },
+  whereToIcon: {
+    fontSize: 22,
+    marginRight: 12,
+  },
+  whereToText: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111111',
+  },
+  whereToArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Yango vertical destinations list ──
+  destList: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  destRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
+  destRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  destIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  destTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111111',
+  },
+  destSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+
+  // ── Yango Red Promo Banner ──
+  promoBanner: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#FF2E2E',
+    paddingVertical: 26,
+    paddingHorizontal: 22,
+    minHeight: 130,
+    justifyContent: 'center',
+  },
+  promoBannerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    lineHeight: 24,
+  },
+  promoBannerSub: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.80)',
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  promoDiag1: {
+    position: 'absolute',
+    right: 40,
+    top: -10,
+    width: 55,
+    height: 140,
+    backgroundColor: '#FFCC00',
+    transform: [{ skewX: '-10deg' }],
+    borderRadius: 4,
+    opacity: 0.9,
+  },
+  promoDiag2: {
+    position: 'absolute',
+    right: 8,
+    top: 0,
+    width: 32,
+    height: 120,
+    backgroundColor: '#1A8C1A',
+    transform: [{ skewX: '-8deg' }],
+    borderRadius: 4,
+    opacity: 0.85,
+  },
+  promoDiag3: {
+    position: 'absolute',
+    right: 78,
+    top: 20,
+    width: 12,
+    height: 100,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    transform: [{ skewX: '-10deg' }],
+    borderRadius: 2,
+  },
+
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
