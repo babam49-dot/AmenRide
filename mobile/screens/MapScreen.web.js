@@ -198,6 +198,11 @@ export default function MapScreenWeb() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#F8FAFC' }]}>
+      {/* Yango Top Banner Overlay: Swipe to move map */}
+      <View style={styles.yangoTopBanner}>
+        <Text style={styles.yangoTopBannerText}>Swipe to move map</Text>
+      </View>
+
       {/* Leaflet Web Map Container */}
       <View style={styles.iframeContainer}>
         <iframe
@@ -207,84 +212,66 @@ export default function MapScreenWeb() {
         />
       </View>
 
-      {/* Floating Interactive Location Card */}
-      <View style={[styles.topInputCard, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-        <View style={styles.inputRow}>
-          <View style={styles.badgeA}>
-            <Text style={styles.badgeText}>A</Text>
-          </View>
-          <TextInput
-            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
-            value={startLocation}
-            onChangeText={handleStartLocationChange}
-            onFocus={() => setActiveInput('start')}
-            placeholder="Search start location in Bahir Dar..."
-            placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-          />
+      {/* Yango Center Red Marker Pin with Hailing Icon */}
+      <View style={styles.yangoCenterPin} pointerEvents="none">
+        <View style={styles.yangoPinBadge}>
+          <Text style={{ fontSize: 24 }}>🙋‍♂️</Text>
         </View>
-
-        <View style={[styles.inputDivider, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]} />
-
-        <View style={styles.inputRow}>
-          <View style={styles.badgeB}>
-            <Text style={styles.badgeText}>B</Text>
-          </View>
-          <TextInput
-            style={[styles.locationInput, { color: isDark ? '#F8FAFC' : '#0F172A' }]}
-            value={destination}
-            onChangeText={handleDestinationChange}
-            onFocus={() => setActiveInput('dest')}
-            placeholder="Search destination in Bahir Dar..."
-            placeholderTextColor={isDark ? '#94A3B8' : '#64748B'}
-          />
-          <TouchableOpacity style={styles.plusBtn}>
-            <Text style={styles.plusText}>+</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Dynamic Search Suggestions Dropdown */}
-        {activeInput && (
-          <View style={[styles.suggestionsBox, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
-            <Text style={styles.suggestionsHeader}>Suggested Locations in Bahir Dar</Text>
-            {BAHIR_DAR_PRESETS.map((item, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.suggestionRow}
-                onPress={() => handleSelectPreset(item)}
-              >
-                <Text style={styles.suggestionIcon}>📍</Text>
-                <View>
-                  <Text style={[styles.suggestionTitle, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
-                    {item.name}
-                  </Text>
-                  <Text style={[styles.suggestionSub, { color: isDark ? '#94A3B8' : '#64748B' }]}>{item.subtitle}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+        <View style={styles.yangoPinStem} />
       </View>
 
-      {/* Dynamic Floating ETA Badge */}
-      <View style={styles.etaFloatingBadge}>
-        <Text style={styles.etaText}>{etaMinutes} min ({distanceKm} km)</Text>
-      </View>
-
-      {/* Bottom Sheet Card */}
-      <View
-        style={[
-          styles.bottomSheet,
-          { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' },
-          isMinimized && styles.bottomSheetMinimized,
-        ]}
-      >
+      {/* Floating Map Action Buttons (Bottom Left & Bottom Right) */}
+      <View style={styles.yangoMapActions}>
         <TouchableOpacity
-          style={styles.dragHandle}
-          activeOpacity={0.7}
+          style={styles.yangoFloatingCircle}
           onPress={() => setIsMinimized(!isMinimized)}
         >
-          <View style={[styles.handleBar, { backgroundColor: isDark ? '#64748B' : '#CBD5E1' }]} />
+          <Text style={{ fontSize: 22, fontWeight: '900', color: '#111111' }}>←</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.yangoFloatingCircle}
+          onPress={() => {
+            setStartLocation('Ring Road, Felege Hiwot');
+            setStartCoords({ lat: 11.5980, lng: 37.3820 });
+          }}
+        >
+          <Text style={{ fontSize: 22, color: '#111111' }}>🧭</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Yango Bottom Sheet Card: WHERE FROM? */}
+      <View style={styles.yangoBottomSheet}>
+        <Text style={styles.whereFromHeader}>WHERE FROM?</Text>
+        <View style={styles.whereFromDivider} />
+
+        <View style={styles.whereFromRow}>
+          <Text style={{ fontSize: 22, marginRight: 12 }}>📍</Text>
+          <TextInput
+            style={styles.whereFromInput}
+            value={startLocation}
+            onChangeText={setStartLocation}
+            placeholder="Ring Road, Felege Hiwot"
+          />
+        </View>
+
+        {/* Action Buttons Bar: Red Done Button + Bookmark */}
+        <View style={styles.whereFromActions}>
+          <TouchableOpacity
+            style={styles.yangoDoneBtn}
+            onPress={handleConfirmRide}
+          >
+            <Text style={styles.yangoDoneBtnText}>Done</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.yangoBookmarkBtn}
+            onPress={() => handleSelectPreset(BAHIR_DAR_PRESETS[0])}
+          >
+            <Text style={{ fontSize: 22 }}>🔖</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
         {isMinimized ? (
           /* Minimized Compact Summary */
@@ -531,6 +518,131 @@ export default function MapScreenWeb() {
 }
 
 const styles = StyleSheet.create({
+  // ── Yango Map Pickup Location Picker Styles ──
+  yangoTopBanner: {
+    position: 'absolute',
+    top: 16,
+    left: 0,
+    right: 0,
+    zIndex: 30,
+    alignItems: 'center',
+  },
+  yangoTopBannerText: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111111',
+  },
+  yangoCenterPin: {
+    position: 'absolute',
+    top: '48%',
+    left: '50%',
+    zIndex: 25,
+    alignItems: 'center',
+    transform: [{ translateX: -24 }, { translateY: -48 }],
+  },
+  yangoPinBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#FF2E2E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  yangoPinStem: {
+    width: 4,
+    height: 24,
+    backgroundColor: '#000000',
+  },
+  yangoMapActions: {
+    position: 'absolute',
+    bottom: 230,
+    left: 20,
+    right: 20,
+    zIndex: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  yangoFloatingCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  yangoBottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 40,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  whereFromHeader: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#111111',
+    letterSpacing: -0.5,
+  },
+  whereFromDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 12,
+  },
+  whereFromRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  whereFromInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111111',
+  },
+  whereFromActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  yangoDoneBtn: {
+    flex: 1,
+    backgroundColor: '#FF2E2E',
+    borderRadius: 18,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  yangoDoneBtnText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  yangoBookmarkBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: '#EFEFF1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   container: {
     flex: 1,
   },
