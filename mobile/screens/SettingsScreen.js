@@ -104,8 +104,8 @@ export default function SettingsScreen({ navigation }) {
               <Text style={styles.rowSub}>Cash</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={{ fontSize: 20 }}>💵</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ fontSize: 20, marginRight: 4 }}>💵</Text>
             <Text style={styles.chevron}>›</Text>
           </View>
         </TouchableOpacity>
@@ -207,13 +207,13 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
   userName: {
     fontSize: 18,
     fontWeight: '900',
     color: '#111111',
     letterSpacing: -0.3,
+    marginRight: 6,
   },
   verifiedBadge: {
     width: 18,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   actionsGrid: {
     flexDirection: 'row',
-    justify.content: 'space-around',
+    justifyContent: 'space-around',
     marginBottom: 18,
   },
   actionBtn: {
@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
   rowItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   rowItemBtn: {
     flexDirection: 'row',
@@ -288,10 +287,10 @@ const styles = StyleSheet.create({
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   rowEmoji: {
     fontSize: 22,
+    marginRight: 12,
   },
   rowTitle: {
     fontSize: 15,
