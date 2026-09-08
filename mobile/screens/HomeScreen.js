@@ -323,6 +323,8 @@ export default function HomeScreen({ navigation }) {
                     onPressIn={() => handlePressIn(cardKey)}
                     onPressOut={() => handlePressOut(cardKey)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Service option: ${item.name}, ${item.sub}`}
                   >
                     <Text style={styles.serviceEmojiTop}>{item.emoji}</Text>
                     <Text style={styles.serviceName}>{item.name}</Text>
@@ -344,6 +346,8 @@ export default function HomeScreen({ navigation }) {
                     onPressIn={() => handlePressIn(cardKey)}
                     onPressOut={() => handlePressOut(cardKey)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Service option: ${item.name}, ${item.sub}`}
                   >
                     <View style={styles.squareIconBox}>
                       <Text style={styles.serviceEmojiSquare}>{item.emoji}</Text>
@@ -367,6 +371,8 @@ export default function HomeScreen({ navigation }) {
             onPressIn={() => handlePressIn('search')}
             onPressOut={() => handlePressOut('search')}
             activeOpacity={0.9}
+            accessibilityRole="search"
+            accessibilityLabel="Where to destination search input"
           >
             <Text style={styles.whereToIcon}>🚘</Text>
             <Text style={styles.whereToText}>{t('whereTo')}</Text>
@@ -387,6 +393,8 @@ export default function HomeScreen({ navigation }) {
                 onPress={() => navigation.navigate('Services', { destination: dest.title })}
                 onPressIn={() => handlePressIn(chipKey)}
                 onPressOut={() => handlePressOut(chipKey)}
+                accessibilityRole="button"
+                accessibilityLabel={`Destination ${dest.title}, ${dest.subtitle}`}
               >
                 <View style={styles.destIconBadge}>
                   <Text style={{ fontSize: 18 }}>{dest.icon}</Text>
@@ -406,6 +414,8 @@ export default function HomeScreen({ navigation }) {
             style={styles.promoBanner}
             onPress={() => navigation.navigate(activeRole === 'driver' ? 'Driver' : 'Services')}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Promotional offer banner"
           >
             {/* Decorative diagonal blocks */}
             <View style={styles.promoDiag1} />
