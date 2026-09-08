@@ -12,11 +12,15 @@ export const HeroPromoCard: React.FC<HeroPromoCardProps> = ({ onBookRide }) => {
     <div className="w-full max-w-md mx-auto sm:max-w-5xl my-4 px-4">
       {/* Yango-style red promo banner */}
       <div
-        className="relative overflow-hidden rounded-3xl p-6 sm:p-8 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
+        className="relative overflow-hidden rounded-3xl p-6 sm:p-8 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#FF2E2E]/40"
         style={{
           background: 'linear-gradient(135deg, #FF2E2E 0%, #CC0000 60%, #B50000 100%)',
         }}
         onClick={onBookRide}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onBookRide(); } }}
+        role="button"
+        tabIndex={0}
+        aria-label="Try Delivery on Amen with 20% discount - Book Now"
       >
         {/* Decorative diagonal pattern blocks (top-right) */}
         <div className="absolute top-0 right-0 w-40 h-full overflow-hidden opacity-80 pointer-events-none">
@@ -74,8 +78,9 @@ export const HeroPromoCard: React.FC<HeroPromoCardProps> = ({ onBookRide }) => {
               : 'ለመጀመሪያ 6 ትዕዛዝ 20% ቅናሽ'}
           </p>
           <button
-            className="mt-4 inline-flex items-center gap-2 bg-white text-[#FF2E2E] font-black text-sm px-5 py-2 rounded-full hover:bg-gray-100 transition-colors shadow-md"
+            className="mt-4 inline-flex items-center gap-2 bg-white text-[#FF2E2E] font-black text-sm px-5 py-2 rounded-full hover:bg-gray-100 transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
             onClick={e => { e.stopPropagation(); onBookRide(); }}
+            aria-label="Book now promo button"
           >
             {language === 'EN' ? 'Book Now' : 'አሁን ይያዙ'}
           </button>
