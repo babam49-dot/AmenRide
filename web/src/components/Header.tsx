@@ -24,10 +24,10 @@ export const Header: React.FC = () => {
           {/* Left: Yango-style Red Brand Logo & Location Picker */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-black italic text-2xl tracking-tighter text-[#FF2E2E] font-['Plus_Jakarta_Sans'] uppercase">
+              <span className="font-black italic text-2xl tracking-tighter text-[#FF2E2E] font-['Plus_Jakarta_Sans'] uppercase select-none">
                 AMEN
               </span>
-              <span className="text-[10px] font-extrabold tracking-widest px-1.5 py-0.5 rounded bg-red-100 text-[#FF2E2E] border border-red-200">
+              <span className="text-[10px] font-extrabold tracking-widest px-1.5 py-0.5 rounded bg-red-100 text-[#FF2E2E] border border-red-200 uppercase">
                 BAHIR DAR
               </span>
             </div>
@@ -35,7 +35,8 @@ export const Header: React.FC = () => {
             {/* Active Location Dropdown Selector - Triggers Pickup Map Screen */}
             <button
               onClick={() => setIsPickupPickerOpen(true)}
-              className="flex items-center gap-1 text-xs font-bold text-gray-800 hover:text-[#FF2E2E] mt-0.5 transition active:scale-95"
+              className="flex items-center gap-1 text-xs font-bold text-gray-800 hover:text-[#FF2E2E] mt-0.5 transition active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]/50 rounded px-1"
+              aria-label={`Change current location from ${selectedPickup}`}
             >
               <MapPin className="w-3 h-3 text-[#FF2E2E] shrink-0" />
               <span className="truncate max-w-[180px]">{selectedPickup}</span>
@@ -44,14 +45,17 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Center: Dynamic Role Switcher Pills */}
-          <div className="hidden sm:flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
+          <div className="hidden sm:flex items-center bg-gray-100 p-1 rounded-full border border-gray-200" role="tablist" aria-label="User View Role Selector">
             {roleConfig.map((r) => {
               const isActive = role === r.id;
               return (
                 <button
                   key={r.id}
                   onClick={() => setRole(r.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-label={`Switch view to ${r.id}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF2E2E] ${
                     isActive
                       ? 'bg-[#FF2E2E] text-white shadow-md'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
@@ -68,8 +72,9 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-xs font-bold text-gray-700 transition"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-xs font-bold text-gray-700 transition focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
               title="Toggle Language / ቋንቋ ይቀይሩ"
+              aria-label="Toggle language"
             >
               <Globe className="w-3.5 h-3.5 text-[#FF2E2E]" />
               <span className={language === 'EN' ? 'text-[#FF2E2E] font-extrabold' : 'text-gray-400'}>EN</span>
@@ -79,8 +84,8 @@ export const Header: React.FC = () => {
 
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 hover:text-[#FF2E2E] transition"
-              aria-label="Menu"
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 hover:text-[#FF2E2E] transition focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
+              aria-label="Open application menu"
             >
               <Menu className="w-5 h-5 text-gray-800" />
             </button>
