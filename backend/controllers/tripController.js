@@ -147,11 +147,54 @@ async function getUserTrips(req, res) {
   }
 }
 
+async function estimateFareAndEta(req, res) {
+  try {
+    const { pickupLat = 11.594, pickupLng = 37.388, dropoffLat = 11.600, dropoffLng = 37.395, rideType = 'standard' } = req.body;
+    
+    // Haversine distance formula approximation
+    const dLat = (dropoffLat - pickupLat) * 111.1; // km per degree lat
+    const dLng = (dropoffLng - pickupLng) * 111.1 * Math.cos(pickupLat * (Math.PI / 180));
+    const distanceKm = Math.max(1.2, parseFloat(Math.sqrt(dLat * dLat + dLng * dLng).toFixed(2)));
+
+    const hour = new Date().getHours();
+    const isPeakHour = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 20);
+    const surgeMultiplier = isPeakHour ? 1.3 : 1.0;
+
+    const baseFares = {
+      standard: { base: 30, perKm: 15 },
+      comfort: { base: 60, perKm: 25 },
+      express: { base: 20, perKm: 10 },
+      corporate: { base: 80, perKm: 35 },
+    };
+
+    const rate = baseFares[rideType] || baseFares.standard;
+    const estimatedFareETB = Math.round((rate.base + distanceKm * rate.perKm) * surgeMultiplier);
+    const estimatedEtaMinutes = Math.max(3, Math.round(distanceKm * 2.5));
+
+    return res.status(200).json({
+      success: true,
+      distanceKm,
+      estimatedEtaMinutes,
+      estimatedFareETB,
+      surgeMultiplier,
+      currency: 'ETB',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to calculate fare estimate',
+      details: error.message,
+    });
+  }
+}
+
 module.exports = {
   createTrip,
   getTripById,
   updateTripStatus,
   listActiveTrips,
   getUserTrips,
+  estimateFareAndEta,
 };
+
 
