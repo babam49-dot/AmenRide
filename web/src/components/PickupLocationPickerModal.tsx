@@ -20,7 +20,11 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white animate-fadeIn select-none overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-white animate-fadeIn select-none overflow-hidden"
+      role="dialog"
+      aria-label="Pickup Location Picker Screen"
+    >
       {/* Top Banner Hint Overlay */}
       <div className="absolute top-4 left-0 right-0 z-20 flex justify-center pointer-events-none">
         <div className="bg-white/90 backdrop-blur-md px-5 py-2 rounded-full shadow-md border border-gray-200">
@@ -76,7 +80,7 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
           {/* Floating Back Button */}
           <button
             onClick={onClose}
-            className="w-14 h-14 rounded-full bg-white text-gray-900 shadow-lg border border-gray-200 flex items-center justify-center active:scale-95 transition-transform hover:bg-gray-50"
+            className="w-14 h-14 rounded-full bg-white text-gray-900 shadow-lg border border-gray-200 flex items-center justify-center active:scale-95 transition-transform hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
             aria-label="Back"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -85,8 +89,8 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
           {/* Floating GPS Recenter Button */}
           <button
             onClick={() => setSelectedAddress('Felege Hiwot Square, Bahir Dar')}
-            className="w-14 h-14 rounded-full bg-white text-gray-900 shadow-lg border border-gray-200 flex items-center justify-center active:scale-95 transition-transform hover:bg-gray-50"
-            aria-label="GPS Recenter"
+            className="w-14 h-14 rounded-full bg-white text-gray-900 shadow-lg border border-gray-200 flex items-center justify-center active:scale-95 transition-transform hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
+            aria-label="Recenter Map to Current GPS Location"
           >
             <Navigation className="w-6 h-6 text-black fill-black" />
           </button>
@@ -108,6 +112,7 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
               value={selectedAddress}
               onChange={(e) => setSelectedAddress(e.target.value)}
               className="w-full text-lg font-bold text-gray-900 bg-transparent focus:outline-none"
+              aria-label="Pickup location address input"
             />
           </div>
         </div>
@@ -120,7 +125,8 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
               onConfirmPickup(selectedAddress);
               onClose();
             }}
-            className="flex-1 py-4 rounded-2xl bg-[#FF2E2E] hover:bg-[#E50914] text-white font-extrabold text-lg shadow-md transition-all active:scale-[0.98]"
+            className="flex-1 py-4 rounded-2xl bg-[#FF2E2E] hover:bg-[#E50914] text-white font-extrabold text-lg shadow-md transition-all active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#FF2E2E]"
+            aria-label="Confirm selected pickup location"
           >
             Done
           </button>
@@ -128,12 +134,12 @@ export const PickupLocationPickerModal: React.FC<PickupLocationPickerModalProps>
           {/* Bookmark Button */}
           <button
             onClick={() => setSavedBookmark(!savedBookmark)}
-            className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all active:scale-95 ${
+            className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#FF2E2E] ${
               savedBookmark
                 ? 'bg-red-50 border-[#FF2E2E] text-[#FF2E2E]'
                 : 'bg-[#EFEFF1] border-gray-200 text-gray-900 hover:bg-gray-200'
             }`}
-            aria-label="Save Location"
+            aria-label="Save location to bookmarks"
           >
             <Bookmark className={`w-6 h-6 ${savedBookmark ? 'fill-[#FF2E2E]' : ''}`} />
           </button>
