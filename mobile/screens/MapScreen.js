@@ -212,6 +212,8 @@ export default function MapScreen() {
           style={styles.dragHandle}
           activeOpacity={0.7}
           onPress={() => setIsMinimized(!isMinimized)}
+          accessibilityRole="button"
+          accessibilityLabel={isMinimized ? "Expand trip details sheet" : "Collapse trip details sheet"}
         >
           <View style={[styles.handleBar, { backgroundColor: isDark ? '#64748B' : '#CBD5E1' }]} />
         </TouchableOpacity>
@@ -245,6 +247,9 @@ export default function MapScreen() {
             <TouchableOpacity
               style={styles.completeBtn}
               onPress={() => setShowRatingModal(true)}
+              activeOpacity={0.88}
+              accessibilityRole="button"
+              accessibilityLabel="Complete trip and open rating review modal"
             >
               <Text style={styles.completeBtnText}>Complete Ride & Rate</Text>
             </TouchableOpacity>
@@ -289,6 +294,10 @@ export default function MapScreen() {
                       isSelected && styles.rideCardActive,
                     ]}
                     onPress={() => setSelectedRide(ride.id.toString())}
+                    activeOpacity={0.88}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: isSelected }}
+                    accessibilityLabel={`Ride option ${ride.name || ride.title}, price ${dynamicFare} Birr`}
                   >
                     <Text style={styles.rideIcon}>{ride.icon || '🚗'}</Text>
                     <Text
