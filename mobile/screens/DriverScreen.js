@@ -93,13 +93,13 @@ export default function DriverScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, dynamicStyles.textPrimary]}>{t('driverDashboard')}</Text>
+        <Text style={[styles.headerTitle, { color: '#FF2E2E' }]}>{t('driverDashboard') || 'Driver Dashboard'}</Text>
         <Text style={[styles.headerSub, dynamicStyles.textSecondary]}>Bahir Dar Fleet Partner 🇪🇹</Text>
       </View>
 
       {/* GPS Status Badge */}
       {isOnline && (
-        <View style={[styles.gpsBadge, isTracking ? styles.gpsBadgeActive : dynamicStyles.cardBg]}>
+        <View style={[styles.gpsBadge, isTracking ? styles.gpsBadgeActive : dynamicStyles.cardBg]} accessibilityRole="text" accessibilityLabel="GPS Tracking Active">
           {isTracking && location ? (
             <Text style={styles.gpsBadgeText}>
               📡 Broadcasting GPS · {location.lat.toFixed(4)}°N, {location.lng.toFixed(4)}°E
@@ -114,7 +114,7 @@ export default function DriverScreen() {
 
       {loading && (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color={isDark ? '#FFFFFF' : '#0D9488'} size="small" />
+          <ActivityIndicator color="#FF2E2E" size="small" />
           <Text style={[styles.loadingText, dynamicStyles.textSecondary]}>Loading driver profile...</Text>
         </View>
       )}
