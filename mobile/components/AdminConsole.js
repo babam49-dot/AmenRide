@@ -144,13 +144,14 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   statCard: {
     width: '48%',
     borderRadius: 16,
     padding: 14,
+    marginBottom: 10,
   },
   statLabel: {
     fontSize: 10,
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
   driverName: {
     fontSize: 14,

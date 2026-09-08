@@ -606,7 +606,6 @@ const styles = StyleSheet.create({
   headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   uberLogo: {
     fontSize: 26,
@@ -964,7 +963,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
-    gap: 10,
   },
   loadingText: {
     fontSize: 13,
