@@ -74,7 +74,7 @@ export const ServiceCategoriesGrid: React.FC<ServiceCategoriesGridProps> = ({
   return (
     <div className="w-full max-w-md mx-auto sm:max-w-5xl my-4 px-4 space-y-3">
       {/* Top Row: Cargo & Transport (Horizontal Rounded Rectangles) */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Service category selector">
         {topRowServices.map((service) => {
           const isSelected = selectedServiceId === service.id;
           const title = language === 'EN' ? service.title : service.titleAm;
@@ -83,7 +83,12 @@ export const ServiceCategoriesGrid: React.FC<ServiceCategoriesGridProps> = ({
             <div
               key={service.id}
               onClick={() => onSelectService(service)}
-              className={`relative bg-[#EFEFF1] hover:bg-gray-200/90 rounded-2xl p-3 cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col items-center justify-between h-28 sm:h-32 shadow-sm overflow-hidden ${
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectService(service); } }}
+              role="radio"
+              tabIndex={0}
+              aria-checked={isSelected}
+              aria-label={`Select ${title} service option`}
+              className={`relative bg-[#EFEFF1] hover:bg-gray-200/90 rounded-2xl p-3 cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col items-center justify-between h-28 sm:h-32 shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#FF2E2E] ${
                 isSelected ? 'border-[#FF2E2E] bg-red-50/40 ring-2 ring-red-500/20' : 'border-transparent'
               }`}
             >
@@ -114,7 +119,12 @@ export const ServiceCategoriesGrid: React.FC<ServiceCategoriesGridProps> = ({
             <div
               key={service.id}
               onClick={() => onSelectService(service)}
-              className={`relative bg-[#EFEFF1] hover:bg-gray-200/90 rounded-3xl p-4 cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col justify-between aspect-square shadow-sm overflow-hidden ${
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectService(service); } }}
+              role="radio"
+              tabIndex={0}
+              aria-checked={isSelected}
+              aria-label={`Select ${title} service option`}
+              className={`relative bg-[#EFEFF1] hover:bg-gray-200/90 rounded-3xl p-4 cursor-pointer border-2 transition-all duration-200 active:scale-95 flex flex-col justify-between aspect-square shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#FF2E2E] ${
                 isSelected ? 'border-[#FF2E2E] bg-red-50/40 ring-2 ring-red-500/20' : 'border-transparent'
               }`}
             >
