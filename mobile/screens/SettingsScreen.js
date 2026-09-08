@@ -40,28 +40,52 @@ export default function SettingsScreen({ navigation }) {
 
       {/* 4 Circular Action Buttons */}
       <View style={styles.actionsGrid}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Orders', 'Viewing trip history...')}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => Alert.alert('Orders', 'Viewing trip history...')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="View order history"
+        >
           <View style={styles.actionCircle}>
             <Text style={styles.actionEmoji}>🕒</Text>
           </View>
           <Text style={styles.actionLabel}>Orders</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn} onPress={() => Alert.alert('Support', '24/7 Support center...')}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => Alert.alert('Support', '24/7 Support center...')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Open 24/7 support center"
+        >
           <View style={styles.actionCircle}>
             <Text style={styles.actionEmoji}>🎧</Text>
           </View>
           <Text style={styles.actionLabel}>Support</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('SavedPlacesScreen')}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => navigation.navigate('SavedPlacesScreen')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Manage saved addresses"
+        >
           <View style={styles.actionCircle}>
             <Text style={styles.actionEmoji}>📍</Text>
           </View>
           <Text style={styles.actionLabel}>Addresses</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn} onPress={() => toggleLanguage()}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => toggleLanguage()}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Toggle app language setting"
+        >
           <View style={styles.actionCircle}>
             <Text style={styles.actionEmoji}>⚙️</Text>
           </View>
@@ -73,6 +97,10 @@ export default function SettingsScreen({ navigation }) {
       <TouchableOpacity
         style={styles.card}
         onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+        activeOpacity={0.85}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: notificationsEnabled }}
+        accessibilityLabel="Toggle push notifications"
       >
         <View style={styles.rowItem}>
           <Text style={styles.rowEmoji}>🔔</Text>
@@ -83,7 +111,13 @@ export default function SettingsScreen({ navigation }) {
 
       {/* Card 2: Discounts & Payment Methods */}
       <View style={styles.cardGroup}>
-        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Discounts', 'Enter your promo code...')}>
+        <TouchableOpacity
+          style={styles.rowItemBtn}
+          onPress={() => Alert.alert('Discounts', 'Enter your promo code...')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Open discounts and promo codes"
+        >
           <View style={styles.rowLeft}>
             <Text style={styles.rowEmoji}>🎁</Text>
             <View>
@@ -96,12 +130,18 @@ export default function SettingsScreen({ navigation }) {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.rowItemBtn} onPress={() => Alert.alert('Payment Methods', 'Default: Cash')}>
+        <TouchableOpacity
+          style={styles.rowItemBtn}
+          onPress={() => Alert.alert('Payment Methods', 'Default: Cash')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Manage payment methods"
+        >
           <View style={styles.rowLeft}>
             <Text style={styles.rowEmoji}>💳</Text>
             <View>
               <Text style={styles.rowTitle}>Payment methods</Text>
-              <Text style={styles.rowSub}>Cash</Text>
+              <Text style={styles.rowSub}>Cash / Telebirr 🇪🇹</Text>
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -115,6 +155,9 @@ export default function SettingsScreen({ navigation }) {
       <TouchableOpacity
         style={styles.driverBanner}
         onPress={() => navigation.navigate('DriverScreen')}
+        activeOpacity={0.88}
+        accessibilityRole="button"
+        accessibilityLabel="Earn as a driver partner in Bahir Dar"
       >
         <View style={styles.rowLeft}>
           <View style={styles.starBadge}>
