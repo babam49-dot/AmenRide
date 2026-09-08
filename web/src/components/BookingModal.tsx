@@ -31,7 +31,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Real Per-KM Distance Calculation
   const selectedLoc = bahirDarLocations.find(l => (language === 'EN' ? l.name : l.nameAm) === destination);
   const distanceKm = selectedLoc ? parseFloat(selectedLoc.distance.replace(' km', '')) || 4.2 : 4.2;
   const ratePerKm = selectedService.id === 'executive-car' ? 40 : (selectedService.id === 'express-delivery' ? 30 : 25);
@@ -99,7 +98,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+      role="dialog"
+      aria-label="Trip booking checkout modal"
+    >
       <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl shadow-card-shadow overflow-hidden">
         {/* Header Bar */}
         <div className="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/90">
