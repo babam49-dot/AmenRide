@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, View, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Modal, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -7,6 +7,7 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
   const { t } = useLanguage();
   const { mode } = useTheme();
   const isDark = mode === 'dark';
+  const [copied, setCopied] = useState(false);
 
   if (!tripData) return null;
 
@@ -15,27 +16,47 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
   const distanceFare = Math.round(fare * 0.7);
   const serviceFee = Math.max(10, Math.round(fare * 0.1));
   const total = baseFare + distanceFare + serviceFee;
+  const receiptCode = `AMEN-BD-${tripData.id || Math.floor(1000 + Math.random() * 9000)}`;
+
+  const handleCopyCode = () => {
+    setCopied(true);
+    Alert.alert('Receipt Code Copied 📋', `Receipt ID: ${receiptCode}`);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   const dynamicStyles = {
-    receiptBox: { backgroundColor: isDark ? '#181818' : '#FFFFFF', borderColor: isDark ? '#333333' : '#E2E8F0' },
-    cardBg: { backgroundColor: isDark ? '#262626' : '#F8FAFC' },
-    textPrimary: { color: isDark ? '#FFFFFF' : '#0F172A' },
-    textSecondary: { color: isDark ? '#A0A0A0' : '#64748B' },
-    divider: { backgroundColor: isDark ? '#333333' : '#E2E8F0' },
-    borderBottom: { borderBottomColor: isDark ? '#262626' : '#E2E8F0' },
+    receiptBox: { backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF', borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0' },
+    cardBg: { backgroundColor: isDark ? '#2C2C2E' : '#F8FAFC' },
+    textPrimary: { color: isDark ? '#FFFFFF' : '#111111' },
+    textSecondary: { color: isDark ? '#94A3B8' : '#64748B' },
+    divider: { backgroundColor: isDark ? '#3A3A3C' : '#E2E8F0' },
+    borderBottom: { borderBottomColor: isDark ? '#2C2C2E' : '#E2E8F0' },
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.receiptBox, dynamicStyles.receiptBox]}>
           {/* Header */}
           <View style={[styles.header, dynamicStyles.borderBottom]}>
-            <Text style={[styles.brandTitle, dynamicStyles.textPrimary]}>Uber <Text style={styles.greenText}>AMEN</Text></Text>
+            <Text style={[styles.brandTitle, { color: '#FF2E2E' }]}>AMEN <Text style={{ color: '#00D154' }}>RIDE 🇪🇹</Text></Text>
 
-            <Text style={[styles.receiptTitle, dynamicStyles.textPrimary]}>{t('receiptTitle')}</Text>
-            <Text style={styles.receiptId}>Receipt ID: AMEN-BD-{tripData.id || Math.floor(1000 + Math.random() * 9000)}</Text>
-            <Text style={[styles.dateText, dynamicStyles.textSecondary]}>{new Date().toLocaleDateString()} · Bahir Dar, Ethiopia 🇪🇹 (TIN: 0098776655)</Text>
+            <Text style={[styles.receiptTitle, dynamicStyles.textPrimary]}>{t('receiptTitle') || 'Official Electronic Receipt'}</Text>
+            
+            <TouchableOpacity
+              style={styles.copyRow}
+              onPress={handleCopyCode}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`Copy receipt ID ${receiptCode}`}
+            >
+              <Text style={styles.receiptId}>ID: {receiptCode}</Text>
+              <Text style={styles.copyBadge}>{copied ? 'COPIED ✓' : 'COPY 📋'}</Text>
+            </TouchableOpacity>
+
+            <Text style={[styles.dateText, dynamicStyles.textSecondary]}>
+              {new Date().toLocaleDateString()} · Bahir Dar, Ethiopia (TIN: 0098776655)
+            </Text>
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -66,56 +87,61 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
                 </Text>
               </View>
               <View style={styles.driverInfo}>
-                <Text style={[styles.driverLabel, dynamicStyles.textSecondary]}>{t('driverAssigned')}</Text>
+                <Text style={[styles.driverLabel, dynamicStyles.textSecondary]}>{t('driverAssigned') || 'Driver Assigned'}</Text>
                 <Text style={[styles.driverName, dynamicStyles.textPrimary]}>{tripData.driver_name || 'Abebe Bikila'} (⭐ {tripData.driver_rating || '4.9'})</Text>
                 <Text style={[styles.vehicleText, dynamicStyles.textSecondary]}>{tripData.vehicle_type || 'Standard Bajaj'} · {tripData.vehicle_plate || 'BD-3-1029'}</Text>
               </View>
             </View>
 
             {/* Fare Breakdown */}
-            <Text style={[styles.sectionHeader, dynamicStyles.textPrimary]}>{t('fareBreakdown')}</Text>
+            <Text style={[styles.sectionHeader, dynamicStyles.textPrimary]}>{t('fareBreakdown') || 'Fare Breakdown'}</Text>
             <View style={[styles.fareTable, dynamicStyles.cardBg]}>
               <View style={styles.fareRow}>
-                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('baseFare')}</Text>
+                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('baseFare') || 'Base Fare'}</Text>
                 <Text style={[styles.fareVal, dynamicStyles.textPrimary]}>{baseFare}.00 ETB</Text>
               </View>
               <View style={[styles.divider, dynamicStyles.divider]} />
               <View style={styles.fareRow}>
-                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('distanceFare')}</Text>
+                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('distanceFare') || 'Distance Fare'}</Text>
                 <Text style={[styles.fareVal, dynamicStyles.textPrimary]}>{distanceFare}.00 ETB</Text>
               </View>
               <View style={[styles.divider, dynamicStyles.divider]} />
               <View style={styles.fareRow}>
-                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('serviceFee')}</Text>
+                <Text style={[styles.fareLabel, dynamicStyles.textSecondary]}>{t('serviceFee') || 'Service Fee'}</Text>
                 <Text style={[styles.fareVal, dynamicStyles.textPrimary]}>{serviceFee}.00 ETB</Text>
               </View>
               {tripData.discount ? (
                 <>
                   <View style={[styles.divider, dynamicStyles.divider]} />
                   <View style={styles.fareRow}>
-                    <Text style={[styles.fareLabel, { color: '#10B981', fontWeight: '700' }]}>🎁 Promo Code Discount</Text>
-                    <Text style={[styles.fareVal, { color: '#10B981' }]}>-{tripData.discount}.00 ETB</Text>
+                    <Text style={[styles.fareLabel, { color: '#00D154', fontWeight: '800' }]}>🎁 Promo Discount</Text>
+                    <Text style={[styles.fareVal, { color: '#00D154' }]}>-{tripData.discount}.00 ETB</Text>
                   </View>
                 </>
               ) : null}
               <View style={styles.dividerBold} />
               <View style={styles.fareRowTotal}>
-                <Text style={[styles.totalLabel, dynamicStyles.textPrimary]}>{t('totalPaid')}</Text>
+                <Text style={[styles.totalLabel, dynamicStyles.textPrimary]}>{t('totalPaid') || 'Total Paid'}</Text>
                 <Text style={styles.totalVal}>{total - (tripData.discount || 0)}.00 ETB</Text>
               </View>
             </View>
 
-
             {/* Payment Method */}
             <View style={[styles.paymentBox, dynamicStyles.cardBg]}>
-              <Text style={[styles.paymentLabel, dynamicStyles.textSecondary]}>{t('paymentMethod')}</Text>
+              <Text style={[styles.paymentLabel, dynamicStyles.textSecondary]}>{t('paymentMethod') || 'Payment Method'}</Text>
               <Text style={[styles.paymentVal, dynamicStyles.textPrimary]}>📱 Telebirr 🇪🇹 / Cash</Text>
             </View>
           </ScrollView>
 
           {/* Close Button */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.85}>
-            <Text style={styles.closeBtnText}>{t('closeReceipt')}</Text>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={onClose}
+            activeOpacity={0.88}
+            accessibilityRole="button"
+            accessibilityLabel="Close receipt modal"
+          >
+            <Text style={styles.closeBtnText}>{t('closeReceipt') || 'Close Receipt'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -126,7 +152,7 @@ export default function ReceiptModal({ visible, onClose, tripData }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -138,6 +164,11 @@ const styles = StyleSheet.create({
     padding: 22,
     borderWidth: 1,
     maxHeight: '88%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   header: {
     alignItems: 'center',
@@ -148,30 +179,43 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-  },
-  greenText: {
-    color: '#05A357',
+    letterSpacing: -0.5,
   },
   receiptTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
-    marginTop: 6,
+    marginTop: 4,
+  },
+  copyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    backgroundColor: '#00D15415',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   receiptId: {
     fontSize: 12,
-    color: '#05A357',
-    fontWeight: '700',
-    marginTop: 2,
+    color: '#00D154',
+    fontWeight: '900',
+    marginRight: 6,
+  },
+  copyBadge: {
+    fontSize: 10,
+    color: '#00D154',
+    fontWeight: '800',
   },
   dateText: {
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 4,
+    fontWeight: '500',
   },
   content: {
     marginBottom: 16,
   },
   routeBox: {
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 14,
     marginBottom: 16,
   },
@@ -182,14 +226,15 @@ const styles = StyleSheet.create({
   pickupSquare: {
     width: 10,
     height: 10,
-    backgroundColor: '#05A357',
+    borderRadius: 2,
+    backgroundColor: '#00D154',
     marginRight: 12,
   },
   dropoffCircle: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#FF2E2E',
     marginRight: 12,
   },
   routeLine: {
@@ -199,12 +244,12 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   routeTextCol: { flex: 1 },
-  routeLabel: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  routeVal: { fontSize: 13, fontWeight: '700', marginTop: 1 },
+  routeLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  routeVal: { fontSize: 13, fontWeight: '800', marginTop: 1 },
   driverBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 12,
     marginBottom: 18,
   },
@@ -212,7 +257,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#05A357',
+    backgroundColor: '#FF2E2E',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -223,12 +268,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   driverInfo: { flex: 1 },
-  driverLabel: { fontSize: 10, fontWeight: '700' },
+  driverLabel: { fontSize: 10, fontWeight: '800' },
   driverName: { fontSize: 14, fontWeight: '800', marginTop: 1 },
-  vehicleText: { fontSize: 11, marginTop: 2 },
-  sectionHeader: { fontSize: 14, fontWeight: '800', marginBottom: 10 },
+  vehicleText: { fontSize: 11, marginTop: 2, fontWeight: '500' },
+  sectionHeader: { fontSize: 14, fontWeight: '900', marginBottom: 10 },
   fareTable: {
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 6,
     marginBottom: 16,
@@ -238,27 +283,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
   },
-  fareLabel: { fontSize: 13 },
-  fareVal: { fontSize: 13, fontWeight: '700' },
+  fareLabel: { fontSize: 13, fontWeight: '500' },
+  fareVal: { fontSize: 13, fontWeight: '800' },
   divider: { height: 1 },
-  dividerBold: { height: 2, backgroundColor: '#05A357', marginVertical: 4 },
+  dividerBold: { height: 2, backgroundColor: '#FF2E2E', marginVertical: 4 },
   fareRowTotal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 10,
   },
-  totalLabel: { fontSize: 15, fontWeight: '800' },
-  totalVal: { fontSize: 18, fontWeight: '900', color: '#05A357' },
+  totalLabel: { fontSize: 15, fontWeight: '900' },
+  totalVal: { fontSize: 19, fontWeight: '900', color: '#FF2E2E' },
   paymentBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 14,
   },
-  paymentLabel: { fontSize: 12, fontWeight: '700' },
+  paymentLabel: { fontSize: 12, fontWeight: '800' },
   paymentVal: { fontSize: 13, fontWeight: '800' },
   closeBtn: {
-    backgroundColor: '#05A357',
+    backgroundColor: '#FF2E2E',
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
@@ -266,6 +311,8 @@ const styles = StyleSheet.create({
   closeBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '900',
+    letterSpacing: 0.3,
   },
 });
+
