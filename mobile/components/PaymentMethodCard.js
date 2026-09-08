@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Animated } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 const PAYMENT_METHODS = [
   { id: 'cash', name: 'Cash on Arrival', icon: '💵', subtitle: 'Pay the driver directly in cash at the end of trip' },
-  { id: 'chapa', name: 'Chapa Online Payment Gateway', icon: '💳', subtitle: 'Pay before ride via CBE, Bank of Abyssinia, Telebirr & Awash' },
   { id: 'telebirr', name: 'Telebirr Direct Wallet', icon: '📱', subtitle: 'Transfer to Ethio Telecom Account: +251 911 001 122' },
   { id: 'cbe_birr', name: 'CBE Birr / Bank Transfer', icon: '🏦', subtitle: 'CBE Account: 1000 8899 7766 (AMEN Ride Tech)' },
+  { id: 'chapa', name: 'Chapa Online Gateway', icon: '💳', subtitle: 'Pay before ride via CBE, Bank of Abyssinia & Awash' },
 ];
 
 export default function PaymentMethodCard({
@@ -22,6 +22,31 @@ export default function PaymentMethodCard({
   const [accountNumber, setAccountNumber] = useState('0911223344');
   const [loading, setLoading] = useState(false);
   const [deductionProof, setDeductionProof] = useState(null);
+
+  const scaleAnims = useRef({}).current;
+  const getScaleAnim = (id) => {
+    if (!scaleAnims[id]) {
+      scaleAnims[id] = new Animated.Value(1);
+    }
+    return scaleAnims[id];
+  };
+
+  const handlePressIn = (id) => {
+    Animated.spring(getScaleAnim(id), {
+      toValue: 0.96,
+      useNativeDriver: true,
+      friction: 6,
+    }).start();
+  };
+
+  const handlePressOut = (id) => {
+    Animated.spring(getScaleAnim(id), {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 4,
+      tension: 100,
+    }).start();
+  };
 
   const calculatedFare = Math.round((baseFare + distanceKm * ratePerKm) * 100) / 100;
 
@@ -58,7 +83,6 @@ export default function PaymentMethodCard({
       Alert.alert('BOOM! Payment Successful 🎉', data.message);
     } catch (e) {
       setLoading(false);
-      // Fallback deduction simulation
       const proof = {
         transactionId: `TXN-MOB-${Date.now()}`,
         accountName: 'Tewodros Zewudu',
@@ -79,10 +103,10 @@ export default function PaymentMethodCard({
   };
 
   const dynamicStyles = {
-    header: { color: isDark ? '#F8FAFC' : '#0F172A' },
-    card: { backgroundColor: isDark ? '#1E293B' : '#FFFFFF', borderColor: isDark ? '#334155' : '#E2E8F0' },
-    cardSelected: { backgroundColor: isDark ? '#134E4A' : '#F0FDFA', borderColor: '#0D9488' },
-    name: { color: isDark ? '#F8FAFC' : '#334155' },
+    header: { color: isDark ? '#FFFFFF' : '#111111' },
+    card: { backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF', borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0' },
+    cardSelected: { backgroundColor: isDark ? '#2C1515' : '#FFF5F5', borderColor: '#FF2E2E' },
+    name: { color: isDark ? '#FFFFFF' : '#111111' },
     subtitle: { color: isDark ? '#94A3B8' : '#64748B' },
   };
 
@@ -92,7 +116,7 @@ export default function PaymentMethodCard({
       <Text style={styles.subHeader}>Choose how you wish to settle your fare in Bahir Dar</Text>
 
       {/* Distance & Rate Card */}
-      <View style={[styles.fareCard, { backgroundColor: isDark ? '#0F172A' : '#F1F5F9' }]}>
+      <View style={[styles.fareCard, { backgroundColor: isDark ? '#2C1515' : '#FFF5F5', borderColor: '#FF2E2E30' }]}>
         <Text style={styles.fareTitle}>Calculated Per-KM Fare</Text>
         <Text style={styles.fareFormula}>
           {distanceKm} km × {ratePerKm} ETB/km + {baseFare} ETB base
@@ -102,38 +126,51 @@ export default function PaymentMethodCard({
 
       {PAYMENT_METHODS.map((method) => {
         const isSelected = selectedMethod === method.id;
+        const scale = getScaleAnim(method.id);
+
         return (
-          <TouchableOpacity
-            key={method.id}
-            style={[styles.card, dynamicStyles.card, isSelected && dynamicStyles.cardSelected]}
-            onPress={() => onSelectMethod && onSelectMethod(method.id)}
-          >
-            <Text style={styles.icon}>{method.icon}</Text>
-            <View style={styles.textContainer}>
-              <Text style={[styles.name, dynamicStyles.name, isSelected && styles.nameSelected]}>{method.name}</Text>
-              <Text style={[styles.subtitle, dynamicStyles.subtitle]}>{method.subtitle}</Text>
-            </View>
-            <View style={[styles.radio, isSelected && styles.radioSelected]}>
-              {isSelected && <View style={styles.radioInner} />}
-            </View>
-          </TouchableOpacity>
+          <Animated.View key={method.id} style={{ transform: [{ scale }] }}>
+            <TouchableOpacity
+              style={[styles.card, dynamicStyles.card, isSelected && dynamicStyles.cardSelected]}
+              onPress={() => onSelectMethod && onSelectMethod(method.id)}
+              onPressIn={() => handlePressIn(method.id)}
+              onPressOut={() => handlePressOut(method.id)}
+              activeOpacity={0.88}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected }}
+              accessibilityLabel={`${method.name}, ${method.subtitle}`}
+            >
+              <Text style={styles.icon}>{method.icon}</Text>
+              <View style={styles.textContainer}>
+                <Text style={[styles.name, dynamicStyles.name, isSelected && styles.nameSelected]}>{method.name}</Text>
+                <Text style={[styles.subtitle, dynamicStyles.subtitle]} numberOfLines={1}>{method.subtitle}</Text>
+              </View>
+              <View style={[styles.radio, isSelected && styles.radioSelected]}>
+                {isSelected && <View style={styles.radioInner} />}
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
         );
       })}
 
       {selectedMethod !== 'cash' && (
-        <View style={[styles.accountBox, { backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }]}>
-          <Text style={styles.accountLabel}>Link Account Number to Pay & Deduct:</Text>
+        <View style={[styles.accountBox, { backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF', borderColor: '#FF2E2E40' }]}>
+          <Text style={styles.accountLabel}>Link Account / Phone Number to Deduct:</Text>
           <TextInput
             style={[styles.input, { color: isDark ? '#FFF' : '#000', borderColor: isDark ? '#334155' : '#CBD5E1' }]}
             value={accountNumber}
             onChangeText={setAccountNumber}
             placeholder="e.g. 0911223344 or CBE 100088997766"
             placeholderTextColor="#64748B"
+            accessibilityLabel="Account or Phone Number for payment"
           />
           <TouchableOpacity
             style={styles.deductBtn}
             onPress={handleVerifyAndDeduct}
             disabled={loading}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={`Verify Account and Deduct ${calculatedFare.toFixed(2)} Ethiopian Birr`}
           >
             <Text style={styles.deductBtnText}>
               {loading ? 'Verifying...' : `Verify Account & Deduct ${calculatedFare.toFixed(2)} ETB`}
@@ -156,29 +193,30 @@ export default function PaymentMethodCard({
 
 const styles = StyleSheet.create({
   container: { marginVertical: 12 },
-  header: { fontSize: 18, fontWeight: '800', marginBottom: 2 },
-  subHeader: { fontSize: 12, color: '#64748B', marginBottom: 12 },
-  fareCard: { padding: 12, borderRadius: 12, marginBottom: 12 },
-  fareTitle: { fontSize: 11, fontWeight: '700', color: '#0D9488', textTransform: 'uppercase' },
-  fareFormula: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  fareTotal: { fontSize: 20, fontWeight: '900', color: '#0D9488', marginTop: 4 },
-  card: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1.5 },
-  icon: { fontSize: 24, marginRight: 12 },
+  header: { fontSize: 18, fontWeight: '900', marginBottom: 2 },
+  subHeader: { fontSize: 12, color: '#64748B', marginBottom: 14, fontWeight: '500' },
+  fareCard: { padding: 14, borderRadius: 16, marginBottom: 14, borderWidth: 1 },
+  fareTitle: { fontSize: 11, fontWeight: '900', color: '#FF2E2E', textTransform: 'uppercase', letterSpacing: 0.5 },
+  fareFormula: { fontSize: 12, color: '#64748B', marginTop: 2, fontWeight: '600' },
+  fareTotal: { fontSize: 22, fontWeight: '900', color: '#FF2E2E', marginTop: 4 },
+  card: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 2 },
+  icon: { fontSize: 26, marginRight: 12 },
   textContainer: { flex: 1 },
-  name: { fontSize: 15, fontWeight: '700' },
-  nameSelected: { color: '#0D9488' },
-  subtitle: { fontSize: 12, marginTop: 2 },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' },
-  radioSelected: { borderColor: '#0D9488' },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#0D9488' },
-  accountBox: { padding: 14, borderRadius: 12, marginTop: 6, borderWidth: 1, borderColor: '#0D948840' },
-  accountLabel: { fontSize: 12, fontWeight: '700', color: '#0D9488', marginBottom: 6 },
-  input: { height: 42, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, fontSize: 14 },
-  deductBtn: { backgroundColor: '#0D9488', padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  deductBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-  proofCard: { backgroundColor: '#10B98120', padding: 14, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: '#10B98150' },
-  proofTitle: { color: '#10B981', fontWeight: '900', fontSize: 14, marginBottom: 4 },
-  proofText: { color: '#10B981', fontSize: 12, fontWeight: '600' },
-  proofHighlight: { color: '#0D9488', fontSize: 13, fontWeight: '800', marginTop: 4 }
+  name: { fontSize: 15, fontWeight: '800' },
+  nameSelected: { color: '#FF2E2E' },
+  subtitle: { fontSize: 11, marginTop: 2, fontWeight: '500' },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' },
+  radioSelected: { borderColor: '#FF2E2E' },
+  radioInner: { width: 11, height: 11, borderRadius: 6, backgroundColor: '#FF2E2E' },
+  accountBox: { padding: 16, borderRadius: 16, marginTop: 8, borderWidth: 1.5 },
+  accountLabel: { fontSize: 12, fontWeight: '800', color: '#FF2E2E', marginBottom: 8 },
+  input: { height: 46, borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, fontSize: 14, fontWeight: '600' },
+  deductBtn: { backgroundColor: '#FF2E2E', padding: 14, borderRadius: 14, alignItems: 'center', marginTop: 12 },
+  deductBtnText: { color: '#FFF', fontWeight: '900', fontSize: 14, letterSpacing: 0.3 },
+  proofCard: { backgroundColor: '#00D15418', padding: 14, borderRadius: 16, marginTop: 14, borderWidth: 1.5, borderColor: '#00D15440' },
+  proofTitle: { color: '#00D154', fontWeight: '900', fontSize: 14, marginBottom: 4 },
+  proofText: { color: '#00D154', fontSize: 12, fontWeight: '700' },
+  proofHighlight: { color: '#00D154', fontSize: 13, fontWeight: '900', marginTop: 4 }
 });
+
 
