@@ -73,7 +73,7 @@ const buildMapHTML = (apiBase, startLat, startLng, destLat, destLng, isRequested
   
   const midLat = (${startLat} + ${destLat})/2 + 0.001;
   const midLng = (${startLng} + ${destLng})/2;
-  const poly = L.polyline([pickup, [midLat, midLng], dropoff], { color: '#0D9488', weight: 5, opacity: 0.8 }).addTo(map);
+  const poly = L.polyline([pickup, [midLat, midLng], dropoff], { color: '#FF2E2E', weight: 5, opacity: 0.9 }).addTo(map);
   map.fitBounds(poly.getBounds(), { padding: [40, 40] });
 </script>
 </body>
