@@ -700,37 +700,40 @@ const styles = StyleSheet.create({
   serviceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   serviceCardWrap: {
     flex: 1,
+    marginHorizontal: 5,
   },
   serviceCardTop: {
-    borderRadius: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 100,
-  },
-  serviceCardSquare: {
-    borderRadius: 28,
-    paddingVertical: 16,
+    borderRadius: 20,
+    paddingVertical: 14,
     paddingHorizontal: 12,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    height: (width - 42) / 2, // Perfect 1:1 Square Shape!
+    justifyContent: 'center',
+    minHeight: 105,
   },
-  squareIconBox: {
-    flex: 1,
+  serviceCardSquare: {
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 105,
+  },
+  squareIconBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   serviceEmojiTop: {
-    fontSize: 34,
+    fontSize: 36,
+    marginBottom: 6,
   },
   serviceEmojiSquare: {
-    fontSize: 54,
+    fontSize: 36,
+    marginBottom: 4,
   },
   serviceName: {
     fontSize: 14,
