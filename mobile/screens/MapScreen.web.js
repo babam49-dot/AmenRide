@@ -397,7 +397,6 @@ export default function MapScreenWeb() {
             </TouchableOpacity>
           </ScrollView>
         )}
-      </View>
 
       {/* Payment Selection Modal */}
       {showPaymentModal && (
